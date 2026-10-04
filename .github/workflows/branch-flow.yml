@@ -1,0 +1,31 @@
+# Impose le sens de promotion : unit/* → dev → staging → main.
+# Un correctif urgent (hotfix/*) peut viser staging ou main directement.
+name: Branch flow
+
+on:
+  pull_request:
+    branches: [staging, main]
+
+permissions: {}
+
+jobs:
+  check-source:
+    name: Vérifier la branche source
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Vérifier la branche source
+        env:
+          BASE: ${{ github.base_ref }}
+          HEAD: ${{ github.head_ref }}
+        run: |
+          case "$BASE" in
+            staging) allowed="dev" ;;
+            main) allowed="staging" ;;
+          esac
+          if [ "$HEAD" = "$allowed" ] || [ "${HEAD#hotfix/}" != "$HEAD" ]; then
+            echo "OK : $HEAD → $BASE"
+          else
+            echo "::error::Une PR vers $BASE doit venir de $allowed (ou d'une branche hotfix/*), pas de $HEAD."
+            exit 1
+          fi

@@ -19,9 +19,21 @@ jobs:
           DEPLOYMENT_URL: ${{ github.event.deployment_status.environment_url || github.event.deployment_status.target_url }}
           ENVIRONMENT: ${{ github.event.deployment.environment }}
           BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+          # Domaines personnalisés autorisés, séparés par des espaces (variable de dépôt GitHub, facultative).
+          ALLOWED_DEPLOYMENT_HOSTS: ${{ vars.ALLOWED_DEPLOYMENT_HOSTS }}
         run: |
           if [ -z "$DEPLOYMENT_URL" ]; then
             echo "::error::URL du déploiement absente de l'événement."
+            exit 1
+          fi
+          # Le secret de contournement n'est envoyé qu'à un domaine Vercel (ou à un domaine listé dans ALLOWED_DEPLOYMENT_HOSTS).
+          if ! printf '%s' "$DEPLOYMENT_URL" | grep -Eq '^https://[^/:]+(/|$)'; then
+            echo "::error::URL de déploiement refusée (https obligatoire)."
+            exit 1
+          fi
+          host=$(printf '%s' "$DEPLOYMENT_URL" | sed -E 's#^https://([^/:]+).*#\1#')
+          if ! printf '%s' "$host" | grep -Eq '^[a-z0-9-]+\.vercel\.app$' && ! printf ' %s ' "$ALLOWED_DEPLOYMENT_HOSTS" | grep -Fq " $host "; then
+            echo "::error::Domaine de déploiement non autorisé : $host"
             exit 1
           fi
           echo "Environnement : $ENVIRONMENT — $DEPLOYMENT_URL"

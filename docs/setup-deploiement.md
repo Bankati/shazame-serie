@@ -40,6 +40,7 @@ Aucune valeur secrète ne doit être copiée dans le dépôt, dans un ticket ou 
 ## 3. GitHub
 
 1. Settings → Secrets and variables → Actions → **New repository secret** : `VERCEL_AUTOMATION_BYPASS_SECRET` = secret de l'étape 2.7.
+   Le test de fumée n'envoie ce secret qu'aux domaines `*.vercel.app`. Si vous ajoutez un domaine personnalisé, le déclarer dans l'onglet **Variables** : `ALLOWED_DEPLOYMENT_HOSTS` = domaines séparés par des espaces (ex. `staging.exemple.fr www.exemple.fr`).
 2. Settings → Rules → Rulesets, pour `staging` et `main` : PR obligatoire, et checks obligatoires :
    - `Lint, typecheck, test, build`
    - `Audit des dépendances de production`

@@ -6,7 +6,7 @@ import { jsonError } from "@/server/http/respond";
 // Protégée par CRON_SECRET (docs/setup-deploiement.md).
 export function GET(request: Request): Response {
   if (!isAuthorizedSentryCheck(request.headers.get("authorization"), env.CRON_SECRET)) {
-    return jsonError({ code: "UNAUTHENTICATED", message: "Accès refusé." });
+    return jsonError("UNAUTHENTICATED");
   }
   throw new SentryCheckError();
 }

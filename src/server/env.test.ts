@@ -29,7 +29,10 @@ describe("parseEnv", () => {
     expect(() => parseEnv({ CRON_SECRET: "trop-court-123" })).not.toThrow(/trop-court-123/);
   });
 
-  it("refuse un DSN qui n'est pas une URL", () => {
-    expect(() => parseEnv({ SENTRY_DSN: "pas-une-url" })).toThrow(/SENTRY_DSN/);
-  });
+  it.each(["pas-une-url", "javascript:alert(1)", "http://key@o1.ingest.sentry.io/1"])(
+    "refuse un DSN qui n'est pas une URL https : %s",
+    (dsn) => {
+      expect(() => parseEnv({ SENTRY_DSN: dsn })).toThrow(/SENTRY_DSN/);
+    },
+  );
 });

@@ -22,6 +22,7 @@ Mettre à jour ce fichier après chaque changement d'implémentation significati
 
 - U01 — Socle du dépôt et déploiement (plan validé le 7 octobre 2026 : `context/plans/U01.md`).
   - Fait (7 octobre 2026) : versions alignées (AD-21), `env.ts` + tests, `/api/health` et `/api/health/sentry-check`, Sentry serveur/edge/navigateur avec `dataCollection` coupé et `scrubEvent` testé, `global-error.tsx`, page d'accueil provisoire, job CI anti-secrets, `smoke.yml`, Dependabot (ignore TS ≥ 6.1, ESLint ≥ 10), `.env.example`, `docs/setup-deploiement.md`. lint / typecheck / test (17) / build / audit verts en local.
+  - `/review` et `/audit` exécutés le 7 octobre 2026 ; corrections appliquées (filtrage Sentry des traces, garde de domaine du test de fumée, DSN https, fragment d'URL, messages d'erreur dans `src/content/fr/errors.ts`, tests de routes). Écart accepté : pas de limitation de débit sur `/api/health/sentry-check` avant U11 (Upstash) — à ajouter en U11.
   - Reste : réglages Vercel, Sentry et GitHub par le fondateur (`docs/setup-deploiement.md`), vérification du critère de fin sur staging puis production, `/review` et `/audit`.
 
 ## Next Up

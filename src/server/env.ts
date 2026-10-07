@@ -9,10 +9,12 @@ import { z } from "zod";
 const emptyToUndefined = (value: unknown) => (value === "" ? undefined : value);
 const optional = <T extends z.ZodType>(schema: T) => z.preprocess(emptyToUndefined, schema.optional());
 
+const httpsUrl = () => z.url({ protocol: /^https$/ });
+
 const envSchema = z.object({
   VERCEL_ENV: optional(z.enum(["development", "preview", "production"])),
-  SENTRY_DSN: optional(z.url()),
-  NEXT_PUBLIC_SENTRY_DSN: optional(z.url()),
+  SENTRY_DSN: optional(httpsUrl()),
+  NEXT_PUBLIC_SENTRY_DSN: optional(httpsUrl()),
   CRON_SECRET: optional(z.string().min(32)),
 });
 

@@ -3,7 +3,7 @@ import "server-only";
 import type * as Sentry from "@sentry/nextjs";
 
 import { env } from "@/server/env";
-import { SENTRY_DATA_COLLECTION, SENTRY_TRACES_SAMPLE_RATE, scrubEvent } from "@/shared/observability/sentry";
+import { SENTRY_DATA_COLLECTION, SENTRY_TRACES_SAMPLE_RATE, scrubEvent, scrubTransaction } from "@/shared/observability/sentry";
 
 // Options des runtimes serveur (Node.js et edge) ; le navigateur a les siennes dans instrumentation-client.ts.
 export const SENTRY_SERVER_OPTIONS = {
@@ -13,4 +13,5 @@ export const SENTRY_SERVER_OPTIONS = {
   tracesSampleRate: SENTRY_TRACES_SAMPLE_RATE,
   dataCollection: SENTRY_DATA_COLLECTION,
   beforeSend: scrubEvent,
+  beforeSendTransaction: scrubTransaction,
 } satisfies Parameters<typeof Sentry.init>[0];

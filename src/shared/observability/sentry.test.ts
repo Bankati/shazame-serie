@@ -1,7 +1,7 @@
 import type { ErrorEvent } from "@sentry/nextjs";
 import { describe, expect, it } from "vitest";
 
-import { redactEmails, scrubEvent } from "./sentry";
+import { redactEmails, scrubEvent, scrubTransaction } from "./sentry";
 
 function makeEvent(): ErrorEvent {
   return {
@@ -42,6 +42,23 @@ describe("scrubEvent", () => {
     const event = scrubEvent(makeEvent());
 
     expect(event.exception?.values?.[0]?.type).toBe("Error");
+  });
+});
+
+describe("scrubTransaction", () => {
+  it("retire utilisateur, en-têtes, cookies, paramètres et fragment d'URL des traces", () => {
+    const event = scrubTransaction({
+      type: "transaction",
+      transaction: "GET /api/health",
+      user: { email: "jean.dupont@example.com" },
+      request: { url: "https://site.example/compte?email=a@b.fr#section", headers: { cookie: "a=b" } },
+      extra: { body: "x" },
+    });
+
+    expect(event.user).toBeUndefined();
+    expect(event.extra).toBeUndefined();
+    expect(event.request).toEqual({ url: "https://site.example/compte" });
+    expect(event.transaction).toBe("GET /api/health");
   });
 });
 

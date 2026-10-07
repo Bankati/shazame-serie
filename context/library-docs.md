@@ -45,6 +45,8 @@ Relevées sur le registre npm le **4 octobre 2026**, révisées en U01 le **7 oc
 | `eslint` / `typescript-eslint` | 9.39.5 (installé, AD-21) / via `eslint-config-next` | Lint |
 | `@playwright/test` | 1.63.0 | Tests bout en bout |
 
+Lockfile (piège rencontré en U01) : un `package-lock.json` écrit par npm 11.6 sous Windows omettait des dépendances WASM optionnelles (`@emnapi/runtime`, `@emnapi/core`) ; npm 11.19, livré avec Node 24.21 sur la CI, refuse alors `npm ci` (« Missing … from lock file »). Toujours modifier les dépendances avec le npm de Node 24 (ou `npx npm@<version de la CI> install`), et contrôler avant de pousser avec `npx npm@<version> ci --dry-run`.
+
 Runtime : **Node.js 24 LTS** (Node 20, cité par le CDC, est en fin de vie depuis avril 2026). Vérifier la version proposée par Vercel dans les réglages du projet et fixer `engines.node` dans `package.json`.
 
 Plans d'hébergement : **Vercel Pro** obligatoire (le plan Hobby est réservé à l'usage non commercial et limite les crons) ; **Supabase payant** en production (le plan gratuit met les projets en pause après inactivité, et certains réglages de session en dépendent). À intégrer au budget (Q17).

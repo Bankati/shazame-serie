@@ -4,25 +4,29 @@ Mettre à jour ce fichier après chaque changement d'implémentation significati
 
 ## Current Phase
 
-- Phase 0 — Décisions bloquantes (jusqu'au 31 octobre 2026). Squelette `create-next-app` présent ; aucune unité commencée formellement.
+- Phase 0 — Décisions bloquantes (jusqu'au 31 octobre 2026), en parallèle de U01 (démarrée le 7 octobre 2026).
 
 ## Current Goal
 
-- Fermer les décisions D1 à D9 de `build-plan.md`, en priorité D1 (paiement) et D4 (accès OpenAI), qui sont sur le chemin critique.
+- Fermer les décisions restantes D1 à D5 et D8 de `build-plan.md`, en priorité D1 (paiement) et D4 (accès OpenAI), qui sont sur le chemin critique.
+- Démarrer U01 (`/architect`), désormais débloquée.
 
 ## Completed
 
+- Décisions D6 (Next 16 / Node 24), D7 (valeurs RG2, RG4, plafond IA) et D9 (plans payants en production) fermées (7 octobre 2026).
 - Cahier des charges V4 rédigé (1er octobre 2026), converti en `docs/cahier-des-charges-v4.md`.
 - Fichiers de contexte et skills du projet créés (4 octobre 2026), puis relus intégralement et corrigés (cohérence entre fichiers, vocabulaire shadcn/ui, sécurité du cache, dépendances du build plan).
 - Dépôt GitHub `Bankati/shazame-serie` branché, branches `dev` / `staging` / `main`, CI GitHub Actions (lint, typecheck, test Vitest, build, audit production), contrôle du sens de promotion, Dependabot vers `dev` (4 octobre 2026). Partie « CI » de U01 en avance ; restent pour U01 : structure de dossiers, `env.ts`, Vercel, Sentry.
 
 ## In Progress
 
-- Aucune unité en cours.
+- U01 — Socle du dépôt et déploiement (plan validé le 7 octobre 2026 : `context/plans/U01.md`).
+  - Fait (7 octobre 2026) : versions alignées (AD-21), `env.ts` + tests, `/api/health` et `/api/health/sentry-check`, Sentry serveur/edge/navigateur avec `dataCollection` coupé et `scrubEvent` testé, `global-error.tsx`, page d'accueil provisoire, job CI anti-secrets, `smoke.yml`, Dependabot (ignore TS ≥ 6.1, ESLint ≥ 10), `.env.example`, `docs/setup-deploiement.md`. lint / typecheck / test (17) / build / audit verts en local.
+  - Reste : réglages Vercel, Sentry et GitHub par le fondateur (`docs/setup-deploiement.md`), vérification du critère de fin sur staging puis production, `/review` et `/audit`.
 
 ## Next Up
 
-- U01 — Socle du dépôt et déploiement (dès que D6 est validée).
+- U02 — Tokens de design et coquille de mise en page (après U01).
 
 ## Open Questions
 
@@ -33,9 +37,6 @@ Mettre à jour ce fichier après chaque changement d'implémentation significati
 | Q3 | « Où regarder » : TMDB watch/providers (attribution JustWatch) suffit-il contractuellement pour un usage commercial ? | U16 | Le demander à TMDB en même temps que Q2. |
 | Q4 | Quel modèle de vision OpenAI, quel niveau de détail d'image, quel accord de traitement des données (transfert hors UE) ? | U07 | Trancher par `npm run eval` sur 2 modèles × 2 niveaux de détail. |
 | Q5 | Où stocker légalement les 100 clips de test (contenus protégés) ? | U13 | Hors dépôt, stockage privé, usage interne de test uniquement ; à confirmer par un juriste. |
-| Q6 | Valeur RG2 (visiteur) : 3 par jour ? | U11 | 3 par jour, par cookie signé + limite IP. |
-| Q7 | Valeur RG4 (plafond Premium anti-abus) ? | U11 | 100 par jour au départ, revu après 2 semaines de mesures. |
-| Q8 | Plafond de dépense IA quotidien initial ? | U14 | 10 EUR/jour pendant la bêta, revu chaque semaine. |
 | Q9 | Le budget MVP (12 008 USD) couvre-t-il les salaires ? (CDC section 23) | Recrutement | À trancher par le fondateur avant novembre. |
 | Q10 | Devise de facturation définitive (EUR confirmé ?) | U22 | EUR. |
 | Q11 | Nom commercial et domaine (nécessaires pour OAuth Google, emails, pages légales) | U04, U23, U27 | Nom provisoire utilisable en préproduction. |
@@ -44,7 +45,6 @@ Mettre à jour ce fichier après chaque changement d'implémentation significati
 | Q14 | Faut-il un email confirmé avant la première identification d'un compte ? | U04, U11 | Non : l'utilisateur non confirmé garde le quota visiteur jusqu'à confirmation. |
 | Q15 | RGPD : registre des traitements, base légale, statut auprès de l'IPDCP (Togo) | Lancement | Avis juridique avant la bêta (CDC 18.2). |
 | Q16 | Combien de temps garder les images d'un signalement consenti ? (RG8 ne fixe pas de durée) | U20, U30 | Jusqu'à la revue admin, puis 12 mois si ajoutées au jeu de test, sinon suppression. |
-| Q17 | Budget des plans payants : Vercel Pro (le plan Hobby interdit l'usage commercial) et Supabase payant en production | U01 | À ajouter au budget du MVP (D9). |
 | Q18 | RG14 : que couvre « données conservées 30 jours après la fin de l'abonnement » ? Et que devient une liste de plus de 100 titres quand le Premium prend fin ? | U18, U22 | Liste conservée en entier, en lecture seule pour les ajouts tant qu'elle dépasse 100 titres. Les 30 jours visent les données de facturation. |
 | Q19 | Âge minimum d'inscription (la cible commence à 16 ans ; l'âge du consentement numérique varie selon les pays) | U04, U27 | 15 ans minimum dans les CGU, à valider par un juriste. |
 | Q20 | Le cookie `visitor_id` (quota visiteur) est-il un cookie strictement nécessaire, sans consentement ? | U11, U27 | Probablement oui (fonctionnement du service) ; à confirmer par un juriste. |
@@ -55,8 +55,8 @@ Mettre à jour ce fichier après chaque changement d'implémentation significati
 
 | # | Décision | Pourquoi | Statut |
 | --- | --- | --- | --- |
-| AD-01 | Next.js 16 au lieu de 14 | Next 14 ne reçoit plus de correctifs de sécurité en octobre 2026 ; le choix « Next.js » du CDC est conservé. | Proposé — valider (D6) |
-| AD-02 | Node.js 24 LTS au lieu de 20 | Node 20 est en fin de vie depuis avril 2026. | Proposé — valider (D6) |
+| AD-01 | Next.js 16 au lieu de 14 | Next 14 ne reçoit plus de correctifs de sécurité en octobre 2026 ; le choix « Next.js » du CDC est conservé. | Décidé (D6, 7 octobre 2026) |
+| AD-02 | Node.js 24 LTS au lieu de 20 | Node 20 est en fin de vie depuis avril 2026. | Décidé (D6, 7 octobre 2026) |
 | AD-03 | Monolithe Next.js (routes API), pas de service séparé | Équipe de 1 à 2 développeurs, 9 semaines (CDC 16). | Décidé (CDC) |
 | AD-04 | Supabase pour Postgres + Auth + Storage, Drizzle côté serveur, RLS refus par défaut | Un seul fournisseur géré ; la base n'est jamais exposée au client. | Proposé |
 | AD-05 | Les images ne sont jamais stockées, sauf signalement consenti | Respecte RG7 sans tâche de nettoyage critique ; réduit le risque juridique. | Proposé |
@@ -72,6 +72,10 @@ Mettre à jour ce fichier après chaque changement d'implémentation significati
 | AD-15 | Authentification via Server Actions (pas d'appel direct du navigateur à Supabase) | Permet notre limitation de débit (CDC 18.1). | Proposé |
 | AD-16 | Plans `/architect` enregistrés dans `context/plans/<ID>.md` | Le plan survit à la fin de session ; `/review` et `/audit` s'y réfèrent. | Décidé |
 | AD-17 | Eval exécutée sans cache ni quota, sur l'environnement de développement | Sinon la deuxième exécution mesurerait le cache, pas le modèle. | Décidé |
+| AD-19 | Plans gratuits Vercel et Supabase en développement et préproduction ; Vercel Pro et Supabase Pro activés pour la production avant le lancement | Le plan Vercel Hobby interdit l'usage commercial ; inutile de payer avant le lancement. | Décidé (D9, 7 octobre 2026) |
+| AD-20 | Valeurs initiales : visiteur 3 identifications/jour (RG2), plafond Premium 100/jour (RG4), plafond de dépense IA 10 EUR/jour pendant la bêta | Propositions Q6, Q7, Q8 acceptées ; revues après 2 semaines de mesures. | Décidé (D7, 7 octobre 2026) |
+| AD-21 | TypeScript 6.0.3 et ESLint 9.39.5 (pas TS 7 ni ESLint 10) | `typescript-eslint` exige `typescript <6.1.0` et les plugins de `eslint-config-next` s'arrêtent à ESLint 9 (registre npm, 7 octobre 2026). À revoir quand l'outillage suivra. | Décidé (U01) |
+| AD-22 | Claude commite et pousse uniquement sur `dev` (pas de branche `unit/*`) ; le fondateur ouvre les PR `dev` → `staging` → `main` | Consigne du fondateur ; chaque PR est vérifiée par la CI et le test de fumée du déploiement. | Décidé (7 octobre 2026) |
 | AD-18 | Trois branches `dev` → `staging` → `main`, promotion par PR uniquement, `hotfix/*` en exception | Demande du fondateur ; `staging` correspond à l'environnement `preview`, `main` à `production`. | Décidé |
 
 ## Eval History
@@ -83,5 +87,7 @@ Mettre à jour ce fichier après chaque changement d'implémentation significati
 ## Session Notes
 
 - La première session de code commence par `/remember restore` (aucune mémoire attendue), puis `/architect` sur U01.
-- Écarts de versions avec `library-docs.md` à trancher en U01 : TypeScript 5.9.3 installé (7.0.2 « à vérifier »), React 19.2.8 (19.3.0), ESLint 9.39.5 (10.12.0). Node local en 22 alors que le projet et la CI exigent Node 24.
-- Protection des branches `main` et `staging` à activer dans GitHub (Settings → Rules) : PR obligatoire, checks « Lint, typecheck, test, build », « Audit des dépendances de production » et « Vérifier la branche source ».
+- Écarts de versions tranchés en U01 (AD-21).
+- Node local en 22.21.1 : installer Node 24 (le projet l'exige).
+- Un `package-lock.json` traîne dans `C:\Users\BK` (hors dépôt) ; Next l'ignore, mais il vaut mieux le supprimer s'il n'a pas d'usage.
+- Protection des branches `main` et `staging` à activer dans GitHub (Settings → Rules) : PR obligatoire, checks listés dans `docs/setup-deploiement.md` (section 3).

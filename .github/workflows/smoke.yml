@@ -1,0 +1,35 @@
+# Test de fumée après chaque déploiement Vercel réussi (préproduction, production, prévisualisations).
+# Le résultat s'affiche sur le commit déployé, donc sur la PR qui le contient.
+name: Smoke test
+
+on:
+  deployment_status:
+
+permissions: {}
+
+jobs:
+  health:
+    name: Santé du déploiement
+    if: github.event.deployment_status.state == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Appeler /api/health
+        env:
+          DEPLOYMENT_URL: ${{ github.event.deployment_status.environment_url || github.event.deployment_status.target_url }}
+          ENVIRONMENT: ${{ github.event.deployment.environment }}
+          BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        run: |
+          if [ -z "$DEPLOYMENT_URL" ]; then
+            echo "::error::URL du déploiement absente de l'événement."
+            exit 1
+          fi
+          echo "Environnement : $ENVIRONMENT — $DEPLOYMENT_URL"
+          body=$(curl --silent --show-error --fail --retry 5 --retry-delay 10 --retry-all-errors --max-time 20 \
+            -H "x-vercel-protection-bypass: $BYPASS_SECRET" \
+            "${DEPLOYMENT_URL%/}/api/health")
+          echo "$body"
+          if [ "$body" != '{"ok":true,"data":{"status":"ok"}}' ]; then
+            echo "::error::Réponse inattendue de /api/health."
+            exit 1
+          fi

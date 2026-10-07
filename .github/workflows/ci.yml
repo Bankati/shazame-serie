@@ -55,3 +55,19 @@ jobs:
 
       - name: npm audit (production, high et plus)
         run: npm audit --omit=dev --audit-level=high
+
+  secrets:
+    name: Aucun fichier de secrets versionné
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Refuser les fichiers .env, clés et certificats
+        run: |
+          found=$(git ls-files | grep -E '(^|/)\.env($|\.)|\.(pem|key|p12|pfx)$' | grep -vE '(^|/)\.env\.example$' || true)
+          if [ -n "$found" ]; then
+            echo "::error::Fichiers sensibles versionnés : $found"
+            exit 1
+          fi
+          echo "OK : aucun fichier de secrets versionné."

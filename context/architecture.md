@@ -7,7 +7,7 @@
 
 | Layer | Technology | Role |
 | --- | --- | --- |
-| Framework | Next.js 16 (App Router) + TypeScript strict, Node.js 24 LTS **(proposé : le CDC cite Next 14 et Node 20, tous deux hors support en octobre 2026)** | Pages (SSR pour les fiches titres), routes API, une seule base de code |
+| Framework | Next.js 16 (App Router) + TypeScript strict, Node.js 24 LTS (AD-01, AD-02 : le CDC cite Next 14 et Node 20, hors support en octobre 2026) | Pages (SSR pour les fiches titres), routes API, une seule base de code |
 | UI | Tailwind CSS 4 + shadcn/ui + lucide-react | Composants accessibles, tokens de design en variables CSS |
 | Formulaires | react-hook-form + zod | Validation partagée client/serveur |
 | Auth | Supabase Auth via `@supabase/ssr` (email + Google) | Sessions par cookies HttpOnly, confirmation d'email, reset |
@@ -42,6 +42,9 @@ src/
 ├── server/                   # Logique métier, 'server-only'. Jamais importé par un composant client.
 │   ├── env.ts                # variables d'environnement validées par zod
 │   ├── log.ts                # logger structuré (sans données sensibles)
+│   ├── http/                 # réponses JSON { ok, data | error }
+│   ├── health/               # route de santé, erreur volontaire Sentry
+│   ├── observability/        # options Sentry des runtimes serveur
 │   ├── db/                   # schéma Drizzle, client, requêtes
 │   ├── auth/                 # session, rôles, garde-fous (requireUser, requireAdmin), visiteur
 │   ├── identification/       # pipeline, score, empreintes, cache de résultats
@@ -54,10 +57,13 @@ src/
 │   ├── admin/                # statistiques, actions admin
 │   └── audit/                # journal d'audit
 ├── shared/                   # Code pur utilisable côté client ET serveur (aucun effet de bord)
-│   └── frames/               # paramètres d'échantillonnage communs au navigateur et à l'eval
+│   ├── frames/               # paramètres d'échantillonnage communs au navigateur et à l'eval
+│   └── observability/        # options et filtrage Sentry communs (aucune donnée personnelle)
 ├── schemas/                  # Schémas zod partagés (entrées API, réponses IA) et codes d'erreur
 ├── content/fr/               # Textes d'interface centralisés (prépare la V2 multilingue)
 ├── lib/                      # Utilitaires purs (dates Europe/Paris, slugs, formatage)
+├── instrumentation.ts        # init Sentry serveur/edge (charge env.ts : refus de démarrer si une variable manque)
+├── instrumentation-client.ts # init Sentry navigateur
 └── proxy.ts                  # (ex-middleware, à vérifier selon la version) rafraîchissement de session
 eval/                         # Harnais du jeu de test : manifeste des 100 clips + script de mesure
 drizzle/                      # Migrations SQL générées — ne jamais éditer une migration appliquée
@@ -158,7 +164,8 @@ Chaque appel externe : délai maximal, journalisation sans donnée personnelle, 
 - `development` (local), `preview` (préproduction, projet Supabase séparé), `production`. Supabase de production sur un plan payant (le plan gratuit met les projets en pause après une période d'inactivité).
 - Variables serveur : `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `OPENAI_API_KEY`, `OPENAI_VISION_MODEL`, `TMDB_API_TOKEN`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `BILLING_*`, `RESEND_API_KEY`, `SENTRY_DSN`, `CRON_SECRET`, `VISITOR_COOKIE_SECRET`, `ADMIN_ALERT_EMAIL`.
 - Variables publiques (`NEXT_PUBLIC_*`) : URL du site, URL et clé publique Supabase, clé analytique, DSN Sentry navigateur. Rien d'autre.
-- `src/server/env.ts` valide les variables au démarrage : l'application refuse de démarrer si l'une manque.
+- `src/server/env.ts` valide les variables au démarrage : l'application refuse de démarrer si l'une manque. Les variables sont ajoutées au fil des unités ; celles des services externes sont obligatoires quand `VERCEL_ENV` vaut `preview` ou `production`, facultatives en local et en CI. Liste à jour : `.env.example`.
+- Santé : `GET /api/health` (sonde et test de fumée), `GET /api/health/sentry-check` (erreur volontaire, `Authorization: Bearer <CRON_SECRET>`). Réglages Vercel/Sentry/GitHub : `docs/setup-deploiement.md`.
 
 ## Tâches planifiées (Vercel Cron → `/api/cron/*`, protégées par `CRON_SECRET`)
 

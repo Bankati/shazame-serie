@@ -115,10 +115,10 @@ type Result<T, E = AppError> = { ok: true; value: T } | { ok: false; error: E };
 ## Git
 
 - Trois branches permanentes : `dev` (intégration), `staging` (préproduction), `main` (production). Dépôt : https://github.com/Bankati/shazame-serie
-- Une branche par unité du build plan, créée depuis `dev` : `unit/U07-vision-provider`, fusionnée dans `dev` par PR.
+- L'agent commite et pousse **uniquement sur `dev`** (AD-22) : pas de branche par unité, pas de PR ouverte par l'agent, jamais de push sur `staging` ni `main`. Le fondateur ouvre les PR `dev` → `staging` → `main`.
 - Promotion uniquement par PR : `dev` → `staging` → `main`. Correctif urgent : `hotfix/*` vers `staging` ou `main`, puis reporté dans `dev`. Le workflow `branch-flow` refuse toute autre source.
 - Commits conventionnels en anglais : `feat(identification): add cache lookup by fingerprint`.
-- Une PR ne mélange pas deux unités. La CI (`.github/workflows/ci.yml` : lint, typecheck, test, build, audit des dépendances de production) doit être verte avant fusion.
+- Un commit ne mélange pas deux unités. La CI (`.github/workflows/ci.yml` : lint, typecheck, test, build, audit des dépendances de production, absence de fichiers de secrets) et le test de fumée du déploiement (`.github/workflows/smoke.yml`) doivent être verts avant fusion.
 
 ## File Organization
 

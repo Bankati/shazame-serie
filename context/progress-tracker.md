@@ -23,11 +23,15 @@ Mettre à jour ce fichier après chaque changement d'implémentation significati
 - U01 — Socle du dépôt et déploiement (plan validé le 7 octobre 2026 : `context/plans/U01.md`).
   - Fait (7 octobre 2026) : versions alignées (AD-21), `env.ts` + tests, `/api/health` et `/api/health/sentry-check`, Sentry serveur/edge/navigateur avec `dataCollection` coupé et `scrubEvent` testé, `global-error.tsx`, page d'accueil provisoire, job CI anti-secrets, `smoke.yml`, Dependabot (ignore TS ≥ 6.1, ESLint ≥ 10), `.env.example`, `docs/setup-deploiement.md`. lint / typecheck / test (17) / build / audit verts en local.
   - `/review` et `/audit` exécutés le 7 octobre 2026 ; corrections appliquées (filtrage Sentry des traces, garde de domaine du test de fumée, DSN https, fragment d'URL, messages d'erreur dans `src/content/fr/errors.ts`, tests de routes). Écart accepté : pas de limitation de débit sur `/api/health/sentry-check` avant U11 (Upstash) — à ajouter en U11.
-  - Reste : réglages Vercel, Sentry et GitHub par le fondateur (`docs/setup-deploiement.md`), vérification du critère de fin sur staging puis production, `/review` et `/audit`.
+  - Reste : réglages Vercel, Sentry et GitHub par le fondateur (`docs/setup-deploiement.md`), vérification du critère de fin sur staging puis production.
+
+- U02 — Tokens de design et coquille de mise en page (plan : `context/plans/U02.md`).
+  - Fait (7 octobre 2026) : shadcn/ui (base Radix, preset Nova) + composants du build plan et accordion, tokens dans `globals.css`, Archivo (wdth 75) et Public Sans, en-tête, menu mobile, pied de page avec mentions TMDB et JustWatch, pages 404 / erreur / erreur globale, accueil statique (hero, étapes, arguments, confidentialité, tarifs, FAQ, appel final), `npm run check:design` en CI, `/imprint` (12 entrées). Lighthouse mobile : accessibilité 100, bonnes pratiques 100, SEO 100, performance 75 (TBT 400 ms, surtout le SDK Sentry navigateur).
+  - Reste : `/review` et `/audit`.
 
 ## Next Up
 
-- U02 — Tokens de design et coquille de mise en page (après U01).
+- U03 — Schéma de base et migrations (après U02).
 
 ## Open Questions
 
@@ -42,7 +46,6 @@ Mettre à jour ce fichier après chaque changement d'implémentation significati
 | Q10 | Devise de facturation définitive (EUR confirmé ?) | U22 | EUR. |
 | Q11 | Nom commercial et domaine (nécessaires pour OAuth Google, emails, pages légales) | U04, U23, U27 | Nom provisoire utilisable en préproduction. |
 | Q12 | Analytique : PostHog ou Plausible ? | U29 | Plausible si l'on veut éviter tout bandeau cookies ; PostHog si l'on veut des entonnoirs détaillés. |
-| Q13 | Vouvoiement ou tutoiement dans l'interface ? | U02 | Vouvoiement. |
 | Q14 | Faut-il un email confirmé avant la première identification d'un compte ? | U04, U11 | Non : l'utilisateur non confirmé garde le quota visiteur jusqu'à confirmation. |
 | Q15 | RGPD : registre des traitements, base légale, statut auprès de l'IPDCP (Togo) | Lancement | Avis juridique avant la bêta (CDC 18.2). |
 | Q16 | Combien de temps garder les images d'un signalement consenti ? (RG8 ne fixe pas de durée) | U20, U30 | Jusqu'à la revue admin, puis 12 mois si ajoutées au jeu de test, sinon suppression. |
@@ -77,6 +80,7 @@ Mettre à jour ce fichier après chaque changement d'implémentation significati
 | AD-20 | Valeurs initiales : visiteur 3 identifications/jour (RG2), plafond Premium 100/jour (RG4), plafond de dépense IA 10 EUR/jour pendant la bêta | Propositions Q6, Q7, Q8 acceptées ; revues après 2 semaines de mesures. | Décidé (D7, 7 octobre 2026) |
 | AD-21 | TypeScript 6.0.3 et ESLint 9.39.5 (pas TS 7 ni ESLint 10) | `typescript-eslint` exige `typescript <6.1.0` et les plugins de `eslint-config-next` s'arrêtent à ESLint 9 (registre npm, 7 octobre 2026). À revoir quand l'outillage suivra. | Décidé (U01) |
 | AD-22 | Claude commite et pousse uniquement sur `dev` (pas de branche `unit/*`) ; le fondateur ouvre les PR `dev` → `staging` → `main` | Consigne du fondateur ; chaque PR est vérifiée par la CI et le test de fumée du déploiement. | Décidé (7 octobre 2026) |
+| AD-23 | Direction visuelle de l'accueil : hero sombre (`bg-inverse`) avec mosaïque de cadres d'affiches et pellicule, sections claires (étapes, grille asymétrique, tarifs, FAQ), blocs sombres de contraste, pied de page en colonnes. Cartes de section `rounded-xl`, blocs sombres `rounded-2xl`. Vouvoiement (Q13). | Références fournies par le fondateur (Netflix, Flowblox, Bankai) ; thème clair conservé (AD-08), tokens inchangés. | Décidé (U02, 7 octobre 2026) |
 | AD-18 | Trois branches `dev` → `staging` → `main`, promotion par PR uniquement, `hotfix/*` en exception | Demande du fondateur ; `staging` correspond à l'environnement `preview`, `main` à `production`. | Décidé |
 
 ## Eval History

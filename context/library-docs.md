@@ -86,6 +86,11 @@ Plans d'hébergement : **Vercel Pro** obligatoire (le plan Hobby est réservé �
 
 ## shadcn/ui
 
+- Installé en U02 : CLI `shadcn` 4.21.4 (dépendance de **développement** : seul `shadcn/tailwind.css` est importé, au build), base **Radix** (`radix-ui` 1.7.0), preset **`radix-nova`** (`components.json`). `init` non interactif : `npx shadcn@4.21.4 init --base radix --preset nova --template next --no-monorepo --no-rtl --pointer -y`.
+- Dépendances ajoutées par la CLI (épinglées) : `class-variance-authority` 0.7.1, `cn` 0.4.0 (paquet officiel shadcn qui remplace `clsx` + `tailwind-merge`), `lucide-react` 1.52.0, `tw-animate-css` 1.4.0, `sonner` 2.0.8, `next-themes` 0.4.6 (requis par le Toaster).
+- Pièges : la CLI écrit des versions `^` (à épingler) ; le preset Nova génère des boutons de 32 px (poser `h-11`) ; le `Sheet` a un bouton de fermeture libellé « Close » (utiliser `showCloseButton={false}` + bouton français) ; le `Toaster` suit le thème du système via `next-themes` (passer `theme="light"`) ; les composants contiennent des classes `dark:` : garder `@custom-variant dark (&:is(.dark *))` dans `globals.css`, sinon Tailwind 4 les applique selon le mode sombre du système. `init` remplace la police par Geist dans le layout : à retirer.
+- Composants générés : button, input, label, dialog, sheet, sonner, skeleton, badge, accordion.
+
 - Doc : https://ui.shadcn.com/docs (section Tailwind v4)
 - Ajouter avec `npx shadcn@latest add <composant>`. Ne pas modifier `src/components/ui/*` à la main : composer dans `src/components/<feature>/`.
 
@@ -162,6 +167,8 @@ Plans d'hébergement : **Vercel Pro** obligatoire (le plan Hobby est réservé �
 - Domaine d'envoi vérifié (SPF, DKIM, DMARC) avant U23.
 
 ## Sentry
+
+- Performance (U02) : le SDK navigateur pèse l'essentiel du JavaScript inutilisé signalé par Lighthouse (~69 Ko, TBT 400 ms en mobile simulé). Les options `webpack.treeshake.*` de Sentry 11 ne s'appliquent pas à Turbopack (Next 16). Piste à étudier avant le lancement : désactiver le traçage navigateur ou charger Sentry après l'interaction.
 
 - Doc : https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
 - Fichiers (U01) : `src/instrumentation.ts` (`register` + `onRequestError = Sentry.captureRequestError`), `src/sentry.server.config.ts`, `src/sentry.edge.config.ts`, `src/instrumentation-client.ts` (`onRouterTransitionStart`), `src/app/global-error.tsx`, `withSentryConfig` importé depuis **`@sentry/nextjs/config`** dans `next.config.ts`.

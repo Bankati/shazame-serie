@@ -31,6 +31,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Design system (aucune couleur en dur)
+        run: npm run check:design
+
       - name: Typecheck
         run: npm run typecheck
 

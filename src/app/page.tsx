@@ -1,12 +1,22 @@
-import { APP_TEXT } from "@/content/fr/app";
+import { Faq } from "@/components/home/faq";
+import { Features } from "@/components/home/features";
+import { FinalCta } from "@/components/home/final-cta";
+import { Hero } from "@/components/home/hero";
+import { HowItWorks } from "@/components/home/how-it-works";
+import { PricingTeaser } from "@/components/home/pricing-teaser";
+import { Privacy } from "@/components/home/privacy";
 
-// Page provisoire : la coquille et le design arrivent en U02.
+// Accueil statique (U02) : l'identification réelle arrive avec ClipDropzone (U06) et le pipeline (U09).
 export default function Home() {
   return (
-    <main>
-      <h1>{APP_TEXT.name}</h1>
-      <p>{APP_TEXT.tagline}</p>
-      <p>{APP_TEXT.comingSoon}</p>
-    </main>
+    <>
+      <Hero />
+      <HowItWorks />
+      <Features />
+      <Privacy />
+      <PricingTeaser />
+      <Faq />
+      <FinalCta />
+    </>
   );
 }

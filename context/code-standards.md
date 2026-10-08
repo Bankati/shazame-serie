@@ -76,6 +76,8 @@ type Result<T, E = AppError> = { ok: true; value: T } | { ok: false; error: E };
 
 - Toutes les requêtes via Drizzle (requêtes paramétrées). SQL brut uniquement via le template `sql` de Drizzle.
 - Une migration par changement de schéma, nommée de façon explicite ; jamais d'édition d'une migration appliquée.
+- Migrations rétrocompatibles (AD-25) : le code en production doit fonctionner avant **et** après la migration. On ajoute (colonne nullable ou avec défaut, table, index) ; le code qui s'en sert part dans une promotion suivante ; on retire ou renomme seulement quand plus aucun code déployé ne s'en sert.
+- `drizzle-kit generate` pose une question interactive pour un renommage : écrire alors le `RENAME` à la main dans la migration générée, aligner son snapshot, puis vérifier que `drizzle-kit generate` répond « No schema changes ».
 - Écritures liées (ex. action admin + journal d'audit, webhook + abonnement) dans une transaction.
 - Montants en entiers : centimes pour les prix, micro-euros pour les coûts IA. Jamais de flottant pour l'argent.
 - Dates en UTC en base ; conversion vers `Europe/Paris` uniquement dans `src/lib/time.ts`.

@@ -117,8 +117,8 @@ Signalement : les images ne sont jamais écrites sur disque ou en stockage penda
 ## Storage Model
 
 - **PostgreSQL (Supabase)** — tables :
-  - `profiles` (id = auth.users.id, display_name, avatar_url, role `user|admin`, status `active|suspended`, deleted_at, created_at)
-  - `identifications` (id, user_id nullable, visitor_key nullable, fingerprint, tmdb_id nullable, media_type, confidence, alternatives jsonb, counted bool, source `ai|cache`, outcome `shown|low_confidence|failed`, prompt_version, provider, model, cost_micro_eur, latency_ms, created_at)
+  - `profiles` (id = auth.users.id, display_name, avatar_path (chemin dans le bucket privé `avatars`), role `user|admin`, status `active|suspended`, deleted_at, created_at)
+  - `identifications` (id, user_id nullable, visitor_key nullable (l'un des deux obligatoire), fingerprint, tmdb_id nullable, media_type, confidence, alternatives jsonb, counted bool, source `ai|cache`, outcome `shown|low_confidence|failed`, prompt_version, provider, model, cost_micro_eur, latency_ms, created_at)
   - `result_cache` (id, fingerprint unique, tmdb_id, media_type, confidence, alternatives jsonb, validated bool, disabled bool, hits, created_at) et `result_cache_frames` (cache_id, frame_hash bigint)
   - `watchlist_items` (user_id, tmdb_id, media_type, added_at) — unique (user_id, tmdb_id, media_type)
   - `reports` (id, identification_id, user_id nullable, proposed_tmdb_id + proposed_media_type, corrected_tmdb_id + corrected_media_type (un identifiant TMDB n'est unique que par type), images_consent bool, storage_paths text[], status `open|reviewed|added_to_eval|rejected`, created_at)
@@ -146,7 +146,7 @@ Signalement : les images ne sont jamais écrites sur disque ou en stockage penda
 - Schéma : `src/server/db/schema/` ; migrations : `drizzle/` (générées par `drizzle-kit`, plus des migrations SQL personnalisées pour les buckets, les réglages initiaux et les droits). Pile locale : Supabase CLI (`npm run db:start`), configurée dans `supabase/config.toml`.
 - Premium (`server/billing/getEntitlement()`) = `status = 'active'`, ou `status in ('past_due','canceled')` et `current_period_end > now()`. Jamais stocké en double, jamais lu depuis le client.
 - Compte suspendu : ne peut ni identifier ni modifier ses données ; peut exporter et supprimer.
-- Compte supprimé : désactivé immédiatement (déconnexion, `deleted_at`, utilisateur Auth supprimé, abonnement annulé), données effacées définitivement par cron sous 30 jours (CDC 18.1).
+- Compte supprimé (AD-26, 8 octobre 2026) : abonnement annulé, fichiers de l'utilisateur supprimés des buckets `avatars` et `exports` (la cascade SQL ne touche pas Storage), email de confirmation envoyé à l'adresse lue avant suppression, puis utilisateur Auth supprimé ; la cascade `auth.users` → `profiles` → données efface tout immédiatement, ce qui respecte « effacé sous 30 jours » (CDC 18.1). Les signalements restent, anonymisés (`user_id` à null). Seules les factures restent chez le prestataire de paiement (obligation légale).
 
 ## External Services and Abstractions
 
@@ -171,7 +171,7 @@ Chaque appel externe : délai maximal, journalisation sans donnée personnelle, 
 ## Tâches planifiées (Vercel Cron → `/api/cron/*`, protégées par `CRON_SECRET`)
 
 - Toutes les heures : suppression des exports expirés (> 24 h).
-- Chaque jour : purge de l'historique > 2 ans (RG11) ; effacement définitif des comptes supprimés depuis > 30 jours ; rappel de renouvellement J-3 (RG13) si le prestataire ne l'envoie pas ; suppression des images de signalement selon la durée de conservation retenue (Q16) ; consolidation `ai_spend_daily`.
+- Chaque jour : purge de l'historique > 2 ans (RG11) ; rappel de renouvellement J-3 (RG13) si le prestataire ne l'envoie pas ; suppression des images de signalement selon la durée de conservation retenue (Q16) ; consolidation `ai_spend_daily`.
 
 ## Invariants
 

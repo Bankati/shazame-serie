@@ -67,6 +67,28 @@ describe("schéma", () => {
     expect(row).toEqual({ profiles: 0, items: 0 });
   });
 
+  it.each(EXPECTED_TABLES)("la RLS seule masque les lignes de %s, même si un droit est accordé par erreur", async (table) => {
+    // Indépendant de la migration 0002 : on accorde select à anon dans une transaction annulée.
+    const rollback = new Error("rollback");
+    await sql
+      .begin(async (tx) => {
+        await tx.unsafe(`grant select on public.${table} to anon`);
+        await tx`set local role anon`;
+        const [row] = await tx.unsafe<{ n: number }[]>(`select count(*)::int as n from public.${table}`);
+        expect(row?.n).toBe(0);
+        throw rollback;
+      })
+      .catch((error: unknown) => {
+        if (error !== rollback) throw error;
+      });
+  });
+
+  it("refuse une identification sans compte ni visiteur", async () => {
+    await expect(
+      sql`insert into public.identifications (fingerprint, source, outcome) values ('orphan', 'ai', 'failed')`,
+    ).rejects.toThrow(/identifications_owner_present/);
+  });
+
   it("ne donne aucun droit aux rôles de l'API publique, y compris sur les futures tables", async () => {
     const grants = await sql`
       select table_name, grantee from information_schema.role_table_grants

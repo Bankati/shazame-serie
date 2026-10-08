@@ -2,6 +2,7 @@
 # Secrets : DATABASE_URL dans les environnements GitHub « preview » et « production »
 # (URL du « session pooler » Supabase, port 5432 : les runners GitHub n'ont pas d'IPv6).
 # L'environnement « production » exige une approbation (docs/setup-deploiement.md).
+# Migrations rétrocompatibles uniquement (AD-25) : Vercel déploie le code sans attendre ce workflow.
 name: Database migrations
 
 on:
@@ -26,6 +27,9 @@ jobs:
     name: Appliquer les migrations
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # Un lancement manuel depuis une autre branche (ex. dev) appliquerait des migrations non relues.
+    # Second verrou : branches autorisées des environnements GitHub (docs/setup-deploiement.md).
+    if: github.ref_name == 'staging' || github.ref_name == 'main'
     environment: ${{ github.ref_name == 'main' && 'production' || 'preview' }}
     steps:
       - uses: actions/checkout@v7

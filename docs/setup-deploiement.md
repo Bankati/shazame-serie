@@ -48,8 +48,10 @@ Aucune valeur secrète ne doit être copiée dans le dépôt, dans un ticket ou 
 1. Settings → Secrets and variables → Actions → **New repository secret** : `VERCEL_AUTOMATION_BYPASS_SECRET` = secret de l'étape 2.7.
    Le test de fumée n'envoie ce secret qu'aux domaines `*.vercel.app`. Si vous ajoutez un domaine personnalisé, le déclarer dans l'onglet **Variables** : `ALLOWED_DEPLOYMENT_HOSTS` = domaines séparés par des espaces (ex. `staging.exemple.fr www.exemple.fr`).
 2. Settings → Environments :
-   - créer l'environnement **`preview`** avec le secret `DATABASE_URL` = URL du session pooler du projet Supabase de préproduction ;
-   - créer l'environnement **`production`** avec le secret `DATABASE_URL` du projet de production, et cocher **Required reviewers** (vous-même) : chaque migration de production attendra votre approbation.
+   - créer l'environnement **`preview`** avec le secret `DATABASE_URL` = URL du session pooler du projet Supabase de préproduction, et dans **Deployment branches and tags** choisir *Selected branches and tags* avec la seule branche `staging` ;
+   - créer l'environnement **`production`** avec le secret `DATABASE_URL` du projet de production, cocher **Required reviewers** (vous-même) : chaque migration de production attendra votre approbation, et limiter **Deployment branches and tags** à la seule branche `main`.
+   - Ainsi, ni un lancement manuel depuis `dev` ni une autre branche ne peuvent obtenir ces secrets (le workflow le refuse aussi de son côté).
+   - Approuver la migration de production dès la fusion vers `main` : Vercel déploie le code sans l'attendre, d'où la règle des migrations rétrocompatibles (AD-25).
 3. Settings → Rules → Rulesets, pour `staging` et `main` : PR obligatoire, et checks obligatoires :
    - `Lint, typecheck, test, build`
    - `Audit des dépendances de production`

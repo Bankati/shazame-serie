@@ -26,7 +26,7 @@ Relevées sur le registre npm le **4 octobre 2026**, révisées en U01 le **7 oc
 | `zod` | 4.6.5 (installé) | Validation |
 | `drizzle-orm` / `drizzle-kit` | 0.45.3 / 0.31.11 | ORM et migrations |
 | `postgres` | 3.4.9 | Pilote PostgreSQL pour Drizzle |
-| `@supabase/supabase-js` | 2.117.2 | Auth, Storage |
+| `@supabase/supabase-js` | 2.117.3 | Auth, Storage |
 | `@supabase/ssr` | 0.12.7 | Sessions Supabase par cookies dans Next |
 | `openai` | 7.28.0 | SDK du fournisseur de vision (uniquement dans `src/server/ai/`) |
 | `@upstash/redis` | 1.39.0 | Redis REST |

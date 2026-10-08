@@ -14,7 +14,8 @@ export const profiles = pgTable("profiles", {
     .primaryKey()
     .references(() => authUsers.id, { onDelete: "cascade" }),
   displayName: text("display_name"),
-  avatarUrl: text("avatar_url"),
+  // Chemin dans le bucket privé `avatars` (pas une URL : l'affichage passe par une URL signée).
+  avatarPath: text("avatar_path"),
   role: userRole("role").notNull().default("user"),
   status: accountStatus("status").notNull().default("active"),
   deletedAt: timestamp("deleted_at", { withTimezone: true }),

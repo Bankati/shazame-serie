@@ -22,6 +22,13 @@
       "when": 1791433566715,
       "tag": "0002_revoke_public_api_access",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791478817203,
+      "tag": "0003_profile_avatar_path_identification_owner",
+      "breakpoints": true
     }
   ]
 }

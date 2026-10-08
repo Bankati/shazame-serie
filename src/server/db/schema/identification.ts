@@ -49,6 +49,8 @@ export const identifications = pgTable(
   (table) => [
     check("identifications_confidence_range", sql`${table.confidence} between 0 and 100`),
     check("identifications_cost_non_negative", sql`${table.costMicroEur} >= 0`),
+    // Toute identification appartient à un compte ou à un visiteur (quota RG1, RG2).
+    check("identifications_owner_present", sql`${table.userId} is not null or ${table.visitorKey} is not null`),
     // Historique (RG11 : 50 dernières) et purge des enregistrements de plus de 2 ans.
     index("identifications_user_created_idx").on(table.userId, table.createdAt.desc()),
     index("identifications_visitor_created_idx").on(table.visitorKey, table.createdAt.desc()),

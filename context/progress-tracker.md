@@ -28,7 +28,9 @@ Mettre à jour ce fichier après chaque changement d'implémentation significati
 
 - U03 — Schéma de base et migrations (plan validé le 8 octobre 2026 : `context/plans/U03.md`).
   - Fait (8 octobre 2026) : Supabase CLI locale, schéma Drizzle des 13 tables (RLS partout, FK `auth.users`), migrations `0000` (schéma), `0001` (buckets privés + `app_settings` AD-20), `0002` (aucun droit pour `anon` / `authenticated` sur `public`, défense en profondeur), seed local idempotent qui refuse toute base distante, 40 tests d'intégration (`npm run test:db`) dont contrôle négatif vérifié à la main, job CI « Base de données », workflow `db-migrate.yml` (préproduction / production avec approbation). Critère de fin démontré : base vide → `db:migrate` → schéma complet ; clé publique sans aucun accès.
-  - Relecture : question Q23 ouverte (cascade vs effacement à 30 jours) ; pour U10, dédoublonner les dHash avant insertion dans `result_cache_frames` (clé primaire `cache_id, frame_hash`).
+  - Relecture : pour U10, dédoublonner les dHash avant insertion dans `result_cache_frames` (clé primaire `cache_id, frame_hash`).
+  - `/audit` exécuté le 8 octobre 2026 ; corrections appliquées : `db-migrate.yml` limité à `staging` / `main` (+ branches autorisées des environnements GitHub dans le guide), migration `0003` (`profiles.avatar_url` → `avatar_path`, contrainte « compte ou visiteur » sur `identifications`), test de la RLS indépendant des droits (contrôle négatif vérifié), mot de passe local 8 caractères, AD-25, AD-26 (Q23). 54 tests `test:db`.
+  - Pour U04 : le premier code qui lit la base respecte AD-25.
   - Reste : CI GitHub verte (nouveau job), puis réglages Supabase et environnements GitHub par le fondateur (`docs/setup-deploiement.md`, section 3).
 
 ## Next Up
@@ -56,7 +58,6 @@ Mettre à jour ce fichier après chaque changement d'implémentation significati
 | Q20 | Le cookie `visitor_id` (quota visiteur) est-il un cookie strictement nécessaire, sans consentement ? | U11, U27 | Probablement oui (fonctionnement du service) ; à confirmer par un juriste. |
 | Q21 | Sécurité des comptes admin sans double authentification en V1 | U25 | Admins connectés uniquement par Google, avec double authentification activée sur le compte Google. |
 | Q22 | Un visiteur au quota épuisé doit-il recevoir un résultat déjà en cache ? | U11 | Non (AD-13) : paywall prévisible. |
-| Q23 | Suppression de compte : `architecture.md` prévoit désactivation immédiate puis effacement par cron sous 30 jours, mais `profiles.id` référence `auth.users` en `ON DELETE CASCADE` (U03) : supprimer l'utilisateur Auth efface tout immédiatement. Effacement immédiat, ou bannissement Auth + effacement à J+30 ? | U26 | Effacement immédiat (plus simple, plus sûr pour le RGPD) ; garder seulement ce que la loi impose (factures chez le prestataire de paiement). À confirmer avec Q18. |
 
 ## Architecture Decisions
 
@@ -85,6 +86,8 @@ Mettre à jour ce fichier après chaque changement d'implémentation significati
 | AD-22 | Claude commite et pousse uniquement sur `dev` (pas de branche `unit/*`) ; le fondateur ouvre les PR `dev` → `staging` → `main` | Consigne du fondateur ; chaque PR est vérifiée par la CI et le test de fumée du déploiement. | Décidé (7 octobre 2026) |
 | AD-23 | Direction visuelle de l'accueil : hero sombre (`bg-inverse`) avec mosaïque de cadres d'affiches et pellicule, sections claires (étapes, grille asymétrique, tarifs, FAQ), blocs sombres de contraste, pied de page en colonnes. Cartes de section `rounded-xl`, blocs sombres `rounded-2xl`. Vouvoiement (Q13). | Références fournies par le fondateur (Netflix, Flowblox, Bankai) ; thème clair conservé (AD-08), tokens inchangés. | Décidé (U02, 7 octobre 2026) |
 | AD-24 | Supabase CLI en local (Docker) ; une seule chaîne de migrations gérée par `drizzle-kit` (générées + SQL personnalisé pour RLS, `auth.users`, buckets, `app_settings`) ; migrations appliquées par workflow au push sur `staging` puis `main` (approbation) | Une seule source de vérité du schéma, testable en local et en CI, sans migration oubliée en production. | Décidé (U03, 8 octobre 2026) |
+| AD-25 | Migrations rétrocompatibles uniquement (ajouter d'abord, retirer plus tard) ; le code qui utilise un nouvel élément de schéma part dans une promotion suivante | Vercel déploie le code sans attendre la migration de production (approbation manuelle) : le code doit tourner avant et après la migration. | Décidé (audit U03, 8 octobre 2026) |
+| AD-26 | Suppression de compte = effacement immédiat (cascade depuis `auth.users`), fichiers Storage supprimés par le code, signalements anonymisés ; pas de cron d'effacement à J+30 | Plus simple et plus sûr pour le RGPD ; respecte « effacé sous 30 jours » (CDC 18.1). Ferme Q23 ; reste à concilier avec RG14 (Q18). | Décidé (8 octobre 2026) |
 | AD-18 | Trois branches `dev` → `staging` → `main`, promotion par PR uniquement, `hotfix/*` en exception | Demande du fondateur ; `staging` correspond à l'environnement `preview`, `main` à `production`. | Décidé |
 
 ## Eval History

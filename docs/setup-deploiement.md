@@ -37,18 +37,28 @@ Aucune valeur secrète ne doit être copiée dans le dépôt, dans un ticket ou 
 7. Settings → Deployment Protection → **Protection Bypass for Automation** : générer un secret. Il permet au test de fumée GitHub d'appeler les déploiements protégés.
 8. Plan : Hobby suffit jusqu'à l'approche du lancement ; passer en **Pro** avant d'ouvrir le service au public (AD-19, le plan Hobby interdit l'usage commercial).
 
-## 3. GitHub
+## 3. Supabase (U03)
+
+1. Créer **deux projets** Supabase : préproduction et production (région UE, ex. Francfort ou Paris). Plan gratuit pour la préproduction ; plan payant pour la production avant le lancement (AD-19).
+2. Pour chacun, noter l'URL de connexion du **Session pooler** (Project Settings → Database → Connection string → Session pooler, port 5432). La connexion directe est en IPv6 uniquement et ne fonctionne pas depuis GitHub Actions.
+3. Les migrations sont appliquées automatiquement par le workflow `Database migrations` (voir section 4). La première fois, le lancer à la main (Actions → Database migrations → Run workflow) sur `staging`, puis sur `main`.
+
+## 4. GitHub
 
 1. Settings → Secrets and variables → Actions → **New repository secret** : `VERCEL_AUTOMATION_BYPASS_SECRET` = secret de l'étape 2.7.
    Le test de fumée n'envoie ce secret qu'aux domaines `*.vercel.app`. Si vous ajoutez un domaine personnalisé, le déclarer dans l'onglet **Variables** : `ALLOWED_DEPLOYMENT_HOSTS` = domaines séparés par des espaces (ex. `staging.exemple.fr www.exemple.fr`).
-2. Settings → Rules → Rulesets, pour `staging` et `main` : PR obligatoire, et checks obligatoires :
+2. Settings → Environments :
+   - créer l'environnement **`preview`** avec le secret `DATABASE_URL` = URL du session pooler du projet Supabase de préproduction ;
+   - créer l'environnement **`production`** avec le secret `DATABASE_URL` du projet de production, et cocher **Required reviewers** (vous-même) : chaque migration de production attendra votre approbation.
+3. Settings → Rules → Rulesets, pour `staging` et `main` : PR obligatoire, et checks obligatoires :
    - `Lint, typecheck, test, build`
    - `Audit des dépendances de production`
    - `Aucun fichier de secrets versionné`
+   - `Base de données (migrations, RLS)`
    - `Vérifier la branche source`
    - `Santé du déploiement` (test de fumée sur le déploiement Vercel du dernier commit de la PR)
 
-## 4. Vérifier (critère de fin de U01)
+## 5. Vérifier (critère de fin de U01)
 
 1. Ouvrir la PR `dev` → `staging` : tous les checks ci-dessus passent au vert.
 2. Après fusion, la préproduction répond :

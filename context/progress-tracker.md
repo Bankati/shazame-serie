@@ -26,9 +26,14 @@ Mettre à jour ce fichier après chaque changement d'implémentation significati
   - `/review` et `/audit` exécutés le 7 octobre 2026 ; corrections appliquées (filtrage Sentry des traces, garde de domaine du test de fumée, DSN https, fragment d'URL, messages d'erreur dans `src/content/fr/errors.ts`, tests de routes). Écart accepté : pas de limitation de débit sur `/api/health/sentry-check` avant U11 (Upstash) — à ajouter en U11.
   - Reste : réglages Vercel, Sentry et GitHub par le fondateur (`docs/setup-deploiement.md`), vérification du critère de fin sur staging puis production.
 
+- U03 — Schéma de base et migrations (plan validé le 8 octobre 2026 : `context/plans/U03.md`).
+  - Fait (8 octobre 2026) : Supabase CLI locale, schéma Drizzle des 13 tables (RLS partout, FK `auth.users`), migrations `0000` (schéma), `0001` (buckets privés + `app_settings` AD-20), `0002` (aucun droit pour `anon` / `authenticated` sur `public`, défense en profondeur), seed local idempotent qui refuse toute base distante, 40 tests d'intégration (`npm run test:db`) dont contrôle négatif vérifié à la main, job CI « Base de données », workflow `db-migrate.yml` (préproduction / production avec approbation). Critère de fin démontré : base vide → `db:migrate` → schéma complet ; clé publique sans aucun accès.
+  - Relecture : question Q23 ouverte (cascade vs effacement à 30 jours) ; pour U10, dédoublonner les dHash avant insertion dans `result_cache_frames` (clé primaire `cache_id, frame_hash`).
+  - Reste : CI GitHub verte (nouveau job), puis réglages Supabase et environnements GitHub par le fondateur (`docs/setup-deploiement.md`, section 3).
+
 ## Next Up
 
-- U03 — Schéma de base et migrations (`/architect` à lancer).
+- U04 — Authentification email et Google (dépend de D8 : nom commercial et domaine).
 
 ## Open Questions
 
@@ -51,6 +56,7 @@ Mettre à jour ce fichier après chaque changement d'implémentation significati
 | Q20 | Le cookie `visitor_id` (quota visiteur) est-il un cookie strictement nécessaire, sans consentement ? | U11, U27 | Probablement oui (fonctionnement du service) ; à confirmer par un juriste. |
 | Q21 | Sécurité des comptes admin sans double authentification en V1 | U25 | Admins connectés uniquement par Google, avec double authentification activée sur le compte Google. |
 | Q22 | Un visiteur au quota épuisé doit-il recevoir un résultat déjà en cache ? | U11 | Non (AD-13) : paywall prévisible. |
+| Q23 | Suppression de compte : `architecture.md` prévoit désactivation immédiate puis effacement par cron sous 30 jours, mais `profiles.id` référence `auth.users` en `ON DELETE CASCADE` (U03) : supprimer l'utilisateur Auth efface tout immédiatement. Effacement immédiat, ou bannissement Auth + effacement à J+30 ? | U26 | Effacement immédiat (plus simple, plus sûr pour le RGPD) ; garder seulement ce que la loi impose (factures chez le prestataire de paiement). À confirmer avec Q18. |
 
 ## Architecture Decisions
 
@@ -78,6 +84,7 @@ Mettre à jour ce fichier après chaque changement d'implémentation significati
 | AD-21 | TypeScript 6.0.3 et ESLint 9.39.5 (pas TS 7 ni ESLint 10) | `typescript-eslint` exige `typescript <6.1.0` et les plugins de `eslint-config-next` s'arrêtent à ESLint 9 (registre npm, 7 octobre 2026). À revoir quand l'outillage suivra. | Décidé (U01) |
 | AD-22 | Claude commite et pousse uniquement sur `dev` (pas de branche `unit/*`) ; le fondateur ouvre les PR `dev` → `staging` → `main` | Consigne du fondateur ; chaque PR est vérifiée par la CI et le test de fumée du déploiement. | Décidé (7 octobre 2026) |
 | AD-23 | Direction visuelle de l'accueil : hero sombre (`bg-inverse`) avec mosaïque de cadres d'affiches et pellicule, sections claires (étapes, grille asymétrique, tarifs, FAQ), blocs sombres de contraste, pied de page en colonnes. Cartes de section `rounded-xl`, blocs sombres `rounded-2xl`. Vouvoiement (Q13). | Références fournies par le fondateur (Netflix, Flowblox, Bankai) ; thème clair conservé (AD-08), tokens inchangés. | Décidé (U02, 7 octobre 2026) |
+| AD-24 | Supabase CLI en local (Docker) ; une seule chaîne de migrations gérée par `drizzle-kit` (générées + SQL personnalisé pour RLS, `auth.users`, buckets, `app_settings`) ; migrations appliquées par workflow au push sur `staging` puis `main` (approbation) | Une seule source de vérité du schéma, testable en local et en CI, sans migration oubliée en production. | Décidé (U03, 8 octobre 2026) |
 | AD-18 | Trois branches `dev` → `staging` → `main`, promotion par PR uniquement, `hotfix/*` en exception | Demande du fondateur ; `staging` correspond à l'environnement `preview`, `main` à `production`. | Décidé |
 
 ## Eval History

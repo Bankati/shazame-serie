@@ -24,7 +24,7 @@ type Result<T, E = AppError> = { ok: true; value: T } | { ok: false; error: E };
 ## Next.js
 
 - Composants serveur par défaut. `'use client'` uniquement quand l'interactivité navigateur l'exige (envoi du clip, extraction d'images, formulaires).
-- Tout fichier de `src/server/**` commence par `import 'server-only'`.
+- Tout fichier de `src/server/**` commence par `import 'server-only'`. Exception : `src/server/db/schema/**`, chargé par `drizzle-kit` hors de Next (déclarations uniquement, jamais importé par un composant client).
 - Les APIs de requête (`params`, `searchParams`, `cookies()`, `headers()`) sont asynchrones : toujours `await`.
 - Fiches titres rendues côté serveur avec `generateMetadata` (titre, description, image Open Graph) et URL stable : `/titre/{film|serie}/{tmdbId}-{slug}`.
 - Mutations : route handlers dans `src/app/api/**` (ou Server Actions pour les formulaires simples du compte), toujours avec la même validation que les routes.
@@ -134,4 +134,6 @@ type Result<T, E = AppError> = { ok: true; value: T } | { ok: false; error: E };
 - `eval/` — jeu de test d'identification (manifeste, pas les vidéos).
 - `drizzle/` — migrations générées.
 - `tests/e2e/` — tests Playwright.
+- `tests/db/` — tests d'intégration contre la pile Supabase locale (`npm run test:db`).
+- `scripts/` — outils du dépôt (seed local, contrôle du design system).
 - `context/plans/` — plans validés par `/architect`.

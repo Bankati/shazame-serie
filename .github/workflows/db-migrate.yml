@@ -1,0 +1,52 @@
+# Applique les migrations Drizzle (AD-24) quand du code arrive sur staging (préproduction) ou main (production).
+# Secrets : DATABASE_URL dans les environnements GitHub « preview » et « production »
+# (URL du « session pooler » Supabase, port 5432 : les runners GitHub n'ont pas d'IPv6).
+# L'environnement « production » exige une approbation (docs/setup-deploiement.md).
+name: Database migrations
+
+on:
+  push:
+    branches: [staging, main]
+    paths:
+      - "drizzle/**"
+      - "src/server/db/schema/**"
+      - "drizzle.config.ts"
+      - ".github/workflows/db-migrate.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: db-migrate-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    name: Appliquer les migrations
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: ${{ github.ref_name == 'main' && 'production' || 'preview' }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - name: Vérifier la présence du secret
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::Secret DATABASE_URL absent de l'environnement GitHub (voir docs/setup-deploiement.md)."
+            exit 1
+          fi
+
+      - name: drizzle-kit migrate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npm run db:migrate

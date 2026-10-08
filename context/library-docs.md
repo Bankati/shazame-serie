@@ -110,10 +110,20 @@ Plans d'hébergement : **Vercel Pro** obligatoire (le plan Hobby est réservé �
 - Doc : https://orm.drizzle.team/docs/overview — Supabase : https://orm.drizzle.team/docs/connect-supabase
 - Connexion via le **pooler** Supabase en mode transaction pour les fonctions serverless : désactiver les requêtes préparées (`prepare: false` avec le pilote `postgres`).
 - Migrations : `drizzle-kit generate` puis `drizzle-kit migrate`. Jamais `push` en production.
+- Installé en U03 : `drizzle-orm` 0.45.3, `drizzle-kit` 0.31.11, `postgres` 3.4.9, `tsx` 4.23.15 (scripts). `.enableRLS()` sur chaque table et `authUsers` (`drizzle-orm/supabase`) pour la clé étrangère `profiles.id → auth.users.id`. `schemaFilter: ["public"]` dans `drizzle.config.ts` : `auth` et `storage` restent à Supabase.
+- Migrations SQL personnalisées : `drizzle-kit generate --custom --name <nom>`, puis écrire le SQL (séparer les instructions par `--> statement-breakpoint`).
+- `drizzle-kit migrate` rejoué affiche deux NOTICE PostgreSQL (« schema "drizzle" already exists ») : normal.
+- Les fichiers du schéma ne peuvent pas importer `server-only` (chargés par `drizzle-kit` hors de Next).
+- `result_cache_frames` a pour clé primaire `(cache_id, frame_hash)` : dédoublonner les dHash d'un clip avant l'insertion (U10).
 - Distance de Hamming pour le cache : dHash stockés en `bigint`, distance = `bit_count((a # b)::bit(64))` (`#` = XOR, `bit_count` existe depuis PostgreSQL 14). À valider en U10, y compris la conversion des valeurs 64 bits signées entre JavaScript (`BigInt`) et PostgreSQL.
 
 ## Supabase Auth et Storage
 
+- Installé en U03 : `@supabase/supabase-js` 2.117.3. CLI 2.120.0 appelée par `npx` (`npm run db:start`, `db:stop`, `db:reset`) et par `supabase/setup-cli` en CI ; pas en dépendance (son script d'installation télécharge un binaire).
+- Clés : la CLI et les projets récents fournissent des clés `sb_publishable_…` (publique, ex-anon) et `sb_secret_…` (serveur, ex-service_role) ; on n'utilise que celles-ci.
+- Pile locale : `supabase/config.toml` ; migrations et seed de la CLI désactivés (AD-24), Realtime et stockage vectoriel désactivés. Studio : http://127.0.0.1:54323. Les clés locales sont des valeurs de démonstration fixes.
+- Supabase accorde par défaut tous les droits sur `public` aux rôles `anon` et `authenticated` : sans RLS, la clé publique lit tout (vérifié). D'où la migration `0002` qui retire ces droits.
+- Connexion depuis GitHub Actions : utiliser l'URL du **session pooler** (la connexion directe est en IPv6 uniquement).
 - Auth côté serveur avec Next : https://supabase.com/docs/guides/auth/server-side/nextjs
 - Google : https://supabase.com/docs/guides/auth/social-login/auth-google
 - Storage : https://supabase.com/docs/guides/storage — URL signées : https://supabase.com/docs/reference/javascript/storage-from-createsignedurl

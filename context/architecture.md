@@ -121,7 +121,7 @@ Signalement : les images ne sont jamais écrites sur disque ou en stockage penda
   - `identifications` (id, user_id nullable, visitor_key nullable, fingerprint, tmdb_id nullable, media_type, confidence, alternatives jsonb, counted bool, source `ai|cache`, outcome `shown|low_confidence|failed`, prompt_version, provider, model, cost_micro_eur, latency_ms, created_at)
   - `result_cache` (id, fingerprint unique, tmdb_id, media_type, confidence, alternatives jsonb, validated bool, disabled bool, hits, created_at) et `result_cache_frames` (cache_id, frame_hash bigint)
   - `watchlist_items` (user_id, tmdb_id, media_type, added_at) — unique (user_id, tmdb_id, media_type)
-  - `reports` (id, identification_id, user_id nullable, proposed_tmdb_id, corrected_tmdb_id, images_consent bool, storage_paths text[], status `open|reviewed|added_to_eval|rejected`, created_at)
+  - `reports` (id, identification_id, user_id nullable, proposed_tmdb_id + proposed_media_type, corrected_tmdb_id + corrected_media_type (un identifiant TMDB n'est unique que par type), images_consent bool, storage_paths text[], status `open|reviewed|added_to_eval|rejected`, created_at)
   - `subscriptions` (user_id unique, provider, provider_customer_id, provider_subscription_id, plan `monthly|yearly`, status normalisé `active|past_due|canceled|expired`, current_period_end, cancel_at_period_end, updated_at)
   - `billing_events` (provider_event_id unique, type, processed_at) — idempotence des webhooks
   - `ai_spend_daily` (day date Paris, total_micro_eur, calls) — miroir durable du compteur Redis, pour le tableau de bord
@@ -142,7 +142,8 @@ Signalement : les images ne sont jamais écrites sur disque ou en stockage penda
 - Visiteurs : cookie signé `visitor_id` (HttpOnly, 1 an) + adresse IP pour la limitation de débit. Sert uniquement au quota RG2.
 - Rôles : `user`, `admin` dans `profiles.role`, **toujours relu en base côté serveur**. Pas d'interface de promotion en V1 : un admin est désigné par migration de seed ou SQL manuel.
 - Propriété : chaque ressource utilisateur porte `user_id` ; toute requête filtre par l'utilisateur de la session vérifiée (`auth.getUser()`).
-- L'application accède à la base **uniquement côté serveur** via Drizzle. RLS activée sur toutes les tables, sans politique pour `anon` et `authenticated` : la clé publique Supabase n'ouvre aucune table.
+- L'application accède à la base **uniquement côté serveur** via Drizzle. RLS activée sur toutes les tables, sans politique pour `anon` et `authenticated`, **et** aucun droit accordé à ces rôles sur le schéma `public`, y compris pour les tables futures (migration `0002`, AD-24) : la clé publique Supabase n'ouvre aucune table (testé par `npm run test:db`).
+- Schéma : `src/server/db/schema/` ; migrations : `drizzle/` (générées par `drizzle-kit`, plus des migrations SQL personnalisées pour les buckets, les réglages initiaux et les droits). Pile locale : Supabase CLI (`npm run db:start`), configurée dans `supabase/config.toml`.
 - Premium (`server/billing/getEntitlement()`) = `status = 'active'`, ou `status in ('past_due','canceled')` et `current_period_end > now()`. Jamais stocké en double, jamais lu depuis le client.
 - Compte suspendu : ne peut ni identifier ni modifier ses données ; peut exporter et supprimer.
 - Compte supprimé : désactivé immédiatement (déconnexion, `deleted_at`, utilisateur Auth supprimé, abonnement annulé), données effacées définitivement par cron sous 30 jours (CDC 18.1).
@@ -162,8 +163,8 @@ Chaque appel externe : délai maximal, journalisation sans donnée personnelle, 
 ## Environnements et secrets
 
 - `development` (local), `preview` (préproduction, projet Supabase séparé), `production`. Supabase de production sur un plan payant (le plan gratuit met les projets en pause après une période d'inactivité).
-- Variables serveur : `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `OPENAI_API_KEY`, `OPENAI_VISION_MODEL`, `TMDB_API_TOKEN`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `BILLING_*`, `RESEND_API_KEY`, `SENTRY_DSN`, `CRON_SECRET`, `VISITOR_COOKIE_SECRET`, `ADMIN_ALERT_EMAIL`.
-- Variables publiques (`NEXT_PUBLIC_*`) : URL du site, URL et clé publique Supabase, clé analytique, DSN Sentry navigateur. Rien d'autre.
+- Variables serveur : `DATABASE_URL`, `SUPABASE_SECRET_KEY` (clé « secret » des nouvelles clés Supabase, remplace `service_role`), `OPENAI_API_KEY`, `OPENAI_VISION_MODEL`, `TMDB_API_TOKEN`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `BILLING_*`, `RESEND_API_KEY`, `SENTRY_DSN`, `CRON_SECRET`, `VISITOR_COOKIE_SECRET`, `ADMIN_ALERT_EMAIL`.
+- Variables publiques (`NEXT_PUBLIC_*`) : URL du site, `NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (clé « publishable », ex-« anon »), clé analytique, DSN Sentry navigateur. Rien d'autre.
 - `src/server/env.ts` valide les variables au démarrage : l'application refuse de démarrer si l'une manque. Les variables sont ajoutées au fil des unités ; celles des services externes sont obligatoires quand `VERCEL_ENV` vaut `preview` ou `production`, facultatives en local et en CI. Liste à jour : `.env.example`.
 - Santé : `GET /api/health` (sonde et test de fumée), `GET /api/health/sentry-check` (erreur volontaire, `Authorization: Bearer <CRON_SECRET>`). Réglages Vercel/Sentry/GitHub : `docs/setup-deploiement.md`.
 

@@ -13,7 +13,7 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 border-b border-border bg-card">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
         <Logo />
-        <nav aria-label={nav.label} className="hidden md:block">
+        <nav aria-label={nav.label} className="hidden lg:block">
           <ul className="flex items-center gap-1">
             {nav.links.map((link) => (
               <li key={link.href}>
@@ -28,7 +28,7 @@ export function SiteHeader() {
           </ul>
         </nav>
         <div className="flex items-center gap-2">
-          <Button asChild className="hidden h-11 px-5 text-sm hover:bg-primary-hover md:inline-flex">
+          <Button asChild className="hidden h-11 px-5 text-sm hover:bg-primary-hover lg:inline-flex">
             <a href={nav.cta.href}>{nav.cta.label}</a>
           </Button>
           <MobileNav />

@@ -13,6 +13,7 @@ Mettre à jour ce fichier après chaque changement d'implémentation significati
 
 ## Completed
 
+- U02 — Tokens de design et coquille de mise en page (7-8 octobre 2026, plan `context/plans/U02.md`). shadcn/ui (Radix, preset Nova), tokens, polices, en-tête, menu mobile, pied de page (mentions TMDB et JustWatch), pages 404 / erreur, accueil statique (AD-23), `npm run check:design` en CI (règles testées), `/imprint` (12 entrées). `/review` et `/audit` exécutés ; corrigés : navigation à partir de 1 024 px, offre Premium affichée « Jusqu'à 100 identifications par jour » (RG4, AD-20), tests du contrôle de design. Lighthouse mobile : accessibilité 100, bonnes pratiques 100, SEO 100, performance 75 (SDK Sentry navigateur, à traiter avant le lancement : voir `library-docs.md`). 40 tests.
 - Décisions D6 (Next 16 / Node 24), D7 (valeurs RG2, RG4, plafond IA) et D9 (plans payants en production) fermées (7 octobre 2026).
 - Cahier des charges V4 rédigé (1er octobre 2026), converti en `docs/cahier-des-charges-v4.md`.
 - Fichiers de contexte et skills du projet créés (4 octobre 2026), puis relus intégralement et corrigés (cohérence entre fichiers, vocabulaire shadcn/ui, sécurité du cache, dépendances du build plan).
@@ -25,13 +26,9 @@ Mettre à jour ce fichier après chaque changement d'implémentation significati
   - `/review` et `/audit` exécutés le 7 octobre 2026 ; corrections appliquées (filtrage Sentry des traces, garde de domaine du test de fumée, DSN https, fragment d'URL, messages d'erreur dans `src/content/fr/errors.ts`, tests de routes). Écart accepté : pas de limitation de débit sur `/api/health/sentry-check` avant U11 (Upstash) — à ajouter en U11.
   - Reste : réglages Vercel, Sentry et GitHub par le fondateur (`docs/setup-deploiement.md`), vérification du critère de fin sur staging puis production.
 
-- U02 — Tokens de design et coquille de mise en page (plan : `context/plans/U02.md`).
-  - Fait (7 octobre 2026) : shadcn/ui (base Radix, preset Nova) + composants du build plan et accordion, tokens dans `globals.css`, Archivo (wdth 75) et Public Sans, en-tête, menu mobile, pied de page avec mentions TMDB et JustWatch, pages 404 / erreur / erreur globale, accueil statique (hero, étapes, arguments, confidentialité, tarifs, FAQ, appel final), `npm run check:design` en CI, `/imprint` (12 entrées). Lighthouse mobile : accessibilité 100, bonnes pratiques 100, SEO 100, performance 75 (TBT 400 ms, surtout le SDK Sentry navigateur).
-  - Reste : `/review` et `/audit`.
-
 ## Next Up
 
-- U03 — Schéma de base et migrations (après U02).
+- U03 — Schéma de base et migrations (`/architect` à lancer).
 
 ## Open Questions
 

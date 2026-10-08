@@ -95,7 +95,7 @@ export const HOME_TEXT = {
       price: "2,99 €",
       yearly: "ou 24,99 € par an",
       features: [
-        "Identifications sans limite quotidienne, pour un usage personnel",
+        "Jusqu'à 100 identifications par jour",
         "Liste de suivi illimitée",
         "Gestion de l'abonnement et factures",
         "Résiliable à tout moment, actif jusqu'à la fin de la période payée",

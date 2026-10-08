@@ -51,7 +51,7 @@ Fichiers : `src/components/layout/site-header.tsx`, `src/components/layout/mobil
 | Ombre | none (Sheet : `shadow-lg` généré) |
 | Accent | bouton « Identifier un clip » `h-11 px-5 hover:bg-primary-hover` |
 
-**Notes de pattern :** le bouton de fermeture généré du Sheet (libellé anglais) est masqué (`showCloseButton={false}`) et remplacé par un bouton `size-11` avec `aria-label` français. Le Sheet se ferme au clic sur un lien.
+**Notes de pattern :** navigation complète et bouton d'action à partir de `lg` (1 024 px) ; menu mobile en dessous (`lg:hidden`) — à `md`, les libellés passaient sur deux lignes. Le bouton de fermeture généré du Sheet (libellé anglais) est masqué (`showCloseButton={false}`) et remplacé par un bouton `size-11` avec `aria-label` français. Le Sheet se ferme au clic sur un lien.
 
 ### Logo
 

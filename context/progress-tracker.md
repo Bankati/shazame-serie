@@ -31,7 +31,8 @@ Mettre à jour ce fichier après chaque changement d'implémentation significati
   - Relecture : pour U10, dédoublonner les dHash avant insertion dans `result_cache_frames` (clé primaire `cache_id, frame_hash`).
   - `/audit` exécuté le 8 octobre 2026 ; corrections appliquées : `db-migrate.yml` limité à `staging` / `main` (+ branches autorisées des environnements GitHub dans le guide), migration `0003` (`profiles.avatar_url` → `avatar_path`, contrainte « compte ou visiteur » sur `identifications`), test de la RLS indépendant des droits (contrôle négatif vérifié), mot de passe local 8 caractères, AD-25, AD-26 (Q23). 54 tests `test:db`.
   - Pour U04 : le premier code qui lit la base respecte AD-25.
-  - Reste : CI GitHub verte (nouveau job), puis réglages Supabase et environnements GitHub par le fondateur (`docs/setup-deploiement.md`, section 3).
+  - Projet Supabase `shazam_serie` (région eu-west-1, PostgreSQL 17) créé par le fondateur ; identifiants vérifiés en lecture seule le 8 octobre 2026 (pooler 5432 et 6543, clés publishable et secrète) ; base encore vide. Un seul projet pour préproduction et production (AD-27).
+  - Reste : CI GitHub verte, secrets saisis par le fondateur dans GitHub (environnement `production`) et Vercel, premier lancement du workflow `Database migrations` sur `main`.
 
 ## Next Up
 
@@ -88,6 +89,7 @@ Mettre à jour ce fichier après chaque changement d'implémentation significati
 | AD-24 | Supabase CLI en local (Docker) ; une seule chaîne de migrations gérée par `drizzle-kit` (générées + SQL personnalisé pour RLS, `auth.users`, buckets, `app_settings`) ; migrations appliquées par workflow au push sur `staging` puis `main` (approbation) | Une seule source de vérité du schéma, testable en local et en CI, sans migration oubliée en production. | Décidé (U03, 8 octobre 2026) |
 | AD-25 | Migrations rétrocompatibles uniquement (ajouter d'abord, retirer plus tard) ; le code qui utilise un nouvel élément de schéma part dans une promotion suivante | Vercel déploie le code sans attendre la migration de production (approbation manuelle) : le code doit tourner avant et après la migration. | Décidé (audit U03, 8 octobre 2026) |
 | AD-26 | Suppression de compte = effacement immédiat (cascade depuis `auth.users`), fichiers Storage supprimés par le code, signalements anonymisés ; pas de cron d'effacement à J+30 | Plus simple et plus sûr pour le RGPD ; respecte « effacé sous 30 jours » (CDC 18.1). Ferme Q23 ; reste à concilier avec RG14 (Q18). | Décidé (8 octobre 2026) |
+| AD-27 | Un seul projet Supabase en ligne pour la préproduction et la production (pas de projet de préproduction séparé) ; migrations appliquées uniquement depuis `main`, avec approbation | Choix du fondateur (8 octobre 2026), contre la recommandation de deux projets. Conséquences acceptées : la préproduction lit et écrit les données réelles ; une migration doit être fusionnée dans `main` avant que le code qui s'en sert soit testé sur `staging` (AD-25) ; aucun test destructif, seed ni donnée de test sur cette base. | Décidé (8 octobre 2026) |
 | AD-18 | Trois branches `dev` → `staging` → `main`, promotion par PR uniquement, `hotfix/*` en exception | Demande du fondateur ; `staging` correspond à l'environnement `preview`, `main` à `production`. | Décidé |
 
 ## Eval History

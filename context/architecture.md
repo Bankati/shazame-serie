@@ -162,7 +162,7 @@ Chaque appel externe : délai maximal, journalisation sans donnée personnelle, 
 
 ## Environnements et secrets
 
-- `development` (local), `preview` (préproduction, projet Supabase séparé), `production`. Supabase de production sur un plan payant (le plan gratuit met les projets en pause après une période d'inactivité).
+- `development` (local, Supabase dans Docker), `preview` (préproduction), `production`. **Un seul projet Supabase en ligne** (`shazam_serie`) sert à la préproduction et à la production (AD-27) : la préproduction travaille sur les données réelles, et seules les migrations fusionnées dans `main` y sont appliquées. Plan payant avant le lancement (le plan gratuit met les projets en pause après une période d'inactivité).
 - Variables serveur : `DATABASE_URL`, `SUPABASE_SECRET_KEY` (clé « secret » des nouvelles clés Supabase, remplace `service_role`), `OPENAI_API_KEY`, `OPENAI_VISION_MODEL`, `TMDB_API_TOKEN`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `BILLING_*`, `RESEND_API_KEY`, `SENTRY_DSN`, `CRON_SECRET`, `VISITOR_COOKIE_SECRET`, `ADMIN_ALERT_EMAIL`.
 - Variables publiques (`NEXT_PUBLIC_*`) : URL du site, `NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (clé « publishable », ex-« anon »), clé analytique, DSN Sentry navigateur. Rien d'autre.
 - `src/server/env.ts` valide les variables au démarrage : l'application refuse de démarrer si l'une manque. Les variables sont ajoutées au fil des unités ; celles des services externes sont obligatoires quand `VERCEL_ENV` vaut `preview` ou `production`, facultatives en local et en CI. Liste à jour : `.env.example`.

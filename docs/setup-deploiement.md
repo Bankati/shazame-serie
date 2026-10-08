@@ -39,19 +39,35 @@ Aucune valeur secrète ne doit être copiée dans le dépôt, dans un ticket ou 
 
 ## 3. Supabase (U03)
 
-1. Créer **deux projets** Supabase : préproduction et production (région UE, ex. Francfort ou Paris). Plan gratuit pour la préproduction ; plan payant pour la production avant le lancement (AD-19).
-2. Pour chacun, noter l'URL de connexion du **Session pooler** (Project Settings → Database → Connection string → Session pooler, port 5432). La connexion directe est en IPv6 uniquement et ne fonctionne pas depuis GitHub Actions.
-3. Les migrations sont appliquées automatiquement par le workflow `Database migrations` (voir section 4). La première fois, le lancer à la main (Actions → Database migrations → Run workflow) sur `staging`, puis sur `main`.
+Un seul projet Supabase en ligne (`shazam_serie`) sert à la préproduction et à la production (AD-27). Le développement utilise la base locale Docker (`npm run db:start`), jamais ce projet.
+
+1. Bouton **Connect** (en haut du projet) → **Connection String** → URI. Remplacer `[YOUR-PASSWORD]` par le mot de passe de la base.
+   - **Session pooler** (port 5432) : pour GitHub (migrations).
+   - **Transaction pooler** (port 6543) : pour Vercel (application).
+   - Pas la connexion directe (IPv6 uniquement, inaccessible depuis GitHub Actions).
+2. **Project URL** : `https://<identifiant>.supabase.co`, **sans** `/rest/v1/` (la page Data API affiche l'adresse de l'API REST ; la librairie Supabase ajoute ce suffixe elle-même).
+3. **Project Settings → API Keys** : clé **publishable** (`sb_publishable_…`) et clé **secrète** (`sb_secret_…`). Pas les anciennes clés `anon` / `service_role`.
+4. Vercel → Settings → Environment Variables, **mêmes valeurs pour Production et Preview** :
+
+   | Variable | Valeur |
+   | --- | --- |
+   | `DATABASE_URL` | URL du Transaction pooler (6543) |
+   | `NEXT_PUBLIC_SUPABASE_URL` | Project URL, sans `/rest/v1/` |
+   | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Clé publishable |
+   | `SUPABASE_SECRET_KEY` | Clé secrète (contourne la RLS : jamais en `NEXT_PUBLIC_*`) |
+
+5. Les migrations sont appliquées par le workflow `Database migrations`, uniquement depuis `main` et après votre approbation (voir section 4). La première fois, le lancer à la main : Actions → Database migrations → Run workflow → branche `main`.
+6. Ne jamais lancer `npm run db:seed`, `npm run test:db` ni `db:reset` avec ces valeurs : ils créent et suppriment des comptes. Le seed refuse d'ailleurs toute base non locale.
 
 ## 4. GitHub
 
 1. Settings → Secrets and variables → Actions → **New repository secret** : `VERCEL_AUTOMATION_BYPASS_SECRET` = secret de l'étape 2.7.
    Le test de fumée n'envoie ce secret qu'aux domaines `*.vercel.app`. Si vous ajoutez un domaine personnalisé, le déclarer dans l'onglet **Variables** : `ALLOWED_DEPLOYMENT_HOSTS` = domaines séparés par des espaces (ex. `staging.exemple.fr www.exemple.fr`).
-2. Settings → Environments :
-   - créer l'environnement **`preview`** avec le secret `DATABASE_URL` = URL du session pooler du projet Supabase de préproduction, et dans **Deployment branches and tags** choisir *Selected branches and tags* avec la seule branche `staging` ;
-   - créer l'environnement **`production`** avec le secret `DATABASE_URL` du projet de production, cocher **Required reviewers** (vous-même) : chaque migration de production attendra votre approbation, et limiter **Deployment branches and tags** à la seule branche `main`.
-   - Ainsi, ni un lancement manuel depuis `dev` ni une autre branche ne peuvent obtenir ces secrets (le workflow le refuse aussi de son côté).
-   - Approuver la migration de production dès la fusion vers `main` : Vercel déploie le code sans l'attendre, d'où la règle des migrations rétrocompatibles (AD-25).
+2. Settings → Environments → créer l'environnement **`production`** :
+   - secret `DATABASE_URL` = URL du **Session pooler** (5432) du projet Supabase ;
+   - cocher **Required reviewers** (vous-même) : chaque migration attendra votre approbation ;
+   - **Deployment branches and tags** → *Selected branches and tags* → uniquement `main`. Ainsi, aucun lancement depuis `dev` ou `staging` ne peut obtenir ce secret (le workflow le refuse aussi de son côté).
+   - Approuver la migration dès la fusion vers `main` : Vercel déploie le code sans l'attendre, d'où la règle des migrations rétrocompatibles (AD-25). Une migration doit arriver sur `main` avant que le code qui s'en sert soit testé sur `staging`, puisque la préproduction utilise la même base (AD-27).
 3. Settings → Rules → Rulesets, pour `staging` et `main` : PR obligatoire, et checks obligatoires :
    - `Lint, typecheck, test, build`
    - `Audit des dépendances de production`

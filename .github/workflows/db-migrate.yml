@@ -1,13 +1,14 @@
-# Applique les migrations Drizzle (AD-24) quand du code arrive sur staging (préproduction) ou main (production).
-# Secrets : DATABASE_URL dans les environnements GitHub « preview » et « production »
-# (URL du « session pooler » Supabase, port 5432 : les runners GitHub n'ont pas d'IPv6).
-# L'environnement « production » exige une approbation (docs/setup-deploiement.md).
+# Applique les migrations Drizzle (AD-24) quand du code arrive sur main.
+# Un seul projet Supabase sert à la préproduction et à la production (AD-27) : seules les migrations
+# fusionnées dans main y sont appliquées, après approbation (environnement GitHub « production »).
+# Secret : DATABASE_URL dans l'environnement « production » (URL du « session pooler » Supabase, port 5432 :
+# les runners GitHub n'ont pas d'IPv6). Voir docs/setup-deploiement.md.
 # Migrations rétrocompatibles uniquement (AD-25) : Vercel déploie le code sans attendre ce workflow.
 name: Database migrations
 
 on:
   push:
-    branches: [staging, main]
+    branches: [main]
     paths:
       - "drizzle/**"
       - "src/server/db/schema/**"
@@ -28,9 +29,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     # Un lancement manuel depuis une autre branche (ex. dev) appliquerait des migrations non relues.
-    # Second verrou : branches autorisées des environnements GitHub (docs/setup-deploiement.md).
-    if: github.ref_name == 'staging' || github.ref_name == 'main'
-    environment: ${{ github.ref_name == 'main' && 'production' || 'preview' }}
+    # Second verrou : branche autorisée de l'environnement GitHub (docs/setup-deploiement.md).
+    if: github.ref_name == 'main'
+    environment: production
     steps:
       - uses: actions/checkout@v7
 

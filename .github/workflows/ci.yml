@@ -31,6 +31,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Design system (aucune couleur en dur)
+        run: npm run check:design
+
       - name: Typecheck
         run: npm run typecheck
 
@@ -55,3 +58,62 @@ jobs:
 
       - name: npm audit (production, high et plus)
         run: npm audit --omit=dev --audit-level=high
+
+  secrets:
+    name: Aucun fichier de secrets versionné
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Refuser les fichiers .env, clés et certificats
+        run: |
+          found=$(git ls-files | grep -E '(^|/)\.env($|\.)|\.(pem|key|p12|pfx)$' | grep -vE '(^|/)\.env\.example$' || true)
+          if [ -n "$found" ]; then
+            echo "::error::Fichiers sensibles versionnés : $found"
+            exit 1
+          fi
+          echo "OK : aucun fichier de secrets versionné."
+
+  database:
+    name: Base de données (migrations, RLS)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.120.0
+
+      # Pile minimale : Postgres, Auth, API REST et Storage (ce que testent les tests d'intégration).
+      - name: Démarrer Supabase
+        run: supabase start -x realtime,imgproxy,mailpit,studio,edge-runtime,logflare,vector,supavisor
+
+      - name: Exporter les variables de la pile locale
+        run: |
+          supabase status -o env > supabase.env
+          set -a; . ./supabase.env; set +a
+          {
+            echo "DATABASE_URL=$DB_URL"
+            echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL"
+            echo "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$PUBLISHABLE_KEY"
+            echo "SUPABASE_SECRET_KEY=$SECRET_KEY"
+          } >> "$GITHUB_ENV"
+          rm supabase.env
+
+      - name: Migrations sur base vide
+        run: npm run db:migrate
+
+      - name: Migrations rejouées (aucun effet attendu)
+        run: npm run db:migrate
+
+      - name: Tests d'intégration
+        run: npm run test:db

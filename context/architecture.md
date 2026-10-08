@@ -7,7 +7,7 @@
 
 | Layer | Technology | Role |
 | --- | --- | --- |
-| Framework | Next.js 16 (App Router) + TypeScript strict, Node.js 24 LTS **(proposé : le CDC cite Next 14 et Node 20, tous deux hors support en octobre 2026)** | Pages (SSR pour les fiches titres), routes API, une seule base de code |
+| Framework | Next.js 16 (App Router) + TypeScript strict, Node.js 24 LTS (AD-01, AD-02 : le CDC cite Next 14 et Node 20, hors support en octobre 2026) | Pages (SSR pour les fiches titres), routes API, une seule base de code |
 | UI | Tailwind CSS 4 + shadcn/ui + lucide-react | Composants accessibles, tokens de design en variables CSS |
 | Formulaires | react-hook-form + zod | Validation partagée client/serveur |
 | Auth | Supabase Auth via `@supabase/ssr` (email + Google) | Sessions par cookies HttpOnly, confirmation d'email, reset |
@@ -42,6 +42,9 @@ src/
 ├── server/                   # Logique métier, 'server-only'. Jamais importé par un composant client.
 │   ├── env.ts                # variables d'environnement validées par zod
 │   ├── log.ts                # logger structuré (sans données sensibles)
+│   ├── http/                 # réponses JSON { ok, data | error }
+│   ├── health/               # route de santé, erreur volontaire Sentry
+│   ├── observability/        # options Sentry des runtimes serveur
 │   ├── db/                   # schéma Drizzle, client, requêtes
 │   ├── auth/                 # session, rôles, garde-fous (requireUser, requireAdmin), visiteur
 │   ├── identification/       # pipeline, score, empreintes, cache de résultats
@@ -54,10 +57,13 @@ src/
 │   ├── admin/                # statistiques, actions admin
 │   └── audit/                # journal d'audit
 ├── shared/                   # Code pur utilisable côté client ET serveur (aucun effet de bord)
-│   └── frames/               # paramètres d'échantillonnage communs au navigateur et à l'eval
+│   ├── frames/               # paramètres d'échantillonnage communs au navigateur et à l'eval
+│   └── observability/        # options et filtrage Sentry communs (aucune donnée personnelle)
 ├── schemas/                  # Schémas zod partagés (entrées API, réponses IA) et codes d'erreur
 ├── content/fr/               # Textes d'interface centralisés (prépare la V2 multilingue)
 ├── lib/                      # Utilitaires purs (dates Europe/Paris, slugs, formatage)
+├── instrumentation.ts        # init Sentry serveur/edge (charge env.ts : refus de démarrer si une variable manque)
+├── instrumentation-client.ts # init Sentry navigateur
 └── proxy.ts                  # (ex-middleware, à vérifier selon la version) rafraîchissement de session
 eval/                         # Harnais du jeu de test : manifeste des 100 clips + script de mesure
 drizzle/                      # Migrations SQL générées — ne jamais éditer une migration appliquée
@@ -111,11 +117,11 @@ Signalement : les images ne sont jamais écrites sur disque ou en stockage penda
 ## Storage Model
 
 - **PostgreSQL (Supabase)** — tables :
-  - `profiles` (id = auth.users.id, display_name, avatar_url, role `user|admin`, status `active|suspended`, deleted_at, created_at)
-  - `identifications` (id, user_id nullable, visitor_key nullable, fingerprint, tmdb_id nullable, media_type, confidence, alternatives jsonb, counted bool, source `ai|cache`, outcome `shown|low_confidence|failed`, prompt_version, provider, model, cost_micro_eur, latency_ms, created_at)
+  - `profiles` (id = auth.users.id, display_name, avatar_path (chemin dans le bucket privé `avatars`), role `user|admin`, status `active|suspended`, deleted_at, created_at)
+  - `identifications` (id, user_id nullable, visitor_key nullable (l'un des deux obligatoire), fingerprint, tmdb_id nullable, media_type, confidence, alternatives jsonb, counted bool, source `ai|cache`, outcome `shown|low_confidence|failed`, prompt_version, provider, model, cost_micro_eur, latency_ms, created_at)
   - `result_cache` (id, fingerprint unique, tmdb_id, media_type, confidence, alternatives jsonb, validated bool, disabled bool, hits, created_at) et `result_cache_frames` (cache_id, frame_hash bigint)
   - `watchlist_items` (user_id, tmdb_id, media_type, added_at) — unique (user_id, tmdb_id, media_type)
-  - `reports` (id, identification_id, user_id nullable, proposed_tmdb_id, corrected_tmdb_id, images_consent bool, storage_paths text[], status `open|reviewed|added_to_eval|rejected`, created_at)
+  - `reports` (id, identification_id, user_id nullable, proposed_tmdb_id + proposed_media_type, corrected_tmdb_id + corrected_media_type (un identifiant TMDB n'est unique que par type), images_consent bool, storage_paths text[], status `open|reviewed|added_to_eval|rejected`, created_at)
   - `subscriptions` (user_id unique, provider, provider_customer_id, provider_subscription_id, plan `monthly|yearly`, status normalisé `active|past_due|canceled|expired`, current_period_end, cancel_at_period_end, updated_at)
   - `billing_events` (provider_event_id unique, type, processed_at) — idempotence des webhooks
   - `ai_spend_daily` (day date Paris, total_micro_eur, calls) — miroir durable du compteur Redis, pour le tableau de bord
@@ -136,10 +142,11 @@ Signalement : les images ne sont jamais écrites sur disque ou en stockage penda
 - Visiteurs : cookie signé `visitor_id` (HttpOnly, 1 an) + adresse IP pour la limitation de débit. Sert uniquement au quota RG2.
 - Rôles : `user`, `admin` dans `profiles.role`, **toujours relu en base côté serveur**. Pas d'interface de promotion en V1 : un admin est désigné par migration de seed ou SQL manuel.
 - Propriété : chaque ressource utilisateur porte `user_id` ; toute requête filtre par l'utilisateur de la session vérifiée (`auth.getUser()`).
-- L'application accède à la base **uniquement côté serveur** via Drizzle. RLS activée sur toutes les tables, sans politique pour `anon` et `authenticated` : la clé publique Supabase n'ouvre aucune table.
+- L'application accède à la base **uniquement côté serveur** via Drizzle. RLS activée sur toutes les tables, sans politique pour `anon` et `authenticated`, **et** aucun droit accordé à ces rôles sur le schéma `public`, y compris pour les tables futures (migration `0002`, AD-24) : la clé publique Supabase n'ouvre aucune table (testé par `npm run test:db`).
+- Schéma : `src/server/db/schema/` ; migrations : `drizzle/` (générées par `drizzle-kit`, plus des migrations SQL personnalisées pour les buckets, les réglages initiaux et les droits). Pile locale : Supabase CLI (`npm run db:start`), configurée dans `supabase/config.toml`.
 - Premium (`server/billing/getEntitlement()`) = `status = 'active'`, ou `status in ('past_due','canceled')` et `current_period_end > now()`. Jamais stocké en double, jamais lu depuis le client.
 - Compte suspendu : ne peut ni identifier ni modifier ses données ; peut exporter et supprimer.
-- Compte supprimé : désactivé immédiatement (déconnexion, `deleted_at`, utilisateur Auth supprimé, abonnement annulé), données effacées définitivement par cron sous 30 jours (CDC 18.1).
+- Compte supprimé (AD-26, 8 octobre 2026) : abonnement annulé, fichiers de l'utilisateur supprimés des buckets `avatars` et `exports` (la cascade SQL ne touche pas Storage), email de confirmation envoyé à l'adresse lue avant suppression, puis utilisateur Auth supprimé ; la cascade `auth.users` → `profiles` → données efface tout immédiatement, ce qui respecte « effacé sous 30 jours » (CDC 18.1). Les signalements restent, anonymisés (`user_id` à null). Seules les factures restent chez le prestataire de paiement (obligation légale).
 
 ## External Services and Abstractions
 
@@ -156,14 +163,15 @@ Chaque appel externe : délai maximal, journalisation sans donnée personnelle, 
 ## Environnements et secrets
 
 - `development` (local), `preview` (préproduction, projet Supabase séparé), `production`. Supabase de production sur un plan payant (le plan gratuit met les projets en pause après une période d'inactivité).
-- Variables serveur : `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `OPENAI_API_KEY`, `OPENAI_VISION_MODEL`, `TMDB_API_TOKEN`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `BILLING_*`, `RESEND_API_KEY`, `SENTRY_DSN`, `CRON_SECRET`, `VISITOR_COOKIE_SECRET`, `ADMIN_ALERT_EMAIL`.
-- Variables publiques (`NEXT_PUBLIC_*`) : URL du site, URL et clé publique Supabase, clé analytique, DSN Sentry navigateur. Rien d'autre.
-- `src/server/env.ts` valide les variables au démarrage : l'application refuse de démarrer si l'une manque.
+- Variables serveur : `DATABASE_URL`, `SUPABASE_SECRET_KEY` (clé « secret » des nouvelles clés Supabase, remplace `service_role`), `OPENAI_API_KEY`, `OPENAI_VISION_MODEL`, `TMDB_API_TOKEN`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `BILLING_*`, `RESEND_API_KEY`, `SENTRY_DSN`, `CRON_SECRET`, `VISITOR_COOKIE_SECRET`, `ADMIN_ALERT_EMAIL`.
+- Variables publiques (`NEXT_PUBLIC_*`) : URL du site, `NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (clé « publishable », ex-« anon »), clé analytique, DSN Sentry navigateur. Rien d'autre.
+- `src/server/env.ts` valide les variables au démarrage : l'application refuse de démarrer si l'une manque. Les variables sont ajoutées au fil des unités ; celles des services externes sont obligatoires quand `VERCEL_ENV` vaut `preview` ou `production`, facultatives en local et en CI. Liste à jour : `.env.example`.
+- Santé : `GET /api/health` (sonde et test de fumée), `GET /api/health/sentry-check` (erreur volontaire, `Authorization: Bearer <CRON_SECRET>`). Réglages Vercel/Sentry/GitHub : `docs/setup-deploiement.md`.
 
 ## Tâches planifiées (Vercel Cron → `/api/cron/*`, protégées par `CRON_SECRET`)
 
 - Toutes les heures : suppression des exports expirés (> 24 h).
-- Chaque jour : purge de l'historique > 2 ans (RG11) ; effacement définitif des comptes supprimés depuis > 30 jours ; rappel de renouvellement J-3 (RG13) si le prestataire ne l'envoie pas ; suppression des images de signalement selon la durée de conservation retenue (Q16) ; consolidation `ai_spend_daily`.
+- Chaque jour : purge de l'historique > 2 ans (RG11) ; rappel de renouvellement J-3 (RG13) si le prestataire ne l'envoie pas ; suppression des images de signalement selon la durée de conservation retenue (Q16) ; consolidation `ai_spend_daily`.
 
 ## Invariants
 

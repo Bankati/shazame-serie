@@ -24,7 +24,7 @@ type Result<T, E = AppError> = { ok: true; value: T } | { ok: false; error: E };
 ## Next.js
 
 - Composants serveur par défaut. `'use client'` uniquement quand l'interactivité navigateur l'exige (envoi du clip, extraction d'images, formulaires).
-- Tout fichier de `src/server/**` commence par `import 'server-only'`.
+- Tout fichier de `src/server/**` commence par `import 'server-only'`. Exception : `src/server/db/schema/**`, chargé par `drizzle-kit` hors de Next (déclarations uniquement, jamais importé par un composant client).
 - Les APIs de requête (`params`, `searchParams`, `cookies()`, `headers()`) sont asynchrones : toujours `await`.
 - Fiches titres rendues côté serveur avec `generateMetadata` (titre, description, image Open Graph) et URL stable : `/titre/{film|serie}/{tmdbId}-{slug}`.
 - Mutations : route handlers dans `src/app/api/**` (ou Server Actions pour les formulaires simples du compte), toujours avec la même validation que les routes.
@@ -76,6 +76,8 @@ type Result<T, E = AppError> = { ok: true; value: T } | { ok: false; error: E };
 
 - Toutes les requêtes via Drizzle (requêtes paramétrées). SQL brut uniquement via le template `sql` de Drizzle.
 - Une migration par changement de schéma, nommée de façon explicite ; jamais d'édition d'une migration appliquée.
+- Migrations rétrocompatibles (AD-25) : le code en production doit fonctionner avant **et** après la migration. On ajoute (colonne nullable ou avec défaut, table, index) ; le code qui s'en sert part dans une promotion suivante ; on retire ou renomme seulement quand plus aucun code déployé ne s'en sert.
+- `drizzle-kit generate` pose une question interactive pour un renommage : écrire alors le `RENAME` à la main dans la migration générée, aligner son snapshot, puis vérifier que `drizzle-kit generate` répond « No schema changes ».
 - Écritures liées (ex. action admin + journal d'audit, webhook + abonnement) dans une transaction.
 - Montants en entiers : centimes pour les prix, micro-euros pour les coûts IA. Jamais de flottant pour l'argent.
 - Dates en UTC en base ; conversion vers `Europe/Paris` uniquement dans `src/lib/time.ts`.
@@ -115,10 +117,10 @@ type Result<T, E = AppError> = { ok: true; value: T } | { ok: false; error: E };
 ## Git
 
 - Trois branches permanentes : `dev` (intégration), `staging` (préproduction), `main` (production). Dépôt : https://github.com/Bankati/shazame-serie
-- Une branche par unité du build plan, créée depuis `dev` : `unit/U07-vision-provider`, fusionnée dans `dev` par PR.
+- L'agent commite et pousse **uniquement sur `dev`** (AD-22) : pas de branche par unité, pas de PR ouverte par l'agent, jamais de push sur `staging` ni `main`. Le fondateur ouvre les PR `dev` → `staging` → `main`.
 - Promotion uniquement par PR : `dev` → `staging` → `main`. Correctif urgent : `hotfix/*` vers `staging` ou `main`, puis reporté dans `dev`. Le workflow `branch-flow` refuse toute autre source.
 - Commits conventionnels en anglais : `feat(identification): add cache lookup by fingerprint`.
-- Une PR ne mélange pas deux unités. La CI (`.github/workflows/ci.yml` : lint, typecheck, test, build, audit des dépendances de production) doit être verte avant fusion.
+- Un commit ne mélange pas deux unités. La CI (`.github/workflows/ci.yml` : lint, typecheck, test, build, audit des dépendances de production, absence de fichiers de secrets) et le test de fumée du déploiement (`.github/workflows/smoke.yml`) doivent être verts avant fusion.
 
 ## File Organization
 
@@ -134,4 +136,6 @@ type Result<T, E = AppError> = { ok: true; value: T } | { ok: false; error: E };
 - `eval/` — jeu de test d'identification (manifeste, pas les vidéos).
 - `drizzle/` — migrations générées.
 - `tests/e2e/` — tests Playwright.
+- `tests/db/` — tests d'intégration contre la pile Supabase locale (`npm run test:db`).
+- `scripts/` — outils du dépôt (seed local, contrôle du design system).
 - `context/plans/` — plans validés par `/architect`.

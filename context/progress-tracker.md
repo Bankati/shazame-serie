@@ -40,6 +40,10 @@ Mettre à jour ce fichier après chaque changement d'implémentation significati
   - Projet Supabase `shazam_serie` (région eu-west-1, PostgreSQL 17) créé par le fondateur ; identifiants vérifiés en lecture seule le 8 octobre 2026 (pooler 5432 et 6543, clés publishable et secrète) ; base encore vide. Un seul projet pour préproduction et production (AD-27).
   - Reste : CI GitHub verte, secrets saisis par le fondateur dans GitHub (environnement `production`) et Vercel, premier lancement du workflow `Database migrations` sur `main`.
 
+- U06 — Extraction d'images dans le navigateur (plan validé le 14 octobre 2026 : `context/plans/U06.md`).
+  - Fait (14 octobre 2026) : `src/shared/frames/` (constantes, échantillonnage 10-90 %, luminosité, netteté, dHash, sélection), `src/client/frames/` (contrôle du clip, extraction vidéo/canvas/JPEG, `fitPackage` ≤ 1,5 Mo, WebM sans durée), `ClipDropzone`, `FilmStrip`, `IdentifyPanel` dans le hero (« N images prêtes. L'identification ouvre très bientôt. »), `/imprint`, `/review`, `/audit`. Cible TypeScript ES2020 (BigInt). 109 tests. Essai Chrome (largeur mobile) : MP4, MOV, WebM, WebM sans durée, noir, flou, image fixe, trop long, trop court, mauvais format ; extraction en 0,6 à 1,2 s.
+  - Reste (fondateur) : essai Chrome Android et Safari iOS (MP4, MOV, WebM) sur la préproduction ; essai de 3-4 extraits réels (action, dialogue en plan fixe, nuit) pour vérifier les seuils (noir 20, flou 20, doublon 5 bits), calibrés ensuite en U13.
+
 ## Next Up
 
 - U04 — Authentification email et Google (dépend de D8 : nom commercial et domaine).

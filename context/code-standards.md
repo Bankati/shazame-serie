@@ -11,7 +11,7 @@
 
 ## TypeScript
 
-- `strict: true` et `noUncheckedIndexedAccess: true`. (`exactOptionalPropertyTypes` n'est pas activé : il crée des conflits avec les types de shadcn/ui, Drizzle et des SDK.)
+- `strict: true` et `noUncheckedIndexedAccess: true`. Cible `ES2020` (U06) : les empreintes dHash de 64 bits utilisent `BigInt` ; Next 16 vise de toute façon Chrome 111+ et Safari 16.4+. (`exactOptionalPropertyTypes` n'est pas activé : il crée des conflits avec les types de shadcn/ui, Drizzle et des SDK.)
 - Interdit : `any`, `as unknown as`, `@ts-ignore`. `@ts-expect-error` seulement avec un commentaire qui explique pourquoi.
 - Toute donnée externe (requête HTTP, réponse IA, réponse TMDB, webhook, variable d'environnement) est validée par un schéma zod avant d'être utilisée. Les types se dérivent des schémas (`z.infer`).
 - Préférer les unions discriminées aux booléens multiples (`status: 'idle' | 'extracting' | 'uploading' | 'done' | 'error'`).

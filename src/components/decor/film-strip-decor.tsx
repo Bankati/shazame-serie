@@ -1,13 +1,13 @@
 import { cn } from "@/lib/utils";
 
-// Bande de pellicule décorative : annonce l'élément signature (FilmStrip, U06) sans logique.
+// Bande de pellicule décorative ; ses perforations sont reprises par l'élément signature FilmStrip (U06).
 const PERFORATIONS = 80;
 const FRAMES = 14;
 
 export function FilmStripDecor({ className }: { className?: string }) {
   return (
     <div aria-hidden="true" className={cn("flex flex-col gap-2 overflow-hidden bg-inverse py-2", className)}>
-      <Perforations />
+      <Perforations count={PERFORATIONS} />
       <div className="flex gap-2 px-2">
         {Array.from({ length: FRAMES }, (_, index) => (
           <div
@@ -19,15 +19,16 @@ export function FilmStripDecor({ className }: { className?: string }) {
           />
         ))}
       </div>
-      <Perforations />
+      <Perforations count={PERFORATIONS} />
     </div>
   );
 }
 
-function Perforations() {
+/** Rangée de perforations de pellicule (décorative, aria-hidden par le parent). */
+export function Perforations({ count, className }: { count: number; className?: string }) {
   return (
-    <div className="flex gap-3 px-2">
-      {Array.from({ length: PERFORATIONS }, (_, index) => (
+    <div className={cn("flex gap-3 px-2", className)}>
+      {Array.from({ length: count }, (_, index) => (
         <span key={index} className="size-3 shrink-0 rounded-sm bg-inverse-foreground/25" />
       ))}
     </div>

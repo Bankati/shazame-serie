@@ -89,22 +89,62 @@ Fichier : `src/components/home/section-heading.tsx`
 | Accent | sur-titre `text-sm font-semibold text-brand-strong` (fond clair) ou `text-brand` (fond sombre) |
 | Espacement | `gap-3`, `max-w-2xl` |
 
-### Hero + ClipDropzonePreview
+### Hero + IdentifyPanel
 
-Fichiers : `src/components/home/hero.tsx`, `src/components/home/clip-dropzone-preview.tsx`
+Fichiers : `src/components/home/hero.tsx`, `src/components/identify/identify-panel.tsx`
+Dernière mise à jour : 14 octobre 2026 (U06, remplace `ClipDropzonePreview`)
 
 | Propriété | Classe |
 | --- | --- |
 | Arrière-plan | section `bg-inverse` + `PosterWall` ; carte `bg-card text-card-foreground` |
-| Bordure | zone de dépôt `border-2 border-dashed border-input rounded-lg` ; pastille `border border-inverse-foreground/20 bg-inverse-foreground/5 rounded-full` |
+| Bordure | pastille `border border-inverse-foreground/20 bg-inverse-foreground/5 rounded-full` |
 | Radius | carte `rounded-xl` |
-| Texte principal | titre `font-display text-display-lg md:text-display-xl font-extrabold` |
+| Texte principal | titre `font-display text-display-lg md:text-display-xl font-extrabold` ; état `text-sm font-medium text-foreground` |
 | Texte secondaire | `text-inverse-muted` (hero), `text-sm text-muted-foreground` (carte) |
-| Espacement | carte `p-4 md:p-6`, zone `px-4 py-8 gap-4` |
+| Espacement | carte `p-4 md:p-6`, contenu `flex flex-col gap-4`, mention de confidentialité `mt-4 gap-2` |
+| Hover / focus | bouton « Choisir un autre clip » `variant="outline"` shadcn, `h-11` |
 | Ombre | `shadow-lg` (carte posée sur le hero sombre, exception documentée) |
-| Accent | icône d'envoi `text-primary` dans `bg-muted rounded-full`, cadenas `text-brand-strong` |
+| Accent | cadenas `text-brand-strong` |
 
-**Notes de pattern :** bouton « Choisir un clip » `disabled` avec `aria-describedby` vers le message « ouvre très bientôt » ; remplacé par `ClipDropzone` en U06.
+**Notes de pattern :** la carte porte `min-w-0` (élément de grille : elle ne doit pas s'élargir pour contenir la pellicule, débordement constaté à 412 px). L'état du parcours est annoncé par un `<p aria-live="polite">`. La carte affiche `ClipDropzone` (repos, refus) ou `FilmStrip` + état + bouton (extraction, prêt, insuffisant).
+
+### ClipDropzone
+
+Fichier : `src/components/identify/clip-dropzone.tsx`
+Dernière mise à jour : 14 octobre 2026 (U06)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | zone transparente ; en glisser-déposer `bg-muted` ; icône dans `bg-muted rounded-full size-14` |
+| Bordure | `border-2 border-dashed border-input` ; en glisser-déposer `border-primary` |
+| Radius | `rounded-lg` |
+| Texte principal | `font-display text-2xl font-bold` |
+| Texte secondaire | `text-sm text-muted-foreground` ; erreur `text-sm font-medium text-destructive` (`role="alert"`) |
+| Espacement | `px-4 py-8 gap-4` |
+| Hover / focus | bouton shadcn par défaut `h-11 w-full max-w-xs text-base` (focus visible du composant `ui`) ; `transition-colors` sur la zone |
+| Ombre | none |
+| Accent | icône d'envoi `text-primary` |
+
+**Notes de pattern :** le champ fichier est `sr-only`, `tabIndex={-1}`, `aria-hidden` : l'accès clavier et mobile passe par le bouton, qui pointe vers les contraintes (et l'erreur) par `aria-describedby`. La valeur du champ est vidée après chaque choix pour pouvoir reprendre le même fichier. L'indice « ou glissez-le ici » n'apparaît qu'à partir de `md`.
+
+### FilmStrip (élément signature)
+
+Fichier : `src/components/identify/film-strip.tsx`
+Dernière mise à jour : 14 octobre 2026 (U06)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | `bg-inverse text-inverse-foreground` ; case vide `bg-inverse-foreground/10` |
+| Bordure | case `border border-inverse-foreground/10` |
+| Radius | bande `rounded-lg` ; images `rounded-none` ; perforations `rounded-sm` |
+| Texte principal | statut retenu `text-xs leading-tight font-medium` |
+| Texte secondaire | en attente ou écartée `text-xs leading-tight text-inverse-muted` |
+| Espacement | `py-2`, grille `grid-cols-5 gap-1.5 px-2 my-2`, case `gap-1` |
+| Hover / focus | none (non interactif) |
+| Ombre | none |
+| Accent | coche « Retenue » `text-brand` (fond sombre uniquement) ; image écartée `opacity-40` |
+
+**Notes de pattern :** `<figure>` + `<figcaption className="sr-only">` + liste ordonnée de 5 cases. Chaque état est écrit (« Retenue », « Trop sombre », « Floue », « Doublon », « En attente ») : jamais la couleur seule. Apparition des images `motion-safe:animate-in motion-safe:fade-in motion-safe:duration-300` (le seul moment orchestré, coupé avec `prefers-reduced-motion`). Aperçus en `<img>` (URL `blob:` locale), pas `next/image`. Perforations réutilisées depuis `film-strip-decor.tsx` avec `overflow-hidden`.
 
 ### HowItWorks (carte d'étape)
 
@@ -192,4 +232,4 @@ Fichiers : `src/components/decor/poster-wall.tsx`, `src/components/decor/film-st
 | Bordure | `border border-inverse-foreground/10` |
 | Radius | affiches `rounded-poster` ; images de pellicule `rounded-none` ; perforations `rounded-sm size-3 bg-inverse-foreground/25` |
 
-**Notes de pattern :** toujours `aria-hidden`. Pas d'affiches réelles tant que la licence TMDB n'est pas obtenue (Q2). `FilmStripDecor` annonce l'élément signature `FilmStrip` (U06), qui en reprendra les perforations.
+**Notes de pattern :** toujours `aria-hidden`. Pas d'affiches réelles tant que la licence TMDB n'est pas obtenue (Q2). `Perforations` (exporté, prop `count`, `className`) est partagé avec `FilmStrip` (U06).

@@ -1,20 +1,20 @@
 # Mise en place du déploiement (U01)
 
-Réglages à faire une seule fois par le fondateur. Le code est prêt : ces étapes branchent Vercel, Sentry et GitHub.
+Réglages à faire une seule fois par le fondateur. Le code est prêt : ces étapes branchent Vercel, PostHog, Supabase et GitHub.
 Aucune valeur secrète ne doit être copiée dans le dépôt, dans un ticket ou dans une conversation.
 
 ## 0. Poste de développement
 
 - Installer **Node.js 24 LTS** (le projet refuse les autres versions majeures : `.nvmrc`, `engines`).
-- `npm ci`, puis copier `.env.example` en `.env.local` si vous voulez tester Sentry en local (facultatif).
+- `npm ci`, puis copier `.env.example` en `.env.local` si vous voulez tester PostHog en local (facultatif).
 
-## 1. Sentry
+## 1. PostHog (suivi des erreurs et analytique, AD-28)
 
-1. Créer une organisation, puis un projet de plateforme **Next.js**.
-2. Noter le **DSN** du projet (Settings → Client Keys). Il sert à la fois pour `SENTRY_DSN` et `NEXT_PUBLIC_SENTRY_DSN`.
-3. Noter le **slug de l'organisation** et le **slug du projet** (`SENTRY_ORG`, `SENTRY_PROJECT`).
-4. Créer un **Organization Auth Token** (Settings → Auth Tokens) : `SENTRY_AUTH_TOKEN`. Il sert uniquement au build, pour envoyer les source maps.
-5. Dans les réglages du projet Sentry, laisser activé le filtrage des données sensibles côté serveur (Security & Privacy → Data Scrubber). Le code filtre déjà avant l'envoi : c'est une seconde barrière.
+1. Créer le compte depuis **https://eu.posthog.com/signup** (région UE). Vérifier que l'adresse du navigateur commence par `eu.posthog.com` : la région ne se change pas après coup.
+2. Settings (roue dentée en bas à gauche) → **Project → General** → **Project token** : la valeur `phc_…` est `NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN`. Ne jamais utiliser une **Personal API key** (`phx_…`) : elle donne accès à tout le compte (le serveur la refuse).
+3. Settings → Project → **Web analytics** → activer **« Cookieless server hash mode »**. Sans ce réglage, le site (configuré sans cookie) n'enregistre rien.
+4. Settings → Project → **Error tracking** : vérifier que le suivi des erreurs est activé.
+5. `NEXT_PUBLIC_POSTHOG_HOST` : rien à saisir (`https://eu.i.posthog.com` par défaut).
 
 ## 2. Vercel
 
@@ -26,14 +26,11 @@ Aucune valeur secrète ne doit être copiée dans le dépôt, dans un ticket ou 
 
    | Variable | Valeur |
    | --- | --- |
-   | `SENTRY_DSN` | DSN Sentry |
-   | `NEXT_PUBLIC_SENTRY_DSN` | DSN Sentry (le même) |
+   | `NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN` | Clé de projet PostHog `phc_…` (étape 1.2) |
    | `CRON_SECRET` | Chaîne aléatoire d'au moins 32 caractères (ex. `openssl rand -base64 48`) |
-   | `SENTRY_AUTH_TOKEN` | Jeton Sentry de l'étape 1.4 |
-   | `SENTRY_ORG` / `SENTRY_PROJECT` | Slugs Sentry |
 
-   Si `SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_DSN` ou `CRON_SECRET` manque, le serveur refuse de démarrer (`src/server/env.ts`) : c'est voulu.
-6. Laisser coché **Automatically expose System Environment Variables** (fournit `VERCEL_ENV` et `NEXT_PUBLIC_VERCEL_ENV`, utilisés pour nommer l'environnement dans Sentry).
+   En **production**, si l'une manque, le build refuse de se terminer (`src/server/env.ts`) : c'est voulu. En **preview** elles sont facultatives : sans elles, l'aperçu se construit mais ne remonte ni erreurs ni pages vues, et `/api/health/error-check` reste fermée.
+6. Laisser coché **Automatically expose System Environment Variables** (fournit `VERCEL_ENV` et `NEXT_PUBLIC_VERCEL_ENV`, utilisés pour marquer l'environnement de chaque événement PostHog).
 7. Settings → Deployment Protection → **Protection Bypass for Automation** : générer un secret. Il permet au test de fumée GitHub d'appeler les déploiements protégés.
 8. Plan : Hobby suffit jusqu'à l'approche du lancement ; passer en **Pro** avant d'ouvrir le service au public (AD-19, le plan Hobby interdit l'usage commercial).
 
@@ -89,10 +86,11 @@ Un seul projet Supabase en ligne (`shazam_serie`) sert à la préproduction et �
 3. Déclencher l'erreur volontaire (remplacer `<CRON_SECRET>` par la valeur Preview, sans l'enregistrer dans l'historique partagé) :
 
    ```bash
-   curl -i -H "Authorization: Bearer <CRON_SECRET>" https://<domaine-staging>/api/health/sentry-check
+   curl -i -H "Authorization: Bearer <CRON_SECRET>" https://<domaine-staging>/api/health/error-check
    # HTTP 500 attendu
    ```
 
-   Dans Sentry, une erreur `SentryCheckError` apparaît en moins d'une minute, environnement `preview`, avec une stack qui pointe vers `src/app/api/health/sentry-check/route.ts` (source maps), **sans** cookie, en-tête ni utilisateur.
+   Dans PostHog → **Error tracking**, une erreur `ErrorCheckError` apparaît en moins d'une minute, avec la propriété `environment` = `preview` et `path` = `/api/health/error-check`, **sans** personne identifiée.
+   Ouvrir aussi la préproduction dans un navigateur : une page vue apparaît dans **Web analytics**, et aucun cookie `ph_*` n'est déposé (outils de développement → Application → Cookies).
 4. Sans secret, la même URL renvoie `401` : c'est normal.
-5. Refaire les étapes 2 et 3 sur la production après la PR `staging` → `main` (environnement `production` dans Sentry).
+5. Refaire les étapes 2 et 3 sur la production après la PR `staging` → `main` (propriété `environment` = `production` dans PostHog).

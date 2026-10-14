@@ -1,18 +1,20 @@
-import * as Sentry from "@sentry/nextjs";
+import { loadPostHog } from "@/client/observability/posthog";
 
-import { SENTRY_DATA_COLLECTION, SENTRY_TRACES_SAMPLE_RATE, scrubEvent, scrubTransaction } from "@/shared/observability/sentry";
+// PostHog (environ 300 Ko de JavaScript) ne doit pas ralentir l'affichage : on attend que la page soit
+// chargée et que le navigateur soit au repos. Une erreur survenue avant reste visible dans les journaux
+// serveur ; les pages d'erreur déclenchent elles-mêmes le chargement (reportBoundaryError).
+const IDLE_TIMEOUT_MS = 5_000;
 
-// Pas de Session Replay ni de widget de retour : aucune base légale validée (Q15).
-const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
+function loadWhenIdle(): void {
+  if ("requestIdleCallback" in window) {
+    window.requestIdleCallback(() => void loadPostHog(), { timeout: IDLE_TIMEOUT_MS });
+  } else {
+    setTimeout(() => void loadPostHog(), 0);
+  }
+}
 
-Sentry.init({
-  dsn,
-  enabled: Boolean(dsn),
-  environment: process.env.NEXT_PUBLIC_VERCEL_ENV ?? "development",
-  tracesSampleRate: SENTRY_TRACES_SAMPLE_RATE,
-  dataCollection: SENTRY_DATA_COLLECTION,
-  beforeSend: scrubEvent,
-  beforeSendTransaction: scrubTransaction,
-});
-
-export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
+if (document.readyState === "complete") {
+  loadWhenIdle();
+} else {
+  window.addEventListener("load", loadWhenIdle, { once: true });
+}

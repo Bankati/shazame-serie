@@ -1,8 +1,8 @@
 "use client";
 
-import * as Sentry from "@sentry/nextjs";
 import { useEffect } from "react";
 
+import { reportBoundaryError } from "@/client/observability/posthog";
 import { LAYOUT_TEXT } from "@/content/fr/layout";
 
 import "./globals.css";
@@ -10,7 +10,7 @@ import "./globals.css";
 // Remplace le layout racine en cas d'erreur : il doit poser ses propres <html>, <body> et styles.
 export default function GlobalError({ error, retry }: { error: Error & { digest?: string }; retry: () => void }) {
   useEffect(() => {
-    Sentry.captureException(error);
+    reportBoundaryError(error);
   }, [error]);
 
   const text = LAYOUT_TEXT.error;

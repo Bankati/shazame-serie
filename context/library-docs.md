@@ -36,8 +36,8 @@ Relevées sur le registre npm le **4 octobre 2026**, révisées en U01 le **7 oc
 | `@paddle/paddle-node-sdk` | 3.10.0 | Si D1 = Paddle |
 | `resend` | 6.32.0 | Emails |
 | `@react-email/components` | 1.0.12 | Gabarits d'emails |
-| `@sentry/nextjs` | 11.5.0 (installé) | Erreurs |
-| `posthog-js` | 1.435.8 | Analytique (si retenu plutôt que Plausible) |
+| `posthog-js` | 1.438.3 (installé) | Erreurs et analytique navigateur (AD-28) |
+| `posthog-node` | 5.55.1 (installé) | Erreurs serveur (AD-28) |
 | `vitest` | 5.0.3 | Tests unitaires |
 | `server-only` | 0.0.1 (installé) | Empêche l'import d'un module serveur côté client |
 | `ffmpeg-static` | 5.3.0 | Extraction d'images dans le harnais `eval/` uniquement (dépendance de développement) |
@@ -176,20 +176,17 @@ Plans d'hébergement : **Vercel Pro** obligatoire (le plan Hobby est réservé �
 - Doc : https://resend.com/docs — https://react.email/docs
 - Domaine d'envoi vérifié (SPF, DKIM, DMARC) avant U23.
 
-## Sentry
+## PostHog (suivi des erreurs et analytique, AD-28)
 
-- Performance (U02) : le SDK navigateur pèse l'essentiel du JavaScript inutilisé signalé par Lighthouse (~69 Ko, TBT 400 ms en mobile simulé). Les options `webpack.treeshake.*` de Sentry 11 ne s'appliquent pas à Turbopack (Next 16). Piste à étudier avant le lancement : désactiver le traçage navigateur ou charger Sentry après l'interaction.
-
-- Doc : https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
-- Fichiers (U01) : `src/instrumentation.ts` (`register` + `onRequestError = Sentry.captureRequestError`), `src/sentry.server.config.ts`, `src/sentry.edge.config.ts`, `src/instrumentation-client.ts` (`onRouterTransitionStart`), `src/app/global-error.tsx`, `withSentryConfig` importé depuis **`@sentry/nextjs/config`** dans `next.config.ts`.
-- **Piège v11** : `sendDefaultPii` n'existe plus, remplacé par `dataCollection`, qui collecte **par défaut** utilisateur, cookies, en-têtes, corps HTTP, paramètres d'URL et variables locales. Tout est coupé dans `src/shared/observability/sentry.ts` ; `beforeSend: scrubEvent` (testé) sert de seconde barrière (emails masqués).
-- Pas de Session Replay ni de widget de retour (Q15). `telemetry: false` sur le plugin de build.
-- Source maps envoyées seulement si `SENTRY_AUTH_TOKEN` est défini (build Vercel) ; en CI, l'avertissement « No auth token provided » est normal.
-
-## Analytique
-
-- PostHog : https://posthog.com/docs/libraries/next-js — Plausible : https://plausible.io/docs
-- Choix ouvert. Pas d'identifiant personnel dans les événements ; consentement si cookies non essentiels.
+- Doc : https://posthog.com/docs/libraries/next-js — erreurs : https://posthog.com/docs/error-tracking/installation/nextjs — options navigateur : https://posthog.com/docs/libraries/js/config — sans cookie : https://posthog.com/docs/privacy/data-collection
+- Fichiers : `src/client/observability/posthog.ts` (`loadPostHog` : `import("posthog-js")` différé puis `posthog.init`, seulement si une clé existe ; `reportBoundaryError`), `src/instrumentation-client.ts` (déclenche le chargement), `src/instrumentation.ts` (`onRequestError` → `captureServerError`, runtime Node.js seulement), `src/server/observability/posthog-server.ts`, `src/shared/observability/posthog.ts` (`scrubEvent`, `withEnvironment`, testés), `src/app/error.tsx` et `src/app/global-error.tsx` (`reportBoundaryError` : la capture automatique écoute `window.onerror` et ne voit pas les erreurs attrapées par une page d'erreur).
+- Navigateur : `cookieless_mode: "always"` (aucun cookie ni stockage, pas de bandeau) **exige** le réglage projet « Cookieless server hash mode » (Settings → Project → Web analytics), sinon aucun événement n'est enregistré. Avec ce mode : jamais d'`identify` ni d'`alias`, `person_profiles: "never"`. `defaults: "2026-05-30"`, `capture_pageview: "history_change"` (navigations App Router), `autocapture`, enregistrement des sessions et sondages coupés, `capture_exceptions: true`.
+- `before_send` accepte un tableau de fonctions (navigateur et Node) ; renvoyer `null` rejette l'événement. Les exceptions sont dans `properties.$exception_list[].value`.
+- Serveur (Vercel) : `new PostHog(token, { host, flushAt: 1, flushInterval: 0 })` et `await captureExceptionImmediate(error, distinctId?, properties?)` avant la fin de la requête. Sans `distinctId`, l'événement est anonyme. `disableGeoip` vaut `true` par défaut côté Node.
+- Chargement : `instrumentation-client.ts` attend l'événement `load` puis `requestIdleCallback` (délai max 5 s) avant `loadPostHog()`. Chargé dès l'hydratation, posthog-js (≈ 300 Ko non compressés) faisait perdre ≈ 12 points de performance mobile. Le bundle `posthog-js/dist/module.slim` (≈ 150 Ko) existe, mais son option `__extensionClasses` est marquée `@internal` : non utilisée.
+- Pas de proxy inverse : le mode sans cookie calcule son identifiant anonyme à partir de l'IP réelle du visiteur. Le navigateur appelle `eu.i.posthog.com` directement (à autoriser dans la CSP en U28).
+- Source maps non envoyées (clé personnelle PostHog requise, `@posthog/nextjs-config`) : prévu en U29. Les piles d'erreurs navigateur restent minifiées d'ici là.
+- Clé de projet `phc_…` (publique, envoi d'événements seulement) ≠ clé personnelle `phx_…` (accès au compte : jamais dans l'application). `env.ts` refuse une clé qui ne commence pas par `phc_`.
 
 ## Vercel
 

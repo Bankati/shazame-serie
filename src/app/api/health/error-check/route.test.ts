@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { SentryCheckError } from "@/server/health/sentry-check";
+import { ErrorCheckError } from "@/server/health/error-check";
 
 import { GET } from "./route";
 
@@ -10,10 +10,10 @@ vi.mock("@/server/env", () => ({ env: { CRON_SECRET: "c".repeat(32) } }));
 
 function request(authorization?: string): Request {
   const headers = authorization ? { authorization } : undefined;
-  return new Request("https://site.example/api/health/sentry-check", { headers });
+  return new Request("https://site.example/api/health/error-check", { headers });
 }
 
-describe("GET /api/health/sentry-check", () => {
+describe("GET /api/health/error-check", () => {
   it("répond 401 UNAUTHENTICATED sans secret", async () => {
     const response = GET(request());
 
@@ -26,6 +26,6 @@ describe("GET /api/health/sentry-check", () => {
   });
 
   it("lève l'erreur volontaire avec le bon secret", () => {
-    expect(() => GET(request(`Bearer ${SECRET}`))).toThrow(SentryCheckError);
+    expect(() => GET(request(`Bearer ${SECRET}`))).toThrow(ErrorCheckError);
   });
 });

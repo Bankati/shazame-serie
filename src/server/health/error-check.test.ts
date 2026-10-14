@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { isAuthorizedSentryCheck } from "./sentry-check";
+import { isAuthorizedErrorCheck } from "./error-check";
 
 const SECRET = "x".repeat(32);
 
-describe("isAuthorizedSentryCheck", () => {
+describe("isAuthorizedErrorCheck", () => {
   it("accepte le bon secret", () => {
-    expect(isAuthorizedSentryCheck(`Bearer ${SECRET}`, SECRET)).toBe(true);
+    expect(isAuthorizedErrorCheck(`Bearer ${SECRET}`, SECRET)).toBe(true);
   });
 
   it.each([
@@ -15,11 +15,11 @@ describe("isAuthorizedSentryCheck", () => {
     ["secret sans préfixe Bearer", SECRET],
     ["en-tête vide", ""],
   ])("refuse : %s", (_label, header) => {
-    expect(isAuthorizedSentryCheck(header, SECRET)).toBe(false);
+    expect(isAuthorizedErrorCheck(header, SECRET)).toBe(false);
   });
 
   it("refuse tout quand aucun secret n'est configuré", () => {
-    expect(isAuthorizedSentryCheck("Bearer ", undefined)).toBe(false);
-    expect(isAuthorizedSentryCheck("Bearer undefined", undefined)).toBe(false);
+    expect(isAuthorizedErrorCheck("Bearer ", undefined)).toBe(false);
+    expect(isAuthorizedErrorCheck("Bearer undefined", undefined)).toBe(false);
   });
 });

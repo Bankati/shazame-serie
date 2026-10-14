@@ -67,7 +67,7 @@ type Result<T, E = AppError> = { ok: true; value: T } | { ok: false; error: E };
 | `FRAMES_UNUSABLE` | 422 | Moins de 2 images exploitables |
 | `AI_PAUSED` | 503 | Plafond de dépense IA atteint |
 | `UPSTREAM_ERROR` | 502 | IA, TMDB ou prestataire en échec après 3 tentatives |
-| `INTERNAL_ERROR` | 500 | Inattendu (envoyé à Sentry) |
+| `INTERNAL_ERROR` | 500 | Inattendu (envoyé au suivi des erreurs PostHog) |
 
 - Webhooks : lire le corps brut, vérifier la signature, vérifier l'idempotence (`billing_events`), traiter, répondre 2xx rapidement.
 - Jamais de détail technique (stack, SQL, réponse brute d'un fournisseur) dans un message d'erreur renvoyé au client.
@@ -86,7 +86,7 @@ type Result<T, E = AppError> = { ok: true; value: T } | { ok: false; error: E };
 ## Security
 
 - Secrets uniquement dans les variables d'environnement serveur, lus via `src/server/env.ts`.
-- En-têtes de sécurité définis globalement (CSP, HSTS, X-Content-Type-Options, Referrer-Policy, `frame-ancestors 'none'`). La CSP suit la méthode à nonce décrite dans la doc Next.js de la version installée et autorise explicitement : images `image.tmdb.org`, cadre `www.youtube-nocookie.com` (bandes-annonces), connexions Supabase, Sentry, analytique, et le domaine du prestataire de paiement si nécessaire.
+- En-têtes de sécurité définis globalement (CSP, HSTS, X-Content-Type-Options, Referrer-Policy, `frame-ancestors 'none'`). La CSP suit la méthode à nonce décrite dans la doc Next.js de la version installée et autorise explicitement : images `image.tmdb.org`, cadre `www.youtube-nocookie.com` (bandes-annonces), connexions Supabase, PostHog (`eu.i.posthog.com`, erreurs et analytique), et le domaine du prestataire de paiement si nécessaire.
 - Bandes-annonces : lecteur `youtube-nocookie.com`, chargé seulement au clic.
 - Contrôle du type réel des images reçues (octets magiques via `sharp`), pas seulement du type MIME annoncé.
 - Limitation de débit sur : connexion, inscription, reset, identification, signalement, export.

@@ -19,9 +19,11 @@ const envSchema = z.object({
   NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN: optional(z.string().regex(/^phc_\w+$/)),
   NEXT_PUBLIC_POSTHOG_HOST: z.preprocess(emptyToUndefined, httpsUrl().default(POSTHOG_DEFAULT_HOST)),
   CRON_SECRET: optional(z.string().min(32)),
+  // Base applicative (U10). Sur Vercel : URL du pooler Supabase en mode transaction (port 6543).
+  DATABASE_URL: optional(z.url({ protocol: /^postgres(ql)?$/ })),
 });
 
-const REQUIRED_IN_PRODUCTION = ["NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN", "CRON_SECRET"] as const;
+const REQUIRED_IN_PRODUCTION = ["NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN", "CRON_SECRET", "DATABASE_URL"] as const;
 
 export type Env = z.infer<typeof envSchema>;
 

@@ -110,7 +110,7 @@ Signalement : les images ne sont jamais écrites sur disque ou en stockage penda
 ## Cache de résultats
 
 - `result_cache` : une entrée par résultat retenu ; `result_cache_frames` : les dHash 64 bits (`bigint`) de chaque image de l'entrée.
-- Correspondance exacte : empreinte = SHA-256 des dHash triés → clé Redis `cache:fp:{empreinte}`.
+- Correspondance exacte : empreinte = SHA-256 des dHash triés, recherchée par l'index unique de `result_cache.fingerprint` (AD-29 : pas de raccourci Redis en V1).
 - Correspondance proche : une entrée est retenue si au moins `CACHE_MIN_MATCHING_FRAMES` (2) images ont une distance de Hamming ≤ `CACHE_MAX_HAMMING` (valeur à calibrer, départ 6) avec ses images. Requête SQL `bit_count((a # b)::bit(64))`. Volume V1 faible : un balayage indexé suffit ; à revoir au-delà de ~100 000 entrées.
 - Écriture seulement si la confiance finale ≥ `CACHE_MIN_CONFIDENCE` (départ 80 %) ou après validation admin.
 - Un signalement sur un résultat servi par le cache désactive l'entrée (`disabled = true`) jusqu'à revue admin. L'admin peut la corriger (`validated = true`, nouveau `tmdb_id`).
@@ -130,7 +130,7 @@ Signalement : les images ne sont jamais écrites sur disque ou en stockage penda
   - `admin_audit_log` (id, admin_id, action, target_type, target_id, before jsonb, after jsonb, created_at)
   - `consents` (user_id, kind `terms|privacy|b2b`, version, granted bool, created_at) — le consentement aux images est porté par chaque `reports.images_consent`
   - `data_exports` (id, user_id, storage_path, expires_at, created_at)
-- **Redis (Upstash)** : `quota:{user|visitor}:{id}:{YYYY-MM-DD Paris}` (expire après minuit Paris), `ai:spend:{YYYY-MM-DD Paris}`, `rl:*` (limitation de débit), `tmdb:*` (réponses TMDB, durée selon leurs conditions), `cache:fp:{empreinte}`.
+- **Redis (Upstash)** : `quota:{user|visitor}:{id}:{YYYY-MM-DD Paris}` (expire après minuit Paris), `ai:spend:{YYYY-MM-DD Paris}`, `rl:*` (limitation de débit), `tmdb:*` (réponses TMDB, durée selon leurs conditions).
 - **Supabase Storage**, buckets privés : `reports` (images consenties, chemins aléatoires, lecture admin par URL signée), `avatars` (photos de profil), `exports` (JSON d'export, URL signée valable 24 h, supprimé par cron).
 - **Aucune vidéo, nulle part.** Montants en entiers : centimes pour les prix, micro-euros pour les coûts (le fournisseur IA facture en USD : conversion par une constante `USD_TO_EUR` révisée chaque mois). Dates en UTC ; le « jour » de quota et de dépense se calcule en `Europe/Paris`.
 
@@ -163,7 +163,7 @@ Chaque appel externe : délai maximal, journalisation sans donnée personnelle, 
 
 ## Environnements et secrets
 
-- `development` (local, Supabase dans Docker), `preview` (préproduction), `production`. **Un seul projet Supabase en ligne** (`shazam_serie`) sert à la préproduction et à la production (AD-27) : la préproduction travaille sur les données réelles, et seules les migrations fusionnées dans `main` y sont appliquées. Plan payant avant le lancement (le plan gratuit met les projets en pause après une période d'inactivité).
+- `development` (local, Supabase dans Docker), `preview` (préproduction), `production`. **Un seul projet Supabase en ligne** (`shazam_serie`) sert à la préproduction et à la production (AD-27) : la préproduction travaille sur les données réelles, et seules les migrations fusionnées dans `main` y sont appliquées. Plan payant avant le lancement (le plan gratuit met les projets en pause après une période d'inactivité). Fonctions Vercel en région `dub1` (Dublin, `vercel.json`), à côté de la base Supabase `eu-west-1`. Chaque requête applicative passe par `withQueryTimeout` (délai de 5 s).
 - Variables serveur : `DATABASE_URL`, `SUPABASE_SECRET_KEY` (clé « secret » des nouvelles clés Supabase, remplace `service_role`), `OPENAI_API_KEY`, `OPENAI_VISION_MODEL`, `TMDB_API_TOKEN`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `BILLING_*`, `RESEND_API_KEY`, `CRON_SECRET`, `VISITOR_COOKIE_SECRET`, `ADMIN_ALERT_EMAIL`.
 - Variables publiques (`NEXT_PUBLIC_*`) : URL du site, `NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (clé « publishable », ex-« anon »), `NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN` (clé de projet PostHog, publique par nature) et `NEXT_PUBLIC_POSTHOG_HOST`. Rien d'autre.
 - `src/server/env.ts` valide les variables au démarrage : l'application refuse de démarrer si l'une manque. Les variables sont ajoutées au fil des unités ; celles des services externes sont obligatoires quand `VERCEL_ENV` vaut `production`, facultatives en preview, en local et en CI (AD-28 ; chaque unité qui ajoute une variable précise si la preview l'exige). Liste à jour : `.env.example`.

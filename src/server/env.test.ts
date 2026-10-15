@@ -4,7 +4,8 @@ import { parseEnv } from "./env";
 
 const SECRET = "s".repeat(32);
 const TOKEN = "phc_abc123XYZ";
-const COMPLETE = { NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN: TOKEN, CRON_SECRET: SECRET };
+const DATABASE_URL = "postgresql://postgres.ref:mdp@aws-0-eu-west-1.pooler.supabase.com:6543/postgres";
+const COMPLETE = { NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN: TOKEN, CRON_SECRET: SECRET, DATABASE_URL };
 const DEFAULT_HOST = { NEXT_PUBLIC_POSTHOG_HOST: "https://eu.i.posthog.com" };
 
 describe("parseEnv", () => {
@@ -18,8 +19,8 @@ describe("parseEnv", () => {
     );
   });
 
-  it("exige la clé PostHog et CRON_SECRET en production", () => {
-    expect(() => parseEnv({ VERCEL_ENV: "production" })).toThrow(/NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN, CRON_SECRET/);
+  it("exige la clé PostHog, CRON_SECRET et DATABASE_URL en production", () => {
+    expect(() => parseEnv({ VERCEL_ENV: "production" })).toThrow(/NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN, CRON_SECRET, DATABASE_URL/);
     expect(parseEnv({ VERCEL_ENV: "production", ...COMPLETE })).toMatchObject(COMPLETE);
   });
 
@@ -38,5 +39,13 @@ describe("parseEnv", () => {
 
   it.each(["pas-une-url", "javascript:alert(1)", "http://eu.i.posthog.com"])("refuse un hôte PostHog non https : %s", (host) => {
     expect(() => parseEnv({ NEXT_PUBLIC_POSTHOG_HOST: host })).toThrow(/NEXT_PUBLIC_POSTHOG_HOST/);
+  });
+
+  it.each(["https://exemple.fr/db", "pas-une-url", "mysql://u:p@h/db"])("refuse une DATABASE_URL qui n'est pas PostgreSQL : %s", (url) => {
+    expect(() => parseEnv({ DATABASE_URL: url })).toThrow(/DATABASE_URL/);
+  });
+
+  it("n'affiche jamais le mot de passe de la base dans l'erreur", () => {
+    expect(() => parseEnv({ VERCEL_ENV: "production", DATABASE_URL: "postgresql://u:secret-mdp@h/db" })).not.toThrow(/secret-mdp/);
   });
 });

@@ -108,7 +108,10 @@ Plans d'hébergement : **Vercel Pro** obligatoire (le plan Hobby est réservé �
 ## Drizzle ORM + PostgreSQL (Supabase)
 
 - Doc : https://orm.drizzle.team/docs/overview — Supabase : https://orm.drizzle.team/docs/connect-supabase
-- Connexion via le **pooler** Supabase en mode transaction pour les fonctions serverless : désactiver les requêtes préparées (`prepare: false` avec le pilote `postgres`).
+- **Pooler en mode transaction (port 6543) : les paramètres envoyés à la connexion sont ignorés** (`connection: { statement_timeout }` de postgres.js reste sans effet, délai réel 2 min ; vérifié le 15 octobre 2026). Délai par requête : `withQueryTimeout(db, (tx) => …)` dans `src/server/db/client.ts` (`SET LOCAL statement_timeout` dans une transaction, 5 s par défaut, erreur 57014). Ne jamais y placer d'appel externe long.
+- Région : fonctions Vercel en `dub1` (Dublin, `vercel.json`), même région que la base Supabase `eu-west-1`. Depuis `iad1` (défaut Vercel), chaque aller-retour traverserait l'Atlantique.
+- Connexion via le **pooler** Supabase en mode transaction pour les fonctions serverless : désactiver les requêtes préparées (`prepare: false` avec le pilote `postgres`). Client applicatif : `getDb()` dans `src/server/db/client.ts` (U10), une connexion par instance, `DATABASE_URL` obligatoire en production.
+- `db.execute(sql…)` avec postgres-js renvoie directement le tableau de lignes. Pour un tableau d'entiers en paramètre : littéral `{1,2,3}` passé en paramètre puis `::bigint[]` (voir `result-cache.ts`).
 - Migrations : `drizzle-kit generate` puis `drizzle-kit migrate`. Jamais `push` en production.
 - Installé en U03 : `drizzle-orm` 0.45.3, `drizzle-kit` 0.31.11, `postgres` 3.4.9, `tsx` 4.23.15 (scripts). `.enableRLS()` sur chaque table et `authUsers` (`drizzle-orm/supabase`) pour la clé étrangère `profiles.id → auth.users.id`. `schemaFilter: ["public"]` dans `drizzle.config.ts` : `auth` et `storage` restent à Supabase.
 - Migrations SQL personnalisées : `drizzle-kit generate --custom --name <nom>`, puis écrire le SQL (séparer les instructions par `--> statement-breakpoint`).
@@ -212,6 +215,8 @@ Plans d'hébergement : **Vercel Pro** obligatoire (le plan Hobby est réservé �
 
 - Doc : https://sharp.pixelplumbing.com
 - Côté serveur : lire les métadonnées pour vérifier le format réel (JPEG) et les dimensions, rejeter le reste. Calculer les dHash (redimensionnement 9 × 8 en niveaux de gris). Runtime Node uniquement.
+- Installé en U10 : `sharp` 0.35.5 (libvips 8.18). dHash : `sharp(buf).greyscale().resize(9, 8, { fit: "fill" }).raw().toBuffer({ resolveWithObject: true })`, puis lire un octet sur `info.channels` (un canal alpha peut subsister) et appliquer `dHash` de `src/shared/frames/analysis.ts` (`src/server/identification/frame-hashes.ts`).
+- dHash stocké en `bigint` PostgreSQL signé : `BigInt.asIntN(64, h)` ; la distance se calcule en SQL par `bit_count((a # b)::bit(64))` (PostgreSQL 14+).
 
 ## Vitest et Playwright
 

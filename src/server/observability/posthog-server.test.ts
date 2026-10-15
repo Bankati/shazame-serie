@@ -61,7 +61,7 @@ describe("captureServerError", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
 
     await expect(capture(new Error("boom"), CONTEXT)).resolves.toBeUndefined();
-    expect(warn).toHaveBeenCalledWith("[observability] Envoi de l'erreur à PostHog impossible.");
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('"event":"observability.posthog_send_failed"'));
     warn.mockRestore();
   });
 });

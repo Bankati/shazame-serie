@@ -3,6 +3,7 @@ import "server-only";
 import { PostHog } from "posthog-node";
 
 import { env } from "@/server/env";
+import { log } from "@/server/log";
 import { scrubEvent, stripQueryAndFragment, toEnvironment, withEnvironment } from "@/shared/observability/posthog";
 
 // Client PostHog serveur (Node.js). Envoi immédiat et attendu : sur Vercel, la fonction peut s'arrêter
@@ -50,6 +51,6 @@ export async function captureServerError(error: unknown, context: ServerErrorCon
   } catch {
     // Le suivi des erreurs ne doit jamais faire échouer la requête. On signale l'échec sans aucun détail
     // (le message pourrait contenir une donnée personnelle, invariant 9).
-    console.warn("[observability] Envoi de l'erreur à PostHog impossible.");
+    log.warn("observability.posthog_send_failed");
   }
 }

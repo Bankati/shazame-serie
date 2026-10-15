@@ -21,9 +21,21 @@ const envSchema = z.object({
   CRON_SECRET: optional(z.string().min(32)),
   // Base applicative (U10). Sur Vercel : URL du pooler Supabase en mode transaction (port 6543).
   DATABASE_URL: optional(z.url({ protocol: /^postgres(ql)?$/ })),
+  // TMDB (U08) : jeton de lecture « API Read Access Token » (JWT), jamais la clé courte v3.
+  TMDB_API_TOKEN: optional(z.string().regex(/^eyJ[\w-]+\.[\w-]+\.[\w-]+$/)),
+  // Upstash Redis (U08 cache TMDB, U11 quotas). Région eu-west-1, à côté de la base.
+  UPSTASH_REDIS_REST_URL: optional(httpsUrl()),
+  UPSTASH_REDIS_REST_TOKEN: optional(z.string().min(20)),
 });
 
-const REQUIRED_IN_PRODUCTION = ["NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN", "CRON_SECRET", "DATABASE_URL"] as const;
+const REQUIRED_IN_PRODUCTION = [
+  "NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN",
+  "CRON_SECRET",
+  "DATABASE_URL",
+  "TMDB_API_TOKEN",
+  "UPSTASH_REDIS_REST_URL",
+  "UPSTASH_REDIS_REST_TOKEN",
+] as const;
 
 export type Env = z.infer<typeof envSchema>;
 

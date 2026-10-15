@@ -11,6 +11,13 @@ Mettre à jour ce fichier après chaque changement d'implémentation significati
 - Fermer les décisions restantes D1 à D5 et D8 de `build-plan.md`, en priorité D1 (paiement) et D4 (accès OpenAI), qui sont sur le chemin critique.
 - Démarrer U01 (`/architect`), désormais débloquée.
 
+## Comptes de service (15 octobre 2026)
+
+- TMDB : clé « Developer » (jeton de lecture) active, vérifiée par une recherche. Licence commerciale à demander (D2, Q2, Q3).
+- OpenAI : compte, crédits et projet de développement actifs, clé vérifiée (133 modèles accessibles). Modèle de vision à choisir en U07 / U13 (Q4) ; DPA à accepter avant la bêta (D4).
+- Upstash Redis : base de développement active (PING vérifié). Région à confirmer : eu-west-1.
+- Les clés sont dans `.env.local` (non versionné). La clé OpenAI est passée par une conversation : à régénérer avant la bêta.
+
 ## Completed
 
 - U02 — Tokens de design et coquille de mise en page (7-8 octobre 2026, plan `context/plans/U02.md`). shadcn/ui (Radix, preset Nova), tokens, polices, en-tête, menu mobile, pied de page (mentions TMDB et JustWatch), pages 404 / erreur, accueil statique (AD-23), `npm run check:design` en CI (règles testées), `/imprint` (12 entrées). `/review` et `/audit` exécutés ; corrigés : navigation à partir de 1 024 px, offre Premium affichée « Jusqu'à 100 identifications par jour » (RG4, AD-20), tests du contrôle de design. Lighthouse mobile : accessibilité 100, bonnes pratiques 100, SEO 100, performance 75 (SDK Sentry navigateur, à traiter avant le lancement : voir `library-docs.md`). 40 tests.
@@ -49,6 +56,10 @@ Mettre à jour ce fichier après chaque changement d'implémentation significati
   - À faire en U13 : exécuter l'eval avec le cache contourné, puis calibrer `CACHE_MAX_HAMMING` (6), `CACHE_MIN_MATCHING_FRAMES` (2), `CACHE_MIN_CONFIDENCE` (80).
   - Reste (fondateur) : `DATABASE_URL` (Transaction pooler, 6543) dans Vercel → Production avant la prochaine fusion vers `main`.
   - Pour U14 : deux envois simultanés du même extrait avant sa mise en cache appellent deux fois l'IA (écriture unique). Surcoût rare (début de diffusion d'un clip viral), borné par le plafond de dépense ; envisager un verrou court par empreinte si les mesures le justifient.
+
+- U08 — Client TMDB et rapprochement (plan validé le 15 octobre 2026 : `context/plans/U08.md`). D2 ouverte : licence commerciale à demander par le fondateur.
+  - Fait (15 octobre 2026) : `CatalogProvider` / `TmdbCatalog` (recherche multi, détails avec repli du synopsis en anglais, configuration des images), client TMDB (délai, nouvelle tentative, zod), cache Upstash 7 jours, rapprochement pur (titre fr / en / original, année ±1, type, popularité) toujours en `fr-FR` + `en-US`. Variables TMDB et Upstash obligatoires en production. 20 titres réels retrouvés en direct (`npm run test:tmdb`), titre inventé sans correspondance. Relecture et audit faits : motif `not_found` distinct (une réponse invalide n'est plus mise en cache comme fiche absente), synopsis anglais demandé seulement si le français est vide. 164 tests unitaires.
+  - Reste (fondateur) : `TMDB_API_TOKEN`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` dans Vercel → Production ; confirmer la région Upstash (eu-west-1) ; demande de licence commerciale TMDB (D2).
 
 ## Next Up
 

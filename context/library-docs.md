@@ -156,6 +156,10 @@ Plans d'hébergement : **Vercel Pro** obligatoire (le plan Hobby est réservé �
 - Où regarder : `movie/{id}/watch/providers` et `tv/{id}/watch/providers` (données fournies par JustWatch, **attribution JustWatch obligatoire**). Licence commerciale TMDB requise (D2).
 - Mention obligatoire et logo : https://www.themoviedb.org/about/logos-attribution
 - Respecter les limites de débit et mettre en cache selon leurs conditions.
+- **Conditions (vérifiées le 15 octobre 2026)** : cache de 6 mois au maximum (section 1.C) ; logo TMDB et mention « uses TMDB and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB » (section 3) ; **tout usage payant exige un accord écrit** (section 2.A, D2). Pas de réponse TMDB stockée dans le dépôt (pas de fixtures).
+- Installé en U08 : `src/server/catalog/` (`TmdbCatalog`, `createTmdbClient` : délai 5 s, une nouvelle tentative sur 429 / 5xx avec `Retry-After` borné à 2 s, zod sur chaque réponse ; cache Redis 7 jours `tmdb:search|details|configuration`). Authentification par **jeton de lecture** (`Authorization: Bearer`, JWT `eyJ…`).
+- **Piège `search/multi`** : la recherche française peut ne pas remonter la bonne fiche quand le titre est anglais (« Attack on Titan » : la série n'apparaît qu'en `en-US`). `matchProposedTitle` interroge toujours `fr-FR` et `en-US` en parallèle et fusionne les titres d'une même fiche. Les résultats mêlent films, séries et personnes : valider chaque élément à part.
+- Test en direct : `npm run test:tmdb` (20 titres, clés de `.env.local`, hors CI).
 
 ## Watchmode (secours pour « où regarder »)
 
@@ -164,6 +168,7 @@ Plans d'hébergement : **Vercel Pro** obligatoire (le plan Hobby est réservé �
 ## Upstash Redis et Ratelimit
 
 - Doc : https://upstash.com/docs/redis/overall/getstarted — Ratelimit : https://upstash.com/docs/redis/sdks/ratelimit-ts/overview
+- Installé en U08 : `@upstash/redis` 1.39.0, `getRedis()` / `cachedJson()` dans `src/server/cache/redis.ts` (délai 1,5 s par `signal: () => AbortSignal.timeout(…)`, 1 nouvelle tentative, `enableTelemetry: false`, valeurs revalidées par zod à la lecture, panne Redis = pas de cache). Sans `UPSTASH_REDIS_REST_*`, pas de cache (local, CI).
 - Quota : `INCR` + `EXPIREAT` sur la clé du jour (minuit Europe/Paris), réservation puis confirmation/libération (`DECR`) pour éviter les dépassements en cas de requêtes simultanées.
 
 ## Paiement (selon D1)

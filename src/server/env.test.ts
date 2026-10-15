@@ -5,7 +5,15 @@ import { parseEnv } from "./env";
 const SECRET = "s".repeat(32);
 const TOKEN = "phc_abc123XYZ";
 const DATABASE_URL = "postgresql://postgres.ref:mdp@aws-0-eu-west-1.pooler.supabase.com:6543/postgres";
-const COMPLETE = { NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN: TOKEN, CRON_SECRET: SECRET, DATABASE_URL };
+const TMDB_API_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJ0ZXN0In0.c2lnbmF0dXJl";
+const COMPLETE = {
+  NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN: TOKEN,
+  CRON_SECRET: SECRET,
+  DATABASE_URL,
+  TMDB_API_TOKEN,
+  UPSTASH_REDIS_REST_URL: "https://exemple-12345.upstash.io",
+  UPSTASH_REDIS_REST_TOKEN: "A".repeat(40),
+};
 const DEFAULT_HOST = { NEXT_PUBLIC_POSTHOG_HOST: "https://eu.i.posthog.com" };
 
 describe("parseEnv", () => {
@@ -19,8 +27,10 @@ describe("parseEnv", () => {
     );
   });
 
-  it("exige la clé PostHog, CRON_SECRET et DATABASE_URL en production", () => {
-    expect(() => parseEnv({ VERCEL_ENV: "production" })).toThrow(/NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN, CRON_SECRET, DATABASE_URL/);
+  it("exige les variables des services externes en production", () => {
+    expect(() => parseEnv({ VERCEL_ENV: "production" })).toThrow(
+      /NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN, CRON_SECRET, DATABASE_URL, TMDB_API_TOKEN, UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN/,
+    );
     expect(parseEnv({ VERCEL_ENV: "production", ...COMPLETE })).toMatchObject(COMPLETE);
   });
 
@@ -47,5 +57,9 @@ describe("parseEnv", () => {
 
   it("n'affiche jamais le mot de passe de la base dans l'erreur", () => {
     expect(() => parseEnv({ VERCEL_ENV: "production", DATABASE_URL: "postgresql://u:secret-mdp@h/db" })).not.toThrow(/secret-mdp/);
+  });
+
+  it.each(["3b68536ae2d233abea1ad47d6c2f0e47", "pas-un-jeton"])("refuse un TMDB_API_TOKEN qui n'est pas le jeton de lecture : %s", (token) => {
+    expect(() => parseEnv({ TMDB_API_TOKEN: token })).toThrow(/TMDB_API_TOKEN/);
   });
 });

@@ -19,10 +19,12 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "tsx --env-file-if-exists=.env.local scripts/db-seed.ts",
-    "test:db": "vitest run --config vitest.db.config.mts"
+    "test:db": "vitest run --config vitest.db.config.mts",
+    "test:tmdb": "vitest run --config vitest.live.config.mts"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.117.3",
+    "@upstash/redis": "1.39.0",
     "class-variance-authority": "0.7.1",
     "cn": "0.4.0",
     "drizzle-orm": "0.45.3",

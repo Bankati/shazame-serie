@@ -52,6 +52,8 @@ Un seul projet Supabase en ligne (`shazam_serie`) sert à la préproduction et �
    | `NEXT_PUBLIC_SUPABASE_URL` | Project URL, sans `/rest/v1/` |
    | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Clé publishable |
    | `SUPABASE_SECRET_KEY` | Clé secrète (contourne la RLS : jamais en `NEXT_PUBLIC_*`) |
+   | `TMDB_API_TOKEN` | TMDB → Paramètres → API → « API Read Access Token » (long jeton `eyJ…`) — obligatoire en Production (U08) |
+   | `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | console.upstash.com → base Redis (région eu-west-1) → REST API — obligatoires en Production (U08) |
 
 5. Région des fonctions : fixée à **Dublin (`dub1`)** par `vercel.json`, à côté de la base (`eu-west-1`). Rien à régler dans Vercel ; ne pas la changer dans Settings → Functions (le fichier l'emporte).
 6. Les migrations sont appliquées par le workflow `Database migrations`, uniquement depuis `main` et après votre approbation (voir section 4). La première fois, le lancer à la main : Actions → Database migrations → Run workflow → branche `main`.

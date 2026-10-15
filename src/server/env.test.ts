@@ -13,8 +13,13 @@ const COMPLETE = {
   TMDB_API_TOKEN,
   UPSTASH_REDIS_REST_URL: "https://exemple-12345.upstash.io",
   UPSTASH_REDIS_REST_TOKEN: "A".repeat(40),
+  OPENAI_API_KEY: `sk-proj-${"x".repeat(40)}`,
 };
-const DEFAULT_HOST = { NEXT_PUBLIC_POSTHOG_HOST: "https://eu.i.posthog.com" };
+const DEFAULT_HOST = {
+  NEXT_PUBLIC_POSTHOG_HOST: "https://eu.i.posthog.com",
+  OPENAI_VISION_MODEL: "gpt-6.1-sol",
+  OPENAI_IMAGE_DETAIL: "auto",
+};
 
 describe("parseEnv", () => {
   it("accepte un environnement local sans aucune variable (hôte PostHog UE par défaut)", () => {
@@ -29,7 +34,7 @@ describe("parseEnv", () => {
 
   it("exige les variables des services externes en production", () => {
     expect(() => parseEnv({ VERCEL_ENV: "production" })).toThrow(
-      /NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN, CRON_SECRET, DATABASE_URL, TMDB_API_TOKEN, UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN/,
+      /NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN, CRON_SECRET, DATABASE_URL, TMDB_API_TOKEN, UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN, OPENAI_API_KEY/,
     );
     expect(parseEnv({ VERCEL_ENV: "production", ...COMPLETE })).toMatchObject(COMPLETE);
   });
@@ -61,5 +66,13 @@ describe("parseEnv", () => {
 
   it.each(["3b68536ae2d233abea1ad47d6c2f0e47", "pas-un-jeton"])("refuse un TMDB_API_TOKEN qui n'est pas le jeton de lecture : %s", (token) => {
     expect(() => parseEnv({ TMDB_API_TOKEN: token })).toThrow(/TMDB_API_TOKEN/);
+  });
+
+  it.each(["pas-une-cle", "sk-court", "phc_mauvaise_cle_de_service"])("refuse une OPENAI_API_KEY invalide : %s", (key) => {
+    expect(() => parseEnv({ OPENAI_API_KEY: key })).toThrow(/OPENAI_API_KEY/);
+  });
+
+  it("refuse un niveau de détail d'image inconnu", () => {
+    expect(() => parseEnv({ OPENAI_IMAGE_DETAIL: "ultra" })).toThrow(/OPENAI_IMAGE_DETAIL/);
   });
 });

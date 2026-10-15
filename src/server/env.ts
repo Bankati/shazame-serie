@@ -26,6 +26,11 @@ const envSchema = z.object({
   // Upstash Redis (U08 cache TMDB, U11 quotas). Région eu-west-1, à côté de la base.
   UPSTASH_REDIS_REST_URL: optional(httpsUrl()),
   UPSTASH_REDIS_REST_TOKEN: optional(z.string().min(20)),
+  // OpenAI (U07) : clé de projet « sk-… » ; modèle et niveau de détail calibrés par l'eval (Q4, AD-31).
+  OPENAI_API_KEY: optional(z.string().regex(/^sk-[\w-]{20,}$/)),
+  OPENAI_VISION_MODEL: z.preprocess(emptyToUndefined, z.string().min(1).default("gpt-6.1-sol")),
+  OPENAI_IMAGE_DETAIL: z.preprocess(emptyToUndefined, z.enum(["low", "high", "auto", "original"]).default("auto")),
+  OPENAI_REASONING_EFFORT: optional(z.enum(["none", "minimal", "low", "medium", "high"])),
 });
 
 const REQUIRED_IN_PRODUCTION = [
@@ -35,6 +40,7 @@ const REQUIRED_IN_PRODUCTION = [
   "TMDB_API_TOKEN",
   "UPSTASH_REDIS_REST_URL",
   "UPSTASH_REDIS_REST_TOKEN",
+  "OPENAI_API_KEY",
 ] as const;
 
 export type Env = z.infer<typeof envSchema>;

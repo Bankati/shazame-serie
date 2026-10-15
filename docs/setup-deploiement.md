@@ -53,6 +53,7 @@ Un seul projet Supabase en ligne (`shazam_serie`) sert à la préproduction et �
    | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Clé publishable |
    | `SUPABASE_SECRET_KEY` | Clé secrète (contourne la RLS : jamais en `NEXT_PUBLIC_*`) |
    | `TMDB_API_TOKEN` | TMDB → Paramètres → API → « API Read Access Token » (long jeton `eyJ…`) — obligatoire en Production (U08) |
+   | `OPENAI_API_KEY` | platform.openai.com → projet de **production** → API keys (clé `sk-…` distincte de celle du développement) — obligatoire en Production (U07). Plafond de dépense mensuel réglé dans Settings → Limits |
    | `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | console.upstash.com → base Redis (région eu-west-1) → REST API — obligatoires en Production (U08) |
 
 5. Région des fonctions : fixée à **Dublin (`dub1`)** par `vercel.json`, à côté de la base (`eu-west-1`). Rien à régler dans Vercel ; ne pas la changer dans Settings → Functions (le fichier l'emporte).

@@ -28,7 +28,7 @@ Relevées sur le registre npm le **4 octobre 2026**, révisées en U01 le **7 oc
 | `postgres` | 3.4.9 | Pilote PostgreSQL pour Drizzle |
 | `@supabase/supabase-js` | 2.117.3 | Auth, Storage |
 | `@supabase/ssr` | 0.12.7 | Sessions Supabase par cookies dans Next |
-| `openai` | 7.28.0 | SDK du fournisseur de vision (uniquement dans `src/server/ai/`) |
+| `openai` | 7.34.0 (installé) | SDK du fournisseur de vision (uniquement dans `src/server/ai/`, règle ESLint) |
 | `@upstash/redis` | 1.39.0 | Redis REST |
 | `@upstash/ratelimit` | 2.2.0 | Limitation de débit |
 | `sharp` | 0.35.5 | Contrôle du type réel et dimensions des images côté serveur |
@@ -148,6 +148,11 @@ Plans d'hébergement : **Vercel Pro** obligatoire (le plan Hobby est réservé �
 - Envoyer les images en base64 dans la requête (elles ne sont pas stockées chez nous, RG7).
 - Coût : calculé à partir des jetons consommés renvoyés dans la réponse et des tarifs du modèle (en USD), converti en micro-euros par une constante révisée chaque mois.
 - Vérifier les conditions de conservation des données côté fournisseur et l'accord de traitement (D4).
+- Installé en U07 : `src/server/ai/` (`OpenAIVisionProvider`, consigne `identify.v1`, `pricing.ts`, `retry.ts`). Appel : `client.responses.parse({ model, instructions, input: [{ role: "user", content: [input_text, input_image…] }], text: { format: zodTextFormat(schema, "identification") }, store: false, max_output_tokens }, { timeout, maxRetries: 0, signal })`, puis `output_parsed` revalidé par zod. Refus : élément de contenu `type: "refusal"` dans `output`.
+- Sorties structurées : tous les champs requis, absences en `nullable()` ; pas de bornes (min/max) dans le schéma envoyé, elles sont appliquées après (`normalizeAnswer`).
+- Erreurs passagères (nouvelle tentative) : `APIConnectionError` (dont `APIConnectionTimeoutError`), `RateLimitError`, `InternalServerError`. Détail d'image : `low | high | auto | original` (défaut `auto`).
+- Jetons : `usage.input_tokens`, `usage.input_tokens_details.cached_tokens`, `usage.output_tokens` (inclut le raisonnement). La consigne est mise en cache par OpenAI d'un appel à l'autre (jetons en cache facturés 20 fois moins cher).
+- Mesures réelles (15 octobre 2026, `gpt-6.1-sol`, détail `auto`, 2 images 768 px) : 2,3 à 2,6 s, 0,0005 à 0,0018 € par appel ; *Le Voyage dans la Lune* (domaine public) reconnu à 100 %. Test en direct : `npm run test:ai`.
 
 ## TMDB API v3
 

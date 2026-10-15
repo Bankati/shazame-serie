@@ -65,6 +65,9 @@ Mettre à jour ce fichier après chaque changement d'implémentation significati
   - Fait (15 octobre 2026) : `VisionProvider` / `OpenAIVisionProvider` (API Responses, sortie structurée revalidée par zod, `store: false`), consigne `identify.v1`, 3 tentatives (0,5 s puis 1,5 s) sur panne passagère, 12 s par tentative, refus et réponse non conforme en erreur, coût en micro-euros de chaque tentative facturée (tarifs datés, `USD_TO_EUR` BCE), modèle sans tarif refusé, garde ESLint (invariant 2). 22 tests simulés ; appels réels (`npm run test:ai`) : réponse conforme, film du domaine public reconnu, 0,002 € par appel.
   - Pour U14 : brancher la garde de dépense autour de `identify` ; `VisionError.costMicroEur` porte le coût déjà facturé d'un échec.
 
+- U09 — Score de confiance (plan validé le 15 octobre 2026 : `context/plans/U09.md`).
+  - Fait (15 octobre 2026) : `src/server/identification/scoring.ts` (confiance finale = IA × (0,5 + 0,5 × qualité TMDB), candidats sans fiche écartés, meilleur score en principal, doublons fusionnés, décisions ≥ 80 / 50-79 / < 50). 18 tests. Seconde analyse hors V1.
+
 ## Next Up
 
 - U04 — Authentification email et Google (dépend de D8 : nom commercial et domaine).

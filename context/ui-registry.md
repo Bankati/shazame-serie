@@ -51,7 +51,7 @@ Fichiers : `src/components/layout/site-header.tsx`, `src/components/layout/mobil
 | Ombre | none (Sheet : `shadow-lg` généré) |
 | Accent | bouton « Identifier un clip » `h-11 px-5 hover:bg-primary-hover` |
 
-**Notes de pattern :** navigation complète et bouton d'action à partir de `lg` (1 024 px) ; menu mobile en dessous (`lg:hidden`) — à `md`, les libellés passaient sur deux lignes. Le bouton de fermeture généré du Sheet (libellé anglais) est masqué (`showCloseButton={false}`) et remplacé par un bouton `size-11` avec `aria-label` français. Le Sheet se ferme au clic sur un lien.
+**Notes de pattern :** mis à jour le 16 octobre 2026 (U04) : liens d'ancre à partir de `xl` (1 280 px), menu mobile en dessous (`xl:hidden`) ; bouton d'action et compte (`AccountMenu`) à partir de `lg`. Libellés et logo en `whitespace-nowrap` : avec le nom « SHAZAM SERIE » et le lien « Se connecter », l'en-tête passait sur deux lignes à 1 280 px. Le menu mobile porte aussi le compte (pastille + email + « Se déconnecter », ou « Se connecter » / « Créer un compte » en `variant="outline"` sur deux colonnes). Le bouton de fermeture généré du Sheet (libellé anglais) est masqué (`showCloseButton={false}`) et remplacé par un bouton `size-11` avec `aria-label` français. Le Sheet se ferme au clic sur un lien.
 
 ### Logo
 
@@ -239,7 +239,7 @@ Dernière mise à jour : 16 octobre 2026 (U12)
 | Ombre | none |
 | Accent | icône `Clapperboard` `size-4` |
 
-**Notes de pattern :** texte court sur mobile (« 2 restantes »), complet à partir de `sm` (« 2 identifications restantes aujourd'hui »). Région `aria-live="polite"`. Alimenté par `useQuota()` (`GET /api/quota`, puis chaque réponse d'identification). Rien n'est affiché tant que le quota n'est pas connu (pas de saut de mise en page notable dans l'en-tête).
+**Notes de pattern :** texte court (« 2 restantes ») jusqu'à `2xl`, complet au-delà (« 2 identifications restantes aujourd'hui ») : place libérée pour le compte dans l'en-tête (U04). Rechargé après une connexion ou une déconnexion (`reloadQuota`). Région `aria-live="polite"`. Alimenté par `useQuota()` (`GET /api/quota`, puis chaque réponse d'identification). Rien n'est affiché tant que le quota n'est pas connu (pas de saut de mise en page notable dans l'en-tête).
 
 ### Fiche titre : TitleHeader, TrailerPlayer, CastRow, SimilarTitles (PosterCard), SourceAttribution
 
@@ -366,3 +366,57 @@ Fichiers : `src/components/decor/poster-wall.tsx`, `src/components/decor/film-st
 | Radius | affiches `rounded-poster` ; images de pellicule `rounded-none` ; perforations `rounded-sm size-3 bg-inverse-foreground/25` |
 
 **Notes de pattern :** toujours `aria-hidden`. Pas d'affiches réelles tant que la licence TMDB n'est pas obtenue (Q2). `Perforations` (exporté, prop `count`, `className`) est partagé avec `FilmStrip` (U06).
+
+### Pages de compte : AuthCard, FormField, PasswordField, SubmitButton, FormMessage, GoogleButton
+
+Fichiers : `src/components/auth/*.tsx` (U04)
+Dernière mise à jour : 16 octobre 2026
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | carte `bg-card` sur `bg-background` |
+| Bordure | carte `border border-border` ; champs `border-input` (composant `Input`) |
+| Radius | carte `rounded-lg` ; champs et messages `rounded-md` |
+| Texte principal | titre `font-display text-display font-bold` ; libellés `text-sm font-medium text-foreground` |
+| Texte secondaire | `text-sm text-muted-foreground` (aide, mention Google, bas de carte) |
+| Espacement | colonne `max-w-md px-4 sm:px-6 py-10 md:py-16 gap-6` ; carte `p-4 md:p-6 gap-6` ; formulaire `gap-4` ; champ `gap-2` |
+| Hover / focus | liens `text-primary underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-ring` ; case à cocher `size-5 accent-primary` + contour de focus |
+| Ombre | none |
+| Accent | bouton principal `h-11 w-full text-base hover:bg-primary-hover` ; Google `variant="outline" h-11 w-full gap-3` |
+
+**Notes de pattern :** champs `h-11 rounded-md px-3 text-base` (16 px : pas de zoom iOS) ; erreur de champ `text-sm text-destructive` reliée par `aria-describedby` + `aria-invalid`. Message global : erreur `role="alert" border border-destructive bg-destructive/10 text-destructive`, confirmation `role="status" bg-brand-subtle text-brand-subtle-foreground`, avis après redirection (`AuthNotice`) `bg-muted border border-border`. Bouton afficher / masquer le mot de passe : `Button variant="ghost" size-11` posé dans le champ (`pr-12`), `aria-pressed`. Séparateur « ou » : deux traits `h-px bg-border`. Logo Google : fichier statique `public/brand/google-g.svg` (couleurs imposées par la charte Google, hors vocabulaire du projet).
+
+### AccountMenu (en-tête)
+
+Fichier : `src/components/layout/account-menu.tsx` (U04)
+Dernière mise à jour : 16 octobre 2026
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | pastille `bg-inverse text-inverse-foreground` ; menu `bg-popover` (DropdownMenu shadcn) |
+| Bordure | none |
+| Radius | pastille `rounded-full` (cercle) ; menu `rounded-lg` (généré) |
+| Texte principal | pastille `text-sm font-bold` (initiale) ; email `text-sm font-medium text-foreground truncate` |
+| Texte secondaire | « Connecté en tant que » `text-sm text-muted-foreground` |
+| Espacement | déclencheur `h-11 px-2` ; pastille `size-9` ; entrée `min-h-11 gap-2` ; menu `w-64` |
+| Hover / focus | générés par shadcn (`focus:bg-accent`) |
+| Ombre | menu `shadow-lg` (menus seulement, baseline) |
+| Accent | visiteur : `Button variant="ghost" h-11 px-3 text-sm` « Se connecter » |
+
+**Notes de pattern :** chargé côté navigateur (`useAccount`, `GET /api/account`) pour garder les pages statiques ; rien n'est affiché pendant le chargement. Déconnexion : formulaire HTML `POST /auth/deconnexion` (rechargement complet). Libellé accessible du déclencheur : « Compte de … ».
+
+### LegalPage (textes provisoires)
+
+Fichier : `src/components/legal/legal-page.tsx` (U04)
+Dernière mise à jour : 16 octobre 2026
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | `bg-background` ; avis de version `bg-muted` |
+| Bordure | avis `border border-border` |
+| Radius | avis `rounded-md` |
+| Texte principal | titre `font-display text-display font-bold` ; liste `text-base text-foreground list-disc pl-5 gap-3` |
+| Espacement | colonne `max-w-2xl px-4 sm:px-6 py-10 md:py-16 gap-6` |
+| Ombre | none |
+
+**Notes de pattern :** même colonne que l'écran de bienvenue (`/bienvenue` : liste à coches `text-brand-strong` dans une carte `rounded-lg border border-border bg-card p-4 md:p-6`).

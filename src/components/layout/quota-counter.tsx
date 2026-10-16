@@ -25,8 +25,8 @@ export function QuotaCounter() {
       )}
     >
       <Clapperboard className="size-4" aria-hidden="true" />
-      <span className="sm:hidden">{counter.short(quota.remaining)}</span>
-      <span className="hidden sm:inline">{counter.full(quota.remaining)}</span>
+      <span className="whitespace-nowrap 2xl:hidden">{counter.short(quota.remaining)}</span>
+      <span className="hidden whitespace-nowrap 2xl:inline">{counter.full(quota.remaining)}</span>
     </p>
   );
 }

@@ -10,6 +10,7 @@ export type IdentifyFailure =
   | { kind: "rate_limited" }
   | { kind: "frames" }
   | { kind: "paused" }
+  | { kind: "suspended" }
   | { kind: "unavailable" };
 
 export type IdentifyCall = { ok: true; response: IdentifyResponse } | { ok: false; failure: IdentifyFailure };
@@ -50,6 +51,8 @@ export async function sendFrames(frames: readonly Blob[], signal?: AbortSignal):
       return { ok: false, failure: { kind: "rate_limited" } };
     case "AI_PAUSED":
       return { ok: false, failure: { kind: "paused" } };
+    case "FORBIDDEN":
+      return { ok: false, failure: { kind: "suspended" } };
     case "FRAMES_UNUSABLE":
     case "VALIDATION_ERROR":
       return { ok: false, failure: { kind: "frames" } };

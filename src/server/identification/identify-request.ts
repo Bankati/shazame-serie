@@ -3,6 +3,7 @@ import "server-only";
 import { cookies } from "next/headers";
 
 import { getGuardedVisionProviderOrNull } from "@/server/ai/vision";
+import { getCurrentAccount } from "@/server/auth/guards";
 import { newVisitorId, signVisitorId, VISITOR_COOKIE, VISITOR_COOKIE_OPTIONS, verifyVisitorCookie } from "@/server/auth/visitor";
 import { getRedis } from "@/server/cache/redis";
 import { getCatalog } from "@/server/catalog/tmdb/tmdb-catalog";
@@ -37,8 +38,21 @@ function getQuotaService(): QuotaService {
   return quotaService;
 }
 
-/** Visiteur du cookie signé, créé s'il est absent ou invalide. En U04, un compte connecté passera avant. */
-async function currentIdentity(): Promise<QuotaIdentity> {
+type Requester = { identity: QuotaIdentity; suspended: boolean };
+
+/**
+ * Compte connecté (quota gratuit ; Premium en U22), sinon visiteur du cookie signé, créé s'il est absent ou
+ * invalide. Un email non confirmé n'ouvre pas de session : il reste visiteur (Q14).
+ */
+async function currentRequester(): Promise<Requester> {
+  const account = await getCurrentAccount();
+  if (account) {
+    return { identity: { kind: "user", id: account.id, plan: "free" }, suspended: account.status === "suspended" };
+  }
+  return { identity: await visitorIdentity(), suspended: false };
+}
+
+async function visitorIdentity(): Promise<QuotaIdentity> {
   const jar = await cookies();
   const existing = verifyVisitorCookie(jar.get(VISITOR_COOKIE)?.value);
   if (existing) {
@@ -74,8 +88,13 @@ export async function handleIdentifyRequest(request: Request): Promise<Response>
     return jsonError("UPSTREAM_ERROR");
   }
 
+  // Session et statut : un compte suspendu ne peut pas identifier (architecture.md).
+  const { identity, suspended } = await currentRequester();
+  if (suspended) {
+    return jsonError("FORBIDDEN");
+  }
+
   const db = getDb();
-  const identity = await currentIdentity();
   const outcome = await identifyClip(
     {
       quota: getQuotaService(),
@@ -109,7 +128,14 @@ export async function handleIdentifyRequest(request: Request): Promise<Response>
 }
 
 export async function handleQuotaRequest(): Promise<Response> {
-  const status = await getQuotaService().status(await currentIdentity());
+  let status: Awaited<ReturnType<QuotaService["status"]>>;
+  try {
+    status = await getQuotaService().status((await currentRequester()).identity);
+  } catch {
+    // Redis lent ou injoignable : le compteur n'est pas affiché, l'identification reste contrôlée par le serveur.
+    log.warn("quota.status_unavailable");
+    return jsonError("UPSTREAM_ERROR", undefined, { headers: { "Cache-Control": "no-store" } });
+  }
   const quota: QuotaInfo = { limit: status.limit, remaining: status.remaining, resetAt: status.resetAt.toISOString() };
   return jsonOk(quota, { headers: { "Cache-Control": "no-store" } });
 }

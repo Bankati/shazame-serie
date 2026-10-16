@@ -69,6 +69,7 @@ export const IDENTIFY_TEXT = {
     frames: "Ces images n'ont pas pu être analysées. Choisissez un autre extrait.",
     paused:
       "L'identification de nouveaux extraits est en pause pour aujourd'hui, en raison d'une forte affluence. Les extraits déjà connus restent reconnus ; réessayez demain.",
+    suspended: "Votre compte est suspendu : l'identification n'est pas disponible.",
     unavailable: "L'identification est momentanément indisponible. Réessayez dans quelques instants.",
   },
   problems: {

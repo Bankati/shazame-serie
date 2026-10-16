@@ -26,15 +26,19 @@ function subscribe(listener: () => void): () => void {
 
 const responseSchema = z.object({ ok: z.literal(true), data: quotaInfoSchema });
 
+// Numéro de chargement : une réponse arrivée après un changement de session est ignorée.
+let generation = 0;
+
 async function loadQuota(): Promise<void> {
   if (loading || current) {
     return;
   }
   loading = true;
+  const mine = generation;
   try {
     const response = await fetch("/api/quota", { cache: "no-store" });
     const parsed = responseSchema.safeParse(await response.json());
-    if (parsed.success) {
+    if (parsed.success && mine === generation) {
       publishQuota(parsed.data.data);
     }
   } catch {
@@ -42,6 +46,17 @@ async function loadQuota(): Promise<void> {
   } finally {
     loading = false;
   }
+}
+
+/** Session changée (connexion, déconnexion) : le quota n'est plus le même (visiteur ou compte). */
+export function reloadQuota(): void {
+  generation += 1;
+  loading = false;
+  current = null;
+  for (const listener of listeners) {
+    listener();
+  }
+  void loadQuota();
 }
 
 /** Quota du jour, ou null tant qu'il n'est pas connu. */

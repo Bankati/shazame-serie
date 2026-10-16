@@ -20,6 +20,9 @@ export default defineConfig({
   ],
   webServer: {
     command: `npx next start -p ${PORT}`,
+    // Aucun service payant ni partagé pendant les tests, même si .env.local en contient : les variables du
+    // processus l'emportent sur .env.local. Quotas et limitation de débit passent en mémoire.
+    env: { UPSTASH_REDIS_REST_URL: "", UPSTASH_REDIS_REST_TOKEN: "", OPENAI_API_KEY: "", TMDB_API_TOKEN: "" },
     url: `http://localhost:${PORT}/api/health`,
     reuseExistingServer: !process.env.CI,
     timeout: 60_000,

@@ -15,6 +15,8 @@ const COMPLETE = {
   UPSTASH_REDIS_REST_TOKEN: "A".repeat(40),
   OPENAI_API_KEY: `sk-proj-${"x".repeat(40)}`,
   VISITOR_COOKIE_SECRET: "v".repeat(32),
+  NEXT_PUBLIC_SUPABASE_URL: "https://exemple.supabase.co",
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: `sb_publishable_${"p".repeat(24)}`,
 };
 const DEFAULT_HOST = {
   NEXT_PUBLIC_POSTHOG_HOST: "https://eu.i.posthog.com",
@@ -35,7 +37,7 @@ describe("parseEnv", () => {
 
   it("exige les variables des services externes en production", () => {
     expect(() => parseEnv({ VERCEL_ENV: "production" })).toThrow(
-      /NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN, CRON_SECRET, DATABASE_URL, TMDB_API_TOKEN, UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN, OPENAI_API_KEY, VISITOR_COOKIE_SECRET/,
+      /NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN, CRON_SECRET, DATABASE_URL, TMDB_API_TOKEN, UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN, OPENAI_API_KEY, VISITOR_COOKIE_SECRET, NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY/,
     );
     expect(parseEnv({ VERCEL_ENV: "production", ...COMPLETE })).toMatchObject(COMPLETE);
   });

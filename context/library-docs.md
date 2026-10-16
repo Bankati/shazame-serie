@@ -131,7 +131,13 @@ Plans d'hébergement : **Vercel Pro** obligatoire (le plan Hobby est réservé �
 - Google : https://supabase.com/docs/guides/auth/social-login/auth-google
 - Storage : https://supabase.com/docs/guides/storage — URL signées : https://supabase.com/docs/reference/javascript/storage-from-createsignedurl
 - Pièges :
-  - Côté serveur, valider l'utilisateur avec `auth.getUser()` (appel vérifié), pas avec la session lue dans le cookie.
+  - Côté serveur, valider l'utilisateur avec `auth.getClaims()` (signature vérifiée) ou `auth.getUser()` (appel à Supabase), jamais avec `getSession()` (AD-34).
+  - Installé en U04 : `@supabase/ssr` 0.12.7. `createServerClient(url, clé publique, { cookieOptions, cookies: { getAll, setAll(cookies, headers) } })` ; dans le proxy, recopier aussi les en-têtes `headers` passés à `setAll` (Cache-Control privé : une réponse portant un jeton ne doit jamais être mise en cache). Options de cookie par défaut `httpOnly: false` : on force `httpOnly: true` (aucun client navigateur). Cookie `sb-<ref>-auth-token` (découpé en `.0`, `.1` si long).
+  - Liens d'email : gabarits `{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=email|recovery` → `/auth/confirm` → `verifyOtp({ token_hash, type })` (usage unique, fonctionne sur un autre appareil, contrairement au code PKCE). Si `redirectTo` n'est pas dans la liste « Redirect URLs », Supabase met l'adresse du site à la place : le lien ne mène alors nulle part.
+  - `signUp` avec une adresse déjà inscrite : pas d'erreur, utilisateur factice sans `identities` (ne pas créer de profil).
+  - Next 16 : une Server Action re-rend la page courante ; une redirection serveur à ce moment (ex. « déjà connecté ») empêche le code client de s'exécuter. Une redirection interne par `window.location.assign` devient une navigation sans rechargement : recharger soi-même les états client liés à la session.
+  - Route handlers : `redirect()` de `next/navigation` joint à la réponse les cookies écrits via `cookies()`.
+  - Mailpit (pile locale) : `GET /api/v1/search?query=to:"adresse"` puis `GET /api/v1/message/{ID}` (champ `HTML`). Sans SMTP personnalisé, Supabase en ligne n'écrit qu'aux membres de l'organisation (erreur `email_address_not_authorized`).
   - La clé `service_role` contourne la RLS : uniquement dans `src/server/`, jamais dans une variable `NEXT_PUBLIC_*`.
   - Emails d'auth : configurer le SMTP personnalisé (Resend) et traduire les gabarits en français dans le tableau de bord Supabase.
   - RG9 (30 jours d'inactivité) : réglage « inactivity timeout » des sessions Supabase, **à vérifier** selon le plan (cette option n'est pas disponible sur tous les plans). Sinon, mettre en œuvre la règle côté application (date de dernière activité).

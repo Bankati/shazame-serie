@@ -31,6 +31,10 @@ const envSchema = z.object({
   OPENAI_VISION_MODEL: z.preprocess(emptyToUndefined, z.string().min(1).default("gpt-6.1-sol")),
   OPENAI_IMAGE_DETAIL: z.preprocess(emptyToUndefined, z.enum(["low", "high", "auto", "original"]).default("auto")),
   OPENAI_REASONING_EFFORT: optional(z.enum(["none", "minimal", "low", "medium", "high"])),
+  // Supabase Auth (U04) : URL du projet et clé publique « sb_publishable_… » (le navigateur ne s'en sert pas :
+  // toute l'authentification passe par le serveur). En local : http://127.0.0.1:54321.
+  NEXT_PUBLIC_SUPABASE_URL: optional(z.url({ protocol: /^https?$/ })),
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: optional(z.string().min(20)),
   // Signature du cookie visiteur (U11, RG2). Différent par environnement.
   VISITOR_COOKIE_SECRET: optional(z.string().min(32)),
 });
@@ -44,6 +48,8 @@ const REQUIRED_IN_PRODUCTION = [
   "UPSTASH_REDIS_REST_TOKEN",
   "OPENAI_API_KEY",
   "VISITOR_COOKIE_SECRET",
+  "NEXT_PUBLIC_SUPABASE_URL",
+  "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
 ] as const;
 
 export type Env = z.infer<typeof envSchema>;

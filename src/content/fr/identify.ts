@@ -54,6 +54,7 @@ export const IDENTIFY_TEXT = {
       possible: (percent: number) => `Piste possible, ${percent} %`,
     },
     alternatives: "Autres pistes",
+    viewTitle: "Voir la fiche",
     leads: "Pistes possibles",
     showAlternative: (title: string) => `Afficher ${title} comme résultat`,
     percent: (percent: number) => `${percent} %`,

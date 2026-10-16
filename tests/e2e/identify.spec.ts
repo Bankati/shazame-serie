@@ -45,6 +45,7 @@ test("clip → résultat sûr : affiche, titre, « Très probable », compteur m
   await expect(page.getByRole("img", { name: "Affiche de Matrix (1999)" })).toBeVisible();
   await expect(page.getByText("1999, Film")).toBeVisible();
   await expect(page.getByText("2 restantes")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Voir la fiche" })).toHaveAttribute("href", "/titre/film/603-matrix");
   // Le serveur n'a reçu que des images, 2 à 5 (invariant 1).
   expect(frameCounts[0]).toBeGreaterThanOrEqual(2);
   expect(frameCounts[0]).toBeLessThanOrEqual(5);

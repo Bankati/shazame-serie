@@ -12,12 +12,14 @@ type TitlePosterProps = {
   size: PosterSize;
   /** Largeur affichée en pixels (la hauteur suit le ratio 2:3). */
   width: number;
+  /** Texte alternatif ; par défaut « Affiche de {titre} ({année}) ». */
+  alt?: string;
   className?: string;
 };
 
 // Affiche TMDB au ratio 2:3, `rounded-poster` (ui-context.md). Servie sans l'optimiseur Vercel :
 // TMDB fournit déjà la taille demandée (next.config.ts, library-docs.md).
-export function TitlePoster({ title, year, posterPath, size, width, className }: TitlePosterProps) {
+export function TitlePoster({ title, year, posterPath, size, width, alt, className }: TitlePosterProps) {
   const { card } = IDENTIFY_TEXT;
   const src = posterUrl(posterPath, size);
   const height = Math.round((width * 3) / 2);
@@ -37,7 +39,7 @@ export function TitlePoster({ title, year, posterPath, size, width, className }:
   return (
     <Image
       src={src}
-      alt={card.poster(title, year)}
+      alt={alt ?? card.poster(title, year)}
       width={width}
       height={height}
       unoptimized

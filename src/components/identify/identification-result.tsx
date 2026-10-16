@@ -1,9 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { IDENTIFY_TEXT } from "@/content/fr/identify";
+import { titlePath } from "@/lib/title-url";
 import type { IdentifiedTitle, IdentifyResponse } from "@/schemas/identify";
 
 import { AlternativeList } from "./alternative-list";
@@ -52,6 +55,10 @@ function MainTitle({ title }: { title: IdentifiedTitle }) {
         <p className="text-sm text-muted-foreground">{card.meta(title.year, card.kind[title.mediaType])}</p>
         <ConfidenceBadge confidence={title.confidence} />
         <p className="sr-only">{result.title(title.title, title.year)}</p>
+        {/* Zone d'actions : « Ajouter à ma liste » (U18) et « Ce n'est pas le bon titre » (U20) viendront ici. */}
+        <Button asChild className="mt-1 h-11 w-fit px-5 text-base hover:bg-primary-hover">
+          <Link href={titlePath(title.mediaType, title.tmdbId, title.title)}>{card.viewTitle}</Link>
+        </Button>
       </div>
     </article>
   );

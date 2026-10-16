@@ -81,6 +81,11 @@ Mettre à jour ce fichier après chaque changement d'implémentation significati
 - U12 — Écran de résultat (plan validé le 16 octobre 2026 : `context/plans/U12.md`).
   - Fait (16 octobre 2026) : `IdentificationResult` (affiche TMDB réelle non optimisée par Vercel, titre, année et type, squelette), `ConfidenceBadge` (libellé + pourcentage), `AlternativeList` (pistes cliquables qui passent en principal), `TitlePoster`, `QuotaCounter` dans l'en-tête (`useQuota`, mis à jour après chaque identification), `images.remotePatterns` TMDB. Playwright 1.64.1 (Chrome installé) : 3 parcours avec serveur simulé (sûr, probable + alternative cliquée, quota épuisé), job CI « Parcours navigateur (Playwright) ». `/imprint` (5 composants). Aucun bouton d'action avant U15, U18, U20.
 
+- U15 — Fiche titre (plan : `context/plans/U15.md`, décidé sur délégation le 16 octobre 2026).
+  - Fait (16 octobre 2026) : route `/titre/{film|serie}/{id}-{slug}` en ISR (24 h), `generateMetadata` (titre, description, Open Graph = affiche, canonique), `TitleHeader`, `TrailerPlayer` (youtube-nocookie au clic, aucune requête YouTube avant), synopsis, `CastRow`, `SimilarTitles` avec motif (même réalisation, même genre, souvent associé), `SourceAttribution` (logo officiel TMDB), redirection 308 des slugs incorrects, 404, `robots.txt`, `sitemap.xml` des titres identifiés, bouton « Voir la fiche » sur la carte de résultat. Mesures locales : p95 23 ms (film) et 16 ms (série) avec cache, 1,5 s à la première visite.
+  - Piège corrigé : Upstash (`fetch` no-store) interdit dans une page ISR → catalogue sans Redis pour les pages statiques.
+  - À faire : fixer `NEXT_PUBLIC_SITE_URL` quand le domaine sera choisi (D8) ; sinon l'adresse Vercel de production est utilisée.
+
 ## Next Up
 
 - U04 — Authentification email et Google (dépend de D8 : nom commercial et domaine).

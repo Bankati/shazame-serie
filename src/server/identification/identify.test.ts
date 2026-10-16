@@ -36,6 +36,7 @@ function setup(options: { vision?: VisionProvider["identify"]; cached?: CachedRe
     searchTitles: async () => [MATRIX],
     getTitleDetails: async () => DETAILS,
     getImageConfig: async () => ({ secureBaseUrl: "https://image.tmdb.org/t/p/", posterSizes: [], backdropSizes: [] }),
+    getTitlePage: async () => null,
   };
   const deps: IdentifyDeps = {
     quota,

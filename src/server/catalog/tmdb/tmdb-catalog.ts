@@ -13,15 +13,21 @@ import {
   type CatalogProvider,
   type CatalogTitleDetails,
   type MediaType,
+  type TitlePage,
 } from "../catalog-provider";
 import { normalizeTitle } from "../matching";
+import { buildSimilar, type SimilarCandidate } from "../similar";
 import { createTmdbClient, type TmdbGet } from "./client";
 import {
   tmdbConfigurationSchema,
   tmdbMovieDetailsSchema,
   tmdbMovieResultSchema,
+  tmdbMoviePageSchema,
   tmdbMultiSearchSchema,
+  tmdbPersonMovieCreditsSchema,
+  tmdbRecommendationSchema,
   tmdbTvDetailsSchema,
+  tmdbTvPageSchema,
   tmdbTvResultSchema,
   yearOf,
 } from "./schemas";
@@ -54,21 +60,78 @@ const detailsSchema = z.object({
   voteAverage: z.number(),
 });
 
+const MAX_CAST = 10;
+const MAX_WRITERS = 3;
+const WRITING_JOBS = new Set(["Screenplay", "Writer", "Story", "Novel"]);
+const YOUTUBE_KEY = /^[\w-]{6,20}$/;
+
+const titlePageSchema = z.object({
+  tmdbId: z.number().int().positive(),
+  mediaType: z.enum(["movie", "tv"]),
+  title: z.string(),
+  originalTitle: z.string(),
+  year: z.number().int().nullable(),
+  tagline: z.string().nullable(),
+  overview: z.string(),
+  genres: z.array(z.string()),
+  runtimeMinutes: z.number().nullable(),
+  seasons: z.number().nullable(),
+  voteAverage: z.number(),
+  voteCount: z.number(),
+  posterPath: z.string().nullable(),
+  backdropPath: z.string().nullable(),
+  directors: z.array(z.string()),
+  writers: z.array(z.string()),
+  cast: z.array(z.object({ id: z.number(), name: z.string(), character: z.string().nullable(), profilePath: z.string().nullable() })),
+  trailerKey: z.string().nullable(),
+  similar: z.array(
+    z.object({
+      tmdbId: z.number().int().positive(),
+      mediaType: z.enum(["movie", "tv"]),
+      title: z.string(),
+      year: z.number().int().nullable(),
+      posterPath: z.string().nullable(),
+      reason: z.discriminatedUnion("kind", [
+        z.object({ kind: z.literal("director"), name: z.string() }),
+        z.object({ kind: z.literal("genre"), name: z.string() }),
+        z.object({ kind: z.literal("related") }),
+      ]),
+    }),
+  ),
+});
+
 const imageConfigSchema = z.object({
   secureBaseUrl: z.string(),
   posterSizes: z.array(z.string()),
   backdropSizes: z.array(z.string()),
 });
 
+export type TmdbCatalogOptions = {
+  /**
+   * Cache Redis des réponses (identification, routes dynamiques). À désactiver dans les pages mises en cache
+   * par Next (ISR : fiches, sitemap) : le client Upstash appelle `fetch` en `no-store`, ce que Next refuse
+   * pendant la génération d'une page statique (« Page changed from static to dynamic »). Next met alors
+   * lui-même en cache la page et les réponses TMDB.
+   */
+  redisCache: boolean;
+};
+
 export class TmdbCatalog implements CatalogProvider {
-  constructor(private readonly get: TmdbGet) {}
+  constructor(
+    private readonly get: TmdbGet,
+    private readonly options: TmdbCatalogOptions = { redisCache: true },
+  ) {}
+
+  private cached<T>(key: string, schema: z.ZodType<T>, load: () => Promise<T>): Promise<T> {
+    return this.options.redisCache ? cachedJson(key, CACHE_TTL_S, schema, load) : load();
+  }
 
   async searchTitles(query: string, language: CatalogLanguage): Promise<CatalogCandidate[]> {
     const normalized = normalizeTitle(query);
     if (!normalized) {
       return [];
     }
-    return cachedJson(`tmdb:search:${language}:${normalized}`, CACHE_TTL_S, z.array(candidateSchema), async () => {
+    return this.cached(`tmdb:search:${language}:${normalized}`, z.array(candidateSchema), async () => {
       const page = await this.get(
         { path: "/search/multi", params: { query, language, include_adult: false, page: 1 } },
         tmdbMultiSearchSchema,
@@ -78,7 +141,7 @@ export class TmdbCatalog implements CatalogProvider {
   }
 
   async getTitleDetails(tmdbId: number, mediaType: MediaType): Promise<CatalogTitleDetails | null> {
-    return cachedJson(`tmdb:details:${mediaType}:${tmdbId}`, CACHE_TTL_S, detailsSchema.nullable(), async () => {
+    return this.cached(`tmdb:details:${mediaType}:${tmdbId}`, detailsSchema.nullable(), async () => {
       try {
         const french = await this.fetchDetails(tmdbId, mediaType, "fr-FR");
         if (french.overview) {
@@ -98,10 +161,102 @@ export class TmdbCatalog implements CatalogProvider {
   }
 
   async getImageConfig(): Promise<CatalogImageConfig> {
-    return cachedJson("tmdb:configuration", CACHE_TTL_S, imageConfigSchema, async () => {
+    return this.cached("tmdb:configuration", imageConfigSchema, async () => {
       const { images } = await this.get({ path: "/configuration" }, tmdbConfigurationSchema);
       return { secureBaseUrl: images.secure_base_url, posterSizes: images.poster_sizes, backdropSizes: images.backdrop_sizes };
     });
+  }
+
+  async getTitlePage(tmdbId: number, mediaType: MediaType): Promise<TitlePage | null> {
+    return this.cached(`tmdb:page:${mediaType}:${tmdbId}`, titlePageSchema.nullable(), async () => {
+      try {
+        return await this.fetchTitlePage(tmdbId, mediaType);
+      } catch (error) {
+        if (error instanceof CatalogError && error.reason === "not_found") {
+          return null;
+        }
+        throw error;
+      }
+    });
+  }
+
+  private async fetchTitlePage(tmdbId: number, mediaType: MediaType): Promise<TitlePage> {
+    const params = { language: "fr-FR", append_to_response: "credits,videos,recommendations", include_video_language: "fr,en" };
+    const raw =
+      mediaType === "movie"
+        ? await this.get({ path: `/movie/${tmdbId}`, params }, tmdbMoviePageSchema)
+        : await this.get({ path: `/tv/${tmdbId}`, params }, tmdbTvPageSchema);
+
+    const base =
+      "title" in raw
+        ? { title: raw.title, originalTitle: raw.original_title, year: yearOf(raw.release_date), runtimeMinutes: raw.runtime ?? null, seasons: null }
+        : {
+            title: raw.name,
+            originalTitle: raw.original_name,
+            year: yearOf(raw.first_air_date),
+            runtimeMinutes: raw.episode_run_time[0] ?? null,
+            seasons: raw.number_of_seasons ?? null,
+          };
+
+    const crew = raw.credits.crew;
+    const directorsWithId =
+      "created_by" in raw
+        ? raw.created_by.map((person) => ({ id: person.id, name: person.name }))
+        : crew.filter((person) => person.job === "Director").map((person) => ({ id: person.id, name: person.name }));
+    const writers = unique(crew.filter((person) => WRITING_JOBS.has(person.job)).map((person) => person.name)).slice(0, MAX_WRITERS);
+
+    // Synopsis vide en français : repli sur l'anglais (library-docs.md).
+    const overview =
+      raw.overview || (await this.fetchDetails(tmdbId, mediaType, "en-US").then((english) => english.overview).catch(() => ""));
+
+    const firstDirector = directorsWithId[0];
+    const director =
+      mediaType === "movie" && firstDirector ? await this.directorWorks(firstDirector.id, firstDirector.name).catch(() => null) : null;
+
+    return {
+      tmdbId: raw.id,
+      mediaType,
+      ...base,
+      tagline: raw.tagline || null,
+      overview,
+      genres: raw.genres.map((genre) => genre.name),
+      voteAverage: raw.vote_average,
+      voteCount: raw.vote_count,
+      posterPath: raw.poster_path ?? null,
+      backdropPath: raw.backdrop_path ?? null,
+      directors: unique(directorsWithId.map((person) => person.name)),
+      writers,
+      cast: [...raw.credits.cast]
+        .sort((a, b) => a.order - b.order)
+        .slice(0, MAX_CAST)
+        .map((person) => ({ id: person.id, name: person.name, character: person.character || null, profilePath: person.profile_path ?? null })),
+      trailerKey: pickTrailer(raw.videos.results),
+      similar: buildSimilar({
+        self: { tmdbId: raw.id, mediaType, genres: raw.genres },
+        director,
+        recommendations: raw.recommendations.results.flatMap((item) => toSimilarCandidate(item, mediaType)),
+      }),
+    };
+  }
+
+  /** Autres films réalisés par la même personne (« Même réalisateur »). */
+  private async directorWorks(personId: number, name: string): Promise<{ name: string; works: SimilarCandidate[] }> {
+    const credits = await this.get(
+      { path: `/person/${personId}/movie_credits`, params: { language: "fr-FR" } },
+      tmdbPersonMovieCreditsSchema,
+    );
+    const works = credits.crew
+      .filter((work) => work.job === "Director")
+      .map((work) => ({
+        tmdbId: work.id,
+        mediaType: "movie" as const,
+        title: work.title,
+        year: yearOf(work.release_date),
+        posterPath: work.poster_path ?? null,
+        genreIds: [],
+        popularity: work.popularity,
+      }));
+    return { name, works };
   }
 
   private async fetchDetails(tmdbId: number, mediaType: MediaType, language: CatalogLanguage): Promise<CatalogTitleDetails> {
@@ -173,15 +328,60 @@ function toCandidate(item: unknown): CatalogCandidate[] {
   return [];
 }
 
-let catalog: TmdbCatalog | undefined;
+type TmdbVideo = { key: string; site: string; type: string; official: boolean; iso_639_1?: string | null };
 
-/** Catalogue applicatif ; lève si TMDB n'est pas configuré. */
-export function getCatalog(): TmdbCatalog {
-  if (!catalog) {
-    if (!env.TMDB_API_TOKEN) {
-      throw new CatalogError("unavailable");
-    }
-    catalog = new TmdbCatalog(createTmdbClient({ token: env.TMDB_API_TOKEN }));
+/** Bande-annonce YouTube : française si possible, puis officielle, puis la première. */
+function pickTrailer(videos: readonly TmdbVideo[]): string | null {
+  const trailers = videos.filter((video) => video.site === "YouTube" && video.type === "Trailer" && YOUTUBE_KEY.test(video.key));
+  const score = (video: TmdbVideo) => (video.iso_639_1 === "fr" ? 2 : 0) + (video.official ? 1 : 0);
+  return [...trailers].sort((a, b) => score(b) - score(a))[0]?.key ?? null;
+}
+
+function toSimilarCandidate(item: unknown, fallbackType: MediaType): SimilarCandidate[] {
+  const parsed = tmdbRecommendationSchema.safeParse(item);
+  if (!parsed.success) {
+    return [];
   }
+  const value = parsed.data;
+  const title = value.title ?? value.name;
+  if (!title) {
+    return [];
+  }
+  return [
+    {
+      tmdbId: value.id,
+      mediaType: value.media_type ?? fallbackType,
+      title,
+      year: yearOf(value.release_date ?? value.first_air_date),
+      posterPath: value.poster_path ?? null,
+      genreIds: value.genre_ids,
+      popularity: value.popularity,
+    },
+  ];
+}
+
+function unique(values: readonly string[]): string[] {
+  return [...new Set(values)];
+}
+
+let catalog: TmdbCatalog | undefined;
+let staticCatalog: TmdbCatalog | undefined;
+
+function token(): string {
+  if (!env.TMDB_API_TOKEN) {
+    throw new CatalogError("unavailable");
+  }
+  return env.TMDB_API_TOKEN;
+}
+
+/** Catalogue applicatif (cache Redis) ; lève si TMDB n'est pas configuré. */
+export function getCatalog(): TmdbCatalog {
+  catalog ??= new TmdbCatalog(createTmdbClient({ token: token() }));
   return catalog;
+}
+
+/** Catalogue des pages mises en cache par Next (fiches, sitemap) : sans Redis, Next met en cache lui-même. */
+export function getStaticPageCatalog(): TmdbCatalog {
+  staticCatalog ??= new TmdbCatalog(createTmdbClient({ token: token() }), { redisCache: false });
+  return staticCatalog;
 }

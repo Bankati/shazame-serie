@@ -163,7 +163,7 @@ Dernière mise à jour : 16 octobre 2026 (U12)
 | Ombre | none |
 | Accent | `ConfidenceBadge` |
 
-**Notes de pattern :** affiche principale 96 px de large (w342 TMDB), à gauche aussi sur mobile. Sans résultat principal (`ask_another_clip`) : message puis « Pistes possibles ». Un clic sur une piste l'affiche en principal, la précédente rejoint la liste. Squelette `IdentificationResultSkeleton` aux dimensions finales (affiche `h-36 w-24`). Zone d'actions réservée sous le badge : « Voir la fiche » (U15), « Ajouter à ma liste » (U18), « Ce n'est pas le bon titre » (U20), à ajouter seulement quand l'action existe.
+**Notes de pattern :** affiche principale 96 px de large (w342 TMDB), à gauche aussi sur mobile. Sans résultat principal (`ask_another_clip`) : message puis « Pistes possibles ». Un clic sur une piste l'affiche en principal, la précédente rejoint la liste. Squelette `IdentificationResultSkeleton` aux dimensions finales (affiche `h-36 w-24`). Zone d'actions sous le badge : « Voir la fiche » (bouton principal `h-11 px-5 text-base hover:bg-primary-hover`, U15) ; « Ajouter à ma liste » (U18) et « Ce n'est pas le bon titre » (U20) à ajouter quand l'action existe.
 
 ### ConfidenceBadge
 
@@ -240,6 +240,25 @@ Dernière mise à jour : 16 octobre 2026 (U12)
 | Accent | icône `Clapperboard` `size-4` |
 
 **Notes de pattern :** texte court sur mobile (« 2 restantes »), complet à partir de `sm` (« 2 identifications restantes aujourd'hui »). Région `aria-live="polite"`. Alimenté par `useQuota()` (`GET /api/quota`, puis chaque réponse d'identification). Rien n'est affiché tant que le quota n'est pas connu (pas de saut de mise en page notable dans l'en-tête).
+
+### Fiche titre : TitleHeader, TrailerPlayer, CastRow, SimilarTitles (PosterCard), SourceAttribution
+
+Fichiers : `src/components/title/` (`title-view.tsx` assemble les blocs)
+Dernière mise à jour : 16 octobre 2026 (U15)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | en-tête `bg-inverse text-inverse-foreground` (comme le hero) ; lecteur `bg-inverse rounded-lg` ; sources `bg-card border border-border rounded-lg p-4` |
+| Bordure | sources `border-border` |
+| Radius | affiches et photos `rounded-poster` ; lecteur et encadré des sources `rounded-lg` ; cartes cliquables `rounded-md` (focus) |
+| Texte principal | titre `font-display text-display-lg md:text-display-xl font-extrabold` ; titres de section `font-display text-display font-bold` ; noms `text-sm font-medium text-foreground` |
+| Texte secondaire | en-tête `text-inverse-muted` ; rôle, motif, mentions `text-sm text-muted-foreground` |
+| Espacement | en-tête `px-4 py-8 md:py-12 gap-6`, contenu `py-10 md:py-14 gap-10`, section `gap-4`, grille des similaires `gap-4` (2 / 3 / 5 colonnes) |
+| Hover / focus | carte similaire `group-hover:underline`, `focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring` ; lecteur `hover:bg-inverse/90` + même focus |
+| Ombre | none |
+| Accent | bouton de lecture `bg-brand text-inverse rounded-full size-14` (fond sombre) ; genres `Badge variant="secondary"` |
+
+**Notes de pattern :** ordre fixe des sections (ui-context.md) : Où regarder (U16, en premier) → Bande-annonce → Synopsis → Distribution → Titres similaires → Sources. La bande-annonce n'appelle YouTube qu'au clic (`youtube-nocookie.com`). Accroche entre guillemets français avec espaces insécables. Distribution : défilement horizontal (`overflow-x-auto`, marges négatives `-mx-4` compensées sur mobile). Logo TMDB `public/brand/tmdb-logo.svg` + mention des conditions TMDB (invariant 12). `TitlePoster` accepte `alt` pour les photos (« Photo de {nom} »).
 
 ### HowItWorks (carte d'étape)
 

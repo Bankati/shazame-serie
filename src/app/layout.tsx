@@ -6,6 +6,7 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { Toaster } from "@/components/ui/sonner";
 import { APP_TEXT } from "@/content/fr/app";
 import { LAYOUT_TEXT } from "@/content/fr/layout";
+import { siteUrl } from "@/lib/site-url";
 import { cn } from "@/lib/utils";
 
 import "./globals.css";
@@ -15,7 +16,9 @@ const archivo = Archivo({ subsets: ["latin"], axes: ["wdth"], display: "swap", v
 const publicSans = Public_Sans({ subsets: ["latin"], display: "swap", variable: "--font-public-sans" });
 
 export const metadata: Metadata = {
-  title: APP_TEXT.name,
+  // Base des adresses relatives (URL canoniques, Open Graph des fiches).
+  metadataBase: new URL(siteUrl()),
+  title: { default: APP_TEXT.name, template: `%s | ${APP_TEXT.name}` },
   description: APP_TEXT.tagline,
 };
 

@@ -229,6 +229,13 @@ Plans d'hébergement : **Vercel Pro** obligatoire (le plan Hobby est réservé �
 - Installé en U10 : `sharp` 0.35.5 (libvips 8.18). dHash : `sharp(buf).greyscale().resize(9, 8, { fit: "fill" }).raw().toBuffer({ resolveWithObject: true })`, puis lire un octet sur `info.channels` (un canal alpha peut subsister) et appliquer `dHash` de `src/shared/frames/analysis.ts` (`src/server/identification/frame-hashes.ts`).
 - dHash stocké en `bigint` PostgreSQL signé : `BigInt.asIntN(64, h)` ; la distance se calcule en SQL par `bit_count((a # b)::bit(64))` (PostgreSQL 14+).
 
+## Next.js : pages mises en cache (ISR) et appels réseau
+
+- Fiche titre (U15) : `export const revalidate = 86400` + `generateStaticParams()` qui renvoie `[]` : chaque fiche est générée à la première visite, servie depuis le cache (`x-nextjs-cache: HIT`, p95 mesuré 23 ms), revalidée chaque jour (modèle sans Cache Components, `cacheComponents` non activé).
+- **Piège (vérifié le 16 octobre 2026)** : le client Upstash appelle `fetch` en `cache: "no-store"`. Dans une page ISR, Next répond alors 500 (« Page changed from static to dynamic at runtime »). Les pages ISR et le sitemap utilisent donc `getStaticPageCatalog()` (catalogue TMDB sans Redis) ; Next met lui-même en cache la page et les réponses TMDB. Ne jamais appeler Redis depuis une page ISR.
+- Ne jamais absorber les erreurs internes de Next dans un `catch` (digest `DYNAMIC_SERVER_USAGE` ou `NEXT_…`) : les relancer (voir `sitemap-titles.ts`).
+- `permanentRedirect` renvoie 308 ; `PageProps<"/titre/[kind]/[idSlug]">` est généré par `next typegen`.
+
 ## Vitest et Playwright
 
 - Installé en U12 : `@playwright/test` 1.64.1, `playwright.config.ts` (projet `mobile-chrome` = Pixel 7 + `channel: "chrome"`, Chrome préinstallé localement et sur les runners Ubuntu, aucun navigateur à télécharger ; `webServer` = `next start` sur le build). Serveur simulé par `page.route` (`/api/identify`, `/api/quota`, `image.tmdb.org`, PostHog bloqué). Vidéo de test : fractale générée (`tests/e2e/fixtures/clip.mp4`). Lancer `npm run build` avant `npm run test:e2e`.

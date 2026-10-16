@@ -26,6 +26,10 @@ jobs:
             echo "::error::URL du déploiement absente de l'événement."
             exit 1
           fi
+          if [ -z "$BYPASS_SECRET" ]; then
+            echo "::error::Secret VERCEL_AUTOMATION_BYPASS_SECRET absent (GitHub → Settings → Secrets and variables → Actions). Voir docs/setup-deploiement.md, étape 2.7."
+            exit 1
+          fi
           # Le secret de contournement n'est envoyé qu'à un domaine Vercel (ou à un domaine listé dans ALLOWED_DEPLOYMENT_HOSTS).
           if ! printf '%s' "$DEPLOYMENT_URL" | grep -Eq '^https://[^/:]+(/|$)'; then
             echo "::error::URL de déploiement refusée (https obligatoire)."
@@ -41,6 +45,10 @@ jobs:
             -H "x-vercel-protection-bypass: $BYPASS_SECRET" \
             "${DEPLOYMENT_URL%/}/api/health")
           echo "$body"
+          if printf '%s' "$body" | grep -q "Vercel Authentication"; then
+            echo "::error::Page de connexion Vercel reçue : le secret VERCEL_AUTOMATION_BYPASS_SECRET de GitHub ne correspond pas à celui de Vercel (Settings → Deployment Protection → Protection Bypass for Automation)."
+            exit 1
+          fi
           if [ "$body" != '{"ok":true,"data":{"status":"ok"}}' ]; then
             echo "::error::Réponse inattendue de /api/health."
             exit 1

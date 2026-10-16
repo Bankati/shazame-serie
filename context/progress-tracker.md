@@ -97,6 +97,8 @@ Mettre à jour ce fichier après chaque changement d'implémentation significati
   - Corrigé en passant : `GET /api/quota` renvoyait une erreur 500 non journalisée si Redis ne répondait pas (désormais `UPSTREAM_ERROR` + journal).
   - Reste (fondateur) : client OAuth Google, réglages Supabase en ligne, variables Vercel `NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (Preview et Production), gabarits d'emails à recopier, SMTP Resend dès qu'un domaine existe (Q11).
 
+- Interface (16 octobre 2026, demande du fondateur) : résultat d'identification dans une fenêtre (Dialog centré sur ordinateur, feuille depuis le bas sur mobile) ; fond du hero remplacé par un bandeau d'images courbé animé (`CurvedFilmBand`, adapté de « TiltedGridHero »), photos Unsplash hébergées dans `public/hero/` (300 Ko, chargées après le premier écran). Constat : l'animation 3D ralentissait l'extraction des images (tests d'identification en échec) → bandeau en pause pendant l'analyse. À vérifier sur un vrai Android d'entrée de gamme (fluidité, batterie).
+
 ## Next Up
 
 - U17 — Historique, puis U18 — Liste de suivi (comptes désormais disponibles).

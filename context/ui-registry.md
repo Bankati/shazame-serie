@@ -96,7 +96,7 @@ Dernière mise à jour : 14 octobre 2026 (U06, remplace `ClipDropzonePreview`)
 
 | Propriété | Classe |
 | --- | --- |
-| Arrière-plan | section `bg-inverse` + `PosterWall` ; carte `bg-card text-card-foreground` |
+| Arrière-plan | section `bg-inverse` + `CurvedFilmBand` sous un voile `bg-linear-to-b from-inverse/50 via-inverse/70 to-inverse` (16 octobre 2026) ; carte `bg-card text-card-foreground` |
 | Bordure | pastille `border border-inverse-foreground/20 bg-inverse-foreground/5 rounded-full` |
 | Radius | carte `rounded-xl` |
 | Texte principal | titre `font-display text-display-lg md:text-display-xl font-extrabold` ; état `text-sm font-medium text-foreground` |
@@ -355,7 +355,7 @@ Fichiers : `src/components/home/final-cta.tsx`, `src/components/layout/error-scr
 
 **Notes de pattern :** `global-error.tsx` reprend ces classes en HTML brut (il remplace le layout et ne peut pas utiliser les composants de la coquille).
 
-### PosterWall et FilmStripDecor (décors)
+### FilmStripDecor (décor) — `PosterWall` retiré le 16 octobre 2026, remplacé par `CurvedFilmBand`
 
 Fichiers : `src/components/decor/poster-wall.tsx`, `src/components/decor/film-strip-decor.tsx`
 
@@ -420,3 +420,39 @@ Dernière mise à jour : 16 octobre 2026
 | Ombre | none |
 
 **Notes de pattern :** même colonne que l'écran de bienvenue (`/bienvenue` : liste à coches `text-brand-strong` dans une carte `rounded-lg border border-border bg-card p-4 md:p-6`).
+
+### CurvedFilmBand (fond du hero)
+
+Fichier : `src/components/decor/curved-film-band.tsx` (16 octobre 2026, adapté du composant « TiltedGridHero » fourni par le fondateur)
+Dernière mise à jour : 16 octobre 2026
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | bandes `bg-inverse-foreground/10` (avant chargement des images) |
+| Bordure | none |
+| Radius | extrémités des tuiles `rounded-l-lg` / `rounded-r-lg` |
+| Texte | none (décoratif, `aria-hidden`) |
+| Espacement | calculé (tuiles en unités `cqh` / `cqw`, styles en ligne) |
+| Ombre | none |
+| Accent | photos d'ambiance, fondu aux extrémités (masque) |
+
+**Notes de pattern :** pas dans `src/components/ui/` (réservé aux composants générés par la CLI shadcn). Monté après `load` + temps calme du navigateur, jamais si `saveData` ; en pause si `prefers-reduced-motion` **ou** si un élément porte `data-pause-motion` (`IdentifyPanel` pendant l'analyse : l'animation 3D ralentissait l'extraction des images au point de faire échouer les tests). Images : `public/hero/*.webp` (640 × 360, ≈ 30 Ko chacune, 300 Ko au total), photos Unsplash (licence Unsplash) : 1478720568477-152d9b164e26, 1513106580091-1d82408b8cd6, 1485846234645-a62644f84728, 1489599849927-2ee91cede3ba, 1440404653325-ab127d49abc1, 1585647347384-2593bc35786b, 1524985069026-dd778a71c7b4, 1536440136628-849c177e76a1, 1574267432553-4b4628081c31, 1595769816263-9b910be24d5f. Écartées : marques (Netflix, Hollywood, Moulin Rouge), affiches réelles, personnage protégé. Masque en `black` (seule l'opacité compte). Sur mobile, le bandeau est surtout visible entre le texte et la carte d'envoi.
+
+### ResultDialog (résultat d'identification)
+
+Fichier : `src/components/identify/result-dialog.tsx` (16 octobre 2026, demande du fondateur)
+Dernière mise à jour : 16 octobre 2026
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | `bg-popover` (Dialog / Sheet shadcn), fond assombri et flouté (généré) |
+| Bordure | séparateur des actions `border-t border-border` |
+| Radius | Dialog `rounded-xl` (généré) ; Sheet `rounded-t-xl` |
+| Texte principal | titre `font-display text-xl font-bold text-foreground` |
+| Texte secondaire | quota restant `text-sm text-muted-foreground` (description accessible) |
+| Espacement | Dialog `p-6 gap-4 sm:max-w-xl` ; Sheet `p-4 gap-4` ; `max-h-[90dvh] overflow-y-auto` |
+| Hover / focus | bouton fermer `Button variant="ghost" size-11` avec `aria-label` français (bouton généré « Close » masqué) |
+| Ombre | `shadow-lg` (modale, baseline) |
+| Accent | « Choisir un autre clip » `variant="outline" h-11` ; « Voir la fiche » dans la carte |
+
+**Notes de pattern :** Dialog centré à partir de `md` (768 px), Sheet `side="bottom"` en dessous (`useSyncExternalStore` sur `matchMedia`). S'ouvre à chaque nouveau résultat ; fermé, il se rouvre par « Voir le résultat » dans le panneau. Les échecs (quota, pause IA, images inexploitables) restent affichés dans le panneau, sans fenêtre.

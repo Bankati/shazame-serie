@@ -42,6 +42,12 @@ export const IDENTIFY_TEXT = {
         ? "C'était votre dernière identification aujourd'hui."
         : `Il vous reste ${count} identification${count > 1 ? "s" : ""} aujourd'hui.`,
   },
+  // Fenêtre du résultat (centrée sur ordinateur, feuille sur mobile).
+  dialog: {
+    title: "Résultat",
+    close: "Fermer le résultat",
+    reopen: "Voir le résultat",
+  },
   card: {
     label: "Résultat de l'identification",
     kind: { movie: "Film", tv: "Série" },

@@ -41,6 +41,8 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("inscription → confirmation → déconnexion → connexion, puis lien de réinitialisation à usage unique", async ({ page }) => {
+  // Parcours long (une quinzaine d'allers-retours avec Supabase) : plus que les 30 s par défaut.
+  test.setTimeout(90_000);
   const email = `e2e-${Date.now()}-${Math.floor(Math.random() * 1e6)}@example.com`;
 
   // Inscription : la case d'acceptation est obligatoire et non cochée par défaut.

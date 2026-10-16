@@ -78,6 +78,9 @@ Mettre à jour ce fichier après chaque changement d'implémentation significati
   - Fait (16 octobre 2026) : `SpendGuardedVisionProvider` (réservation atomique du coût maximal ≈ 0,072 € dans `ai:spend:{jour}`, ajustement au coût réel, échecs facturés comptés), `spend-store.ts` (Upstash + mémoire), cumul `ai_spend_daily`, plafond lu dans `app_settings`, `AI_PAUSED` (503) et message d'attente sur l'accueil, alerte PostHog `ai_spend_cap_reached` une fois par jour. Tests : 7 de la garde (dont 20 identifications simultanées → 2 appels, plafond jamais dépassé), cumul en base, Upstash en direct.
   - Essai réel (base locale, plafond à 0) : extrait déjà connu reconnu depuis le cache, nouvel extrait en pause, aucun appel OpenAI, quota inchangé, alerte émise une seule fois.
 
+- U12 — Écran de résultat (plan validé le 16 octobre 2026 : `context/plans/U12.md`).
+  - Fait (16 octobre 2026) : `IdentificationResult` (affiche TMDB réelle non optimisée par Vercel, titre, année et type, squelette), `ConfidenceBadge` (libellé + pourcentage), `AlternativeList` (pistes cliquables qui passent en principal), `TitlePoster`, `QuotaCounter` dans l'en-tête (`useQuota`, mis à jour après chaque identification), `images.remotePatterns` TMDB. Playwright 1.64.1 (Chrome installé) : 3 parcours avec serveur simulé (sûr, probable + alternative cliquée, quota épuisé), job CI « Parcours navigateur (Playwright) ». `/imprint` (5 composants). Aucun bouton d'action avant U15, U18, U20.
+
 ## Next Up
 
 - U04 — Authentification email et Google (dépend de D8 : nom commercial et domaine).

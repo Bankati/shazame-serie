@@ -3,9 +3,10 @@ import { LAYOUT_TEXT } from "@/content/fr/layout";
 
 import { Logo } from "./logo";
 import { MobileNav } from "./mobile-nav";
+import { QuotaCounter } from "./quota-counter";
 
-// Barre supérieure fine (ui-context.md) : logo et ancres de l'accueil. Le quota (U11),
-// les liens Liste / Historique (U18, U19) et le compte (U04) viendront s'ajouter ici.
+// Barre supérieure fine (ui-context.md) : logo, ancres de l'accueil et compteur de quota (U12).
+// Les liens Liste / Historique (U18, U19) et le compte (U04) viendront s'ajouter ici.
 export function SiteHeader() {
   const { nav } = LAYOUT_TEXT;
 
@@ -27,7 +28,8 @@ export function SiteHeader() {
             ))}
           </ul>
         </nav>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          <QuotaCounter />
           <Button asChild className="hidden h-11 px-5 text-sm hover:bg-primary-hover lg:inline-flex">
             <a href={nav.cta.href}>{nav.cta.label}</a>
           </Button>

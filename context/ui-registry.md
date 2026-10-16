@@ -106,7 +106,7 @@ Dernière mise à jour : 14 octobre 2026 (U06, remplace `ClipDropzonePreview`)
 | Ombre | `shadow-lg` (carte posée sur le hero sombre, exception documentée) |
 | Accent | cadenas `text-brand-strong` |
 
-**Notes de pattern :** la carte porte `min-w-0` (élément de grille : elle ne doit pas s'élargir pour contenir la pellicule, débordement constaté à 412 px). L'état du parcours est annoncé par un `<p aria-live="polite">`. La carte affiche `ClipDropzone` (repos, refus) ou `FilmStrip` + état + bouton (extraction, prêt, insuffisant).
+**Notes de pattern :** depuis U12, le résultat est rendu par `IdentificationResult` (squelette pendant l'analyse). La carte porte `min-w-0` (élément de grille : elle ne doit pas s'élargir pour contenir la pellicule, débordement constaté à 412 px). L'état du parcours est annoncé par un `<p aria-live="polite">`. La carte affiche `ClipDropzone` (repos, refus) ou `FilmStrip` + état + bouton (extraction, prêt, insuffisant).
 
 ### ClipDropzone
 
@@ -145,6 +145,101 @@ Dernière mise à jour : 14 octobre 2026 (U06)
 | Accent | coche « Retenue » `text-brand` (fond sombre uniquement) ; image écartée `opacity-40` |
 
 **Notes de pattern :** `<figure>` + `<figcaption className="sr-only">` + liste ordonnée de 5 cases. Chaque état est écrit (« Retenue », « Trop sombre », « Floue », « Doublon », « En attente ») : jamais la couleur seule. Apparition des images `motion-safe:animate-in motion-safe:fade-in motion-safe:duration-300` (le seul moment orchestré, coupé avec `prefers-reduced-motion`). Aperçus en `<img>` (URL `blob:` locale), pas `next/image`. Perforations réutilisées depuis `film-strip-decor.tsx` avec `overflow-hidden`.
+
+### IdentificationResult (carte de résultat)
+
+Fichier : `src/components/identify/identification-result.tsx`
+Dernière mise à jour : 16 octobre 2026 (U12)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | hérité de la carte `IdentifyPanel` (`bg-card`) ; squelette `bg-muted` (`Skeleton`) |
+| Bordure | none |
+| Radius | affiche `rounded-poster` ; squelette d'affiche `rounded-poster` |
+| Texte principal | titre `font-display text-2xl leading-tight font-bold` |
+| Texte secondaire | année et type `text-sm text-muted-foreground` ; « non reconnu » `text-sm text-foreground` |
+| Espacement | carte `flex flex-col gap-4` ; bloc titre `flex gap-4`, colonne `gap-2` |
+| Hover / focus | aucun sur la carte ; voir `AlternativeList` |
+| Ombre | none |
+| Accent | `ConfidenceBadge` |
+
+**Notes de pattern :** affiche principale 96 px de large (w342 TMDB), à gauche aussi sur mobile. Sans résultat principal (`ask_another_clip`) : message puis « Pistes possibles ». Un clic sur une piste l'affiche en principal, la précédente rejoint la liste. Squelette `IdentificationResultSkeleton` aux dimensions finales (affiche `h-36 w-24`). Zone d'actions réservée sous le badge : « Voir la fiche » (U15), « Ajouter à ma liste » (U18), « Ce n'est pas le bon titre » (U20), à ajouter seulement quand l'action existe.
+
+### ConfidenceBadge
+
+Fichier : `src/components/identify/confidence-badge.tsx`
+Dernière mise à jour : 16 octobre 2026 (U12)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | ≥ 80 % `bg-brand-subtle` ; sinon aucun |
+| Bordure | none |
+| Radius | `rounded-sm` (≥ 80 %) |
+| Texte principal | ≥ 80 % `text-sm font-medium text-brand-subtle-foreground` ; 50-79 % `text-warning` ; < 50 % `text-muted-foreground` |
+| Texte secondaire | none |
+| Espacement | `px-2 py-1 gap-1` (≥ 80 %), `gap-1` sinon |
+| Hover / focus | none (non interactif) |
+| Ombre | none |
+| Accent | icônes `Check` (≥ 80), `Info` (50-79), `CircleHelp` (< 50), `size-4` |
+
+**Notes de pattern :** toujours un libellé et un pourcentage (« Très probable, 94 % », « Probable, 65 % », « Piste possible, 40 % ») : jamais la couleur seule. Seuils 80 et 50 identiques à `scoring.ts` (U09).
+
+### AlternativeList
+
+Fichier : `src/components/identify/alternative-list.tsx`
+Dernière mise à jour : 16 octobre 2026 (U12)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | ligne transparente, `hover:bg-muted` |
+| Bordure | none |
+| Radius | ligne `rounded-md` ; miniature `rounded-poster` |
+| Texte principal | titre `text-sm font-medium text-foreground` (tronqué) |
+| Texte secondaire | intitulé de section et pourcentage `text-sm text-muted-foreground` |
+| Espacement | section `gap-2`, liste `gap-1`, ligne `min-h-11 px-2 py-1 gap-3` |
+| Hover / focus | `hover:bg-muted`, `focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring` |
+| Ombre | none |
+| Accent | none |
+
+**Notes de pattern :** chaque piste est un `<button>` (clavier) avec `aria-label` « Afficher {titre} ({année}) comme résultat ». Miniature 32 px (w92 TMDB).
+
+### TitlePoster
+
+Fichier : `src/components/identify/title-poster.tsx`
+Dernière mise à jour : 16 octobre 2026 (U12)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | `bg-muted` (pendant le chargement et sans affiche) |
+| Bordure | none |
+| Radius | `rounded-poster` |
+| Texte principal | none |
+| Texte secondaire | none |
+| Espacement | none |
+| Hover / focus | none |
+| Ombre | none |
+| Accent | sans affiche : icône `Film` `size-6 text-muted-foreground` |
+
+**Notes de pattern :** ratio 2:3 calculé depuis la largeur. `next/image` avec `unoptimized` (TMDB sert déjà la taille, l'optimiseur Vercel est facturé). Texte alternatif « Affiche de {titre} ({année}) » (ui-context.md) ; sans affiche, `role="img"` et « Affiche indisponible ». Réutilisable par `PosterCard` (U15).
+
+### QuotaCounter
+
+Fichier : `src/components/layout/quota-counter.tsx` (dans `SiteHeader`)
+Dernière mise à jour : 16 octobre 2026 (U12)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | none (sur `bg-card` de l'en-tête) |
+| Bordure | none |
+| Radius | none |
+| Texte principal | `text-sm font-medium text-muted-foreground` ; ≤ 3 restantes `text-warning` |
+| Texte secondaire | none |
+| Espacement | `gap-1.5` ; dans l'en-tête `gap-3` avec le menu |
+| Hover / focus | none (non interactif) |
+| Ombre | none |
+| Accent | icône `Clapperboard` `size-4` |
+
+**Notes de pattern :** texte court sur mobile (« 2 restantes »), complet à partir de `sm` (« 2 identifications restantes aujourd'hui »). Région `aria-live="polite"`. Alimenté par `useQuota()` (`GET /api/quota`, puis chaque réponse d'identification). Rien n'est affiché tant que le quota n'est pas connu (pas de saut de mise en page notable dans l'en-tête).
 
 ### HowItWorks (carte d'étape)
 

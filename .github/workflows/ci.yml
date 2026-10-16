@@ -45,6 +45,36 @@ jobs:
         env:
           NEXT_TELEMETRY_DISABLED: 1
 
+  e2e:
+    name: Parcours navigateur (Playwright)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      # Build sans aucune variable : serveur, IA et TMDB sont simulés par les tests (aucun service réel appelé).
+      - name: Build
+        run: npm run build
+
+      # Chrome est préinstallé sur les runners Ubuntu (channel « chrome » dans playwright.config.ts).
+      - name: Playwright
+        run: npm run test:e2e
+
+      - name: Traces en cas d'échec
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-traces
+          path: test-results/
+          retention-days: 7
+
   audit:
     name: Audit des dépendances de production
     runs-on: ubuntu-latest

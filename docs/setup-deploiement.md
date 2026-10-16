@@ -75,6 +75,7 @@ Un seul projet Supabase en ligne (`shazam_serie`) sert à la préproduction et �
    - `Audit des dépendances de production`
    - `Aucun fichier de secrets versionné`
    - `Base de données (migrations, RLS)`
+   - `Parcours navigateur (Playwright)`
    - `Vérifier la branche source`
    - `Santé du déploiement` (test de fumée sur le déploiement Vercel du dernier commit de la PR)
 

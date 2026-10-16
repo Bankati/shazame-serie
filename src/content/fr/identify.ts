@@ -42,6 +42,26 @@ export const IDENTIFY_TEXT = {
         ? "C'était votre dernière identification aujourd'hui."
         : `Il vous reste ${count} identification${count > 1 ? "s" : ""} aujourd'hui.`,
   },
+  card: {
+    label: "Résultat de l'identification",
+    kind: { movie: "Film", tv: "Série" },
+    meta: (year: number | null, kind: string) => (year ? `${year}, ${kind}` : kind),
+    poster: (title: string, year: number | null) => (year ? `Affiche de ${title} (${year})` : `Affiche de ${title}`),
+    noPoster: "Affiche indisponible",
+    badge: {
+      sure: (percent: number) => `Très probable, ${percent} %`,
+      likely: (percent: number) => `Probable, ${percent} %`,
+      possible: (percent: number) => `Piste possible, ${percent} %`,
+    },
+    alternatives: "Autres pistes",
+    leads: "Pistes possibles",
+    showAlternative: (title: string) => `Afficher ${title} comme résultat`,
+    percent: (percent: number) => `${percent} %`,
+  },
+  counter: {
+    full: (count: number) => `${count} identification${count > 1 ? "s" : ""} restante${count > 1 ? "s" : ""} aujourd'hui`,
+    short: (count: number) => `${count} restante${count > 1 ? "s" : ""}`,
+  },
   failures: {
     quota: "Vous avez atteint votre limite d'identifications pour aujourd'hui. Elle se renouvelle à minuit (heure de Paris).",
     rate_limited: "Trop d'essais rapprochés. Patientez une minute, puis réessayez.",

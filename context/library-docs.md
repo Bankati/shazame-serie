@@ -231,6 +231,8 @@ Plans d'hébergement : **Vercel Pro** obligatoire (le plan Hobby est réservé �
 
 ## Vitest et Playwright
 
+- Installé en U12 : `@playwright/test` 1.64.1, `playwright.config.ts` (projet `mobile-chrome` = Pixel 7 + `channel: "chrome"`, Chrome préinstallé localement et sur les runners Ubuntu, aucun navigateur à télécharger ; `webServer` = `next start` sur le build). Serveur simulé par `page.route` (`/api/identify`, `/api/quota`, `image.tmdb.org`, PostHog bloqué). Vidéo de test : fractale générée (`tests/e2e/fixtures/clip.mp4`). Lancer `npm run build` avant `npm run test:e2e`.
+
 - https://vitest.dev — https://playwright.dev
 - Vitest 5.0.3 installé (4 octobre 2026) pour la CI. Exige `@types/node` ^22 ou ≥ 24 (d'où l'alignement sur 24.19.1) et Node ^22.12 ou ^24. Configuration : `vitest.config.mts` (extension `.mts` pour éviter l'avertissement « ESM syntax in a file loaded as CommonJS » de Vite ; alias `@` → `src`, environnement `node`). `--passWithNoTests` retiré en U01.
 - `server-only` lève une erreur hors de la condition `react-server` : Vitest l'aliase vers `server-only/empty.js` pour pouvoir tester `src/server/**`.

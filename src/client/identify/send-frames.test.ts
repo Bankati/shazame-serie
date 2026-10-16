@@ -37,6 +37,7 @@ describe("sendFrames", () => {
   it.each([
     ["RATE_LIMITED", "rate_limited"],
     ["FRAMES_UNUSABLE", "frames"],
+    ["AI_PAUSED", "paused"],
     ["UPSTREAM_ERROR", "unavailable"],
   ])("traduit %s", async (code, kind) => {
     mockFetch({ ok: false, error: { code, message: "…" } });

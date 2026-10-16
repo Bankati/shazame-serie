@@ -74,6 +74,10 @@ Mettre à jour ce fichier après chaque changement d'implémentation significati
   - À mesurer en U13 : temps du premier envoi (15 s, dont recherches TMDB à froid en deux langues pour chaque candidat).
   - Reste (fondateur) : `VISITOR_COOKIE_SECRET` dans Vercel (Production obligatoire, Preview conseillée). Recommandé : U14 (plafond de dépense IA) avant toute diffusion publique.
 
+- U14 — Plafond de dépense IA (plan validé le 16 octobre 2026 : `context/plans/U14.md`).
+  - Fait (16 octobre 2026) : `SpendGuardedVisionProvider` (réservation atomique du coût maximal ≈ 0,072 € dans `ai:spend:{jour}`, ajustement au coût réel, échecs facturés comptés), `spend-store.ts` (Upstash + mémoire), cumul `ai_spend_daily`, plafond lu dans `app_settings`, `AI_PAUSED` (503) et message d'attente sur l'accueil, alerte PostHog `ai_spend_cap_reached` une fois par jour. Tests : 7 de la garde (dont 20 identifications simultanées → 2 appels, plafond jamais dépassé), cumul en base, Upstash en direct.
+  - Essai réel (base locale, plafond à 0) : extrait déjà connu reconnu depuis le cache, nouvel extrait en pause, aucun appel OpenAI, quota inchangé, alerte émise une seule fois.
+
 ## Next Up
 
 - U04 — Authentification email et Google (dépend de D8 : nom commercial et domaine).
@@ -133,6 +137,7 @@ Mettre à jour ce fichier après chaque changement d'implémentation significati
 | AD-29 | Cache de résultats : correspondance exacte (index unique sur l'empreinte d'extrait) et proche (`bit_count`) dans PostgreSQL, sans raccourci Redis en V1 | Une recherche par index unique coûte ≈ 1 ms ; une dépendance de moins, rien à désynchroniser. Redis reste pour quotas et limitation de débit. À revoir au-delà de ~100 000 entrées. | Décidé (U10, 15 octobre 2026) |
 | AD-30 | Redis réservé au cache des réponses TMDB, aux quotas, au plafond de dépense IA et à la limitation de débit ; les sessions restent gérées par Supabase Auth (cookies HttpOnly, renouvellement, RG9) | Une copie des jetons de session dans Redis serait une seconde source de vérité à synchroniser et une surface d'attaque de plus. | Décidé (option A, 15 octobre 2026) |
 | AD-31 | Modèle de vision par défaut `gpt-6.1-sol` (≈ 0,011 € par identification à 4 images), second candidat `gpt-5.6-luna` ; choix définitif par l'eval (Q4) | Reconnaître un titre demande une large culture générale ; coût sous la cible de 0,015 € (CDC 15.1). | Décidé (U07, 15 octobre 2026) |
+| AD-32 | Garde de dépense IA dans la couche IA (enveloppe du fournisseur de vision) plutôt que dans l'orchestrateur | Aucun appel au modèle ne peut contourner le plafond (invariant 2), y compris depuis l'eval (U13) ou d'autres usages futurs. | Décidé (U14, 16 octobre 2026) |
 | AD-18 | Trois branches `dev` → `staging` → `main`, promotion par PR uniquement, `hotfix/*` en exception | Demande du fondateur ; `staging` correspond à l'environnement `preview`, `main` à `production`. | Décidé |
 
 ## Eval History

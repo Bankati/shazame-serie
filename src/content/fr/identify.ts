@@ -46,6 +46,8 @@ export const IDENTIFY_TEXT = {
     quota: "Vous avez atteint votre limite d'identifications pour aujourd'hui. Elle se renouvelle à minuit (heure de Paris).",
     rate_limited: "Trop d'essais rapprochés. Patientez une minute, puis réessayez.",
     frames: "Ces images n'ont pas pu être analysées. Choisissez un autre extrait.",
+    paused:
+      "L'identification de nouveaux extraits est en pause pour aujourd'hui, en raison d'une forte affluence. Les extraits déjà connus restent reconnus ; réessayez demain.",
     unavailable: "L'identification est momentanément indisponible. Réessayez dans quelques instants.",
   },
   problems: {

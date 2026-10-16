@@ -9,6 +9,7 @@ export type IdentifyFailure =
   | { kind: "quota"; quota: QuotaInfo | null }
   | { kind: "rate_limited" }
   | { kind: "frames" }
+  | { kind: "paused" }
   | { kind: "unavailable" };
 
 export type IdentifyCall = { ok: true; response: IdentifyResponse } | { ok: false; failure: IdentifyFailure };
@@ -47,6 +48,8 @@ export async function sendFrames(frames: readonly Blob[], signal?: AbortSignal):
       return { ok: false, failure: { kind: "quota", quota: failure.data.error.details?.quota ?? null } };
     case "RATE_LIMITED":
       return { ok: false, failure: { kind: "rate_limited" } };
+    case "AI_PAUSED":
+      return { ok: false, failure: { kind: "paused" } };
     case "FRAMES_UNUSABLE":
     case "VALIDATION_ERROR":
       return { ok: false, failure: { kind: "frames" } };

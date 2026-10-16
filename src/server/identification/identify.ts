@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { VisionAnswer, VisionProvider, VisionResult } from "@/server/ai/vision-provider";
+import { type VisionAnswer, VisionError, type VisionProvider, type VisionResult } from "@/server/ai/vision-provider";
 import type { CatalogProvider, MediaType } from "@/server/catalog/catalog-provider";
 import { matchProposedTitle } from "@/server/catalog/match-title";
 import type { ProposedTitle } from "@/server/catalog/matching";
@@ -32,6 +32,7 @@ export type IdentifyDeps = {
 export type IdentifyOutcome =
   | { ok: true; response: IdentifyResponse }
   | { ok: false; code: "QUOTA_EXCEEDED"; quota: QuotaInfo }
+  | { ok: false; code: "AI_PAUSED" }
   | { ok: false; code: "UPSTREAM_ERROR" };
 
 export async function identifyClip(
@@ -108,9 +109,12 @@ export async function identifyClip(
         quota: toQuotaInfo(await deps.quota.status(identity)),
       },
     };
-  } catch {
-    // Échec IA ou TMDB : non décompté (RG16) ; la dépense déjà facturée reste enregistrée.
+  } catch (error) {
+    // Échec IA ou TMDB, ou plafond de dépense atteint : non décompté (RG5, RG16).
     await reservation.release();
+    if (error instanceof VisionError && error.reason === "paused") {
+      return { ok: false, code: "AI_PAUSED" };
+    }
     await deps.persist({
       identity,
       fingerprint: lookup.fingerprint,

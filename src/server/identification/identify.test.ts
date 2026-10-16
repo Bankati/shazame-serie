@@ -129,4 +129,18 @@ describe("identifyClip", () => {
 
     expect(outcomes.map((outcome) => (outcome.ok ? "ok" : outcome.code)).sort()).toEqual(["QUOTA_EXCEEDED", "ok"]);
   });
+
+  it("IA en pause (plafond atteint) : AI_PAUSED, rien de décompté, le cache répond encore (RG5)", async () => {
+    const paused = async () => {
+      throw new VisionError("paused");
+    };
+    const withoutCache = setup({ vision: paused });
+    expect(await identifyClip(withoutCache.deps, { identity: VISITOR, images: IMAGES })).toEqual({ ok: false, code: "AI_PAUSED" });
+    expect((await withoutCache.quota.status(VISITOR)).used).toBe(0);
+
+    const cached: CachedResult = { cacheId: "c1", tmdbId: 603, mediaType: "movie", confidence: 92, alternatives: [], validated: false };
+    const withCache = setup({ vision: paused, cached });
+    const outcome = await identifyClip(withCache.deps, { identity: VISITOR, images: IMAGES });
+    expect(outcome).toMatchObject({ ok: true, response: { source: "cache", main: { title: "Matrix" } } });
+  });
 });

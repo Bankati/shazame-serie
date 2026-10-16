@@ -101,6 +101,8 @@ Navigateur                                   Serveur (POST /api/identify)
 
 Choix assumés de ce flux **(proposé, AD-12 et AD-13)** :
 
+- Garde de dépense (U14, AD-32) : placée dans la couche IA (`SpendGuardedVisionProvider`), elle enveloppe le fournisseur de vision ; la réservation de quota (12) précède donc la garde (11), et un refus libère la réservation. Résultat identique à l'ordre ci-dessus, mais aucun appel au modèle ne peut contourner le plafond.
+
 - Les empreintes sont calculées **par le serveur** à partir des images reçues. Une empreinte fournie par le client pourrait empoisonner le cache (images du film A envoyées avec l'empreinte d'un clip viral B). Le navigateur calcule ses propres hash uniquement pour écarter les doublons avant l'envoi.
 - Un utilisateur dont le quota est épuisé reçoit `QUOTA_EXCEEDED` même si le clip est en cache : le paywall reste prévisible. Le cache continue de répondre quand l'IA est en pause (RG5).
 - Les étapes 12 à 17 garantissent qu'une réservation est toujours confirmée ou libérée (`try / finally`).

@@ -2,7 +2,7 @@ import "server-only";
 
 import { cookies } from "next/headers";
 
-import { getOpenAIVisionProviderOrNull } from "@/server/ai/vision";
+import { getGuardedVisionProviderOrNull } from "@/server/ai/vision";
 import { newVisitorId, signVisitorId, VISITOR_COOKIE, VISITOR_COOKIE_OPTIONS, verifyVisitorCookie } from "@/server/auth/visitor";
 import { getRedis } from "@/server/cache/redis";
 import { getCatalog } from "@/server/catalog/tmdb/tmdb-catalog";
@@ -68,7 +68,7 @@ export async function handleIdentifyRequest(request: Request): Promise<Response>
     return frames.reason === "count" ? jsonError("FRAMES_UNUSABLE") : jsonError("VALIDATION_ERROR");
   }
 
-  const vision = getOpenAIVisionProviderOrNull();
+  const vision = getGuardedVisionProviderOrNull();
   if (!vision) {
     log.error("identify.vision_not_configured");
     return jsonError("UPSTREAM_ERROR");
@@ -101,6 +101,9 @@ export async function handleIdentifyRequest(request: Request): Promise<Response>
   }
   if (outcome.code === "QUOTA_EXCEEDED") {
     return jsonError("QUOTA_EXCEEDED", undefined, undefined, { quota: outcome.quota });
+  }
+  if (outcome.code === "AI_PAUSED") {
+    return jsonError("AI_PAUSED");
   }
   return jsonError("UPSTREAM_ERROR");
 }

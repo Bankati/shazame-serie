@@ -1,13 +1,16 @@
-import * as Sentry from "@sentry/nextjs";
+import type { Instrumentation } from "next";
 
-// `env` est importé par les configurations Sentry : une variable manquante empêche le serveur de démarrer.
+// `env` est validé au démarrage, dans les runtimes Node.js et edge : une variable invalide empêche le serveur de démarrer.
 export async function register(): Promise<void> {
-  if (process.env.NEXT_RUNTIME === "nodejs") {
-    await import("./sentry.server.config");
-  }
-  if (process.env.NEXT_RUNTIME === "edge") {
-    await import("./sentry.edge.config");
-  }
+  await import("./server/env");
 }
 
-export const onRequestError = Sentry.captureRequestError;
+// Erreurs serveur (rendu, routes, Server Actions) → PostHog Error Tracking. Runtime Node.js uniquement :
+// posthog-node n'est pas chargé dans le runtime edge, inutilisé à ce jour (context/plans/OBS.md).
+export const onRequestError: Instrumentation.onRequestError = async (error, request, context) => {
+  if (process.env.NEXT_RUNTIME !== "nodejs") {
+    return;
+  }
+  const { captureServerError } = await import("./server/observability/posthog-server");
+  await captureServerError(error, { path: request.path, method: request.method, routeType: context.routeType });
+};

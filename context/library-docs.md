@@ -28,7 +28,7 @@ Relevées sur le registre npm le **4 octobre 2026**, révisées en U01 le **7 oc
 | `postgres` | 3.4.9 | Pilote PostgreSQL pour Drizzle |
 | `@supabase/supabase-js` | 2.117.3 | Auth, Storage |
 | `@supabase/ssr` | 0.12.7 | Sessions Supabase par cookies dans Next |
-| `openai` | 7.28.0 | SDK du fournisseur de vision (uniquement dans `src/server/ai/`) |
+| `openai` | 7.34.0 (installé) | SDK du fournisseur de vision (uniquement dans `src/server/ai/`, règle ESLint) |
 | `@upstash/redis` | 1.39.0 | Redis REST |
 | `@upstash/ratelimit` | 2.2.0 | Limitation de débit |
 | `sharp` | 0.35.5 | Contrôle du type réel et dimensions des images côté serveur |
@@ -36,8 +36,8 @@ Relevées sur le registre npm le **4 octobre 2026**, révisées en U01 le **7 oc
 | `@paddle/paddle-node-sdk` | 3.10.0 | Si D1 = Paddle |
 | `resend` | 6.32.0 | Emails |
 | `@react-email/components` | 1.0.12 | Gabarits d'emails |
-| `@sentry/nextjs` | 11.5.0 (installé) | Erreurs |
-| `posthog-js` | 1.435.8 | Analytique (si retenu plutôt que Plausible) |
+| `posthog-js` | 1.438.3 (installé) | Erreurs et analytique navigateur (AD-28) |
+| `posthog-node` | 5.55.1 (installé) | Erreurs serveur (AD-28) |
 | `vitest` | 5.0.3 | Tests unitaires |
 | `server-only` | 0.0.1 (installé) | Empêche l'import d'un module serveur côté client |
 | `ffmpeg-static` | 5.3.0 | Extraction d'images dans le harnais `eval/` uniquement (dépendance de développement) |
@@ -108,7 +108,10 @@ Plans d'hébergement : **Vercel Pro** obligatoire (le plan Hobby est réservé �
 ## Drizzle ORM + PostgreSQL (Supabase)
 
 - Doc : https://orm.drizzle.team/docs/overview — Supabase : https://orm.drizzle.team/docs/connect-supabase
-- Connexion via le **pooler** Supabase en mode transaction pour les fonctions serverless : désactiver les requêtes préparées (`prepare: false` avec le pilote `postgres`).
+- **Pooler en mode transaction (port 6543) : les paramètres envoyés à la connexion sont ignorés** (`connection: { statement_timeout }` de postgres.js reste sans effet, délai réel 2 min ; vérifié le 15 octobre 2026). Délai par requête : `withQueryTimeout(db, (tx) => …)` dans `src/server/db/client.ts` (`SET LOCAL statement_timeout` dans une transaction, 5 s par défaut, erreur 57014). Ne jamais y placer d'appel externe long.
+- Région : fonctions Vercel en `dub1` (Dublin, `vercel.json`), même région que la base Supabase `eu-west-1`. Depuis `iad1` (défaut Vercel), chaque aller-retour traverserait l'Atlantique.
+- Connexion via le **pooler** Supabase en mode transaction pour les fonctions serverless : désactiver les requêtes préparées (`prepare: false` avec le pilote `postgres`). Client applicatif : `getDb()` dans `src/server/db/client.ts` (U10), une connexion par instance, `DATABASE_URL` obligatoire en production.
+- `db.execute(sql…)` avec postgres-js renvoie directement le tableau de lignes. Pour un tableau d'entiers en paramètre : littéral `{1,2,3}` passé en paramètre puis `::bigint[]` (voir `result-cache.ts`).
 - Migrations : `drizzle-kit generate` puis `drizzle-kit migrate`. Jamais `push` en production.
 - Installé en U03 : `drizzle-orm` 0.45.3, `drizzle-kit` 0.31.11, `postgres` 3.4.9, `tsx` 4.23.15 (scripts). `.enableRLS()` sur chaque table et `authUsers` (`drizzle-orm/supabase`) pour la clé étrangère `profiles.id → auth.users.id`. `schemaFilter: ["public"]` dans `drizzle.config.ts` : `auth` et `storage` restent à Supabase.
 - Migrations SQL personnalisées : `drizzle-kit generate --custom --name <nom>`, puis écrire le SQL (séparer les instructions par `--> statement-breakpoint`).
@@ -145,6 +148,11 @@ Plans d'hébergement : **Vercel Pro** obligatoire (le plan Hobby est réservé �
 - Envoyer les images en base64 dans la requête (elles ne sont pas stockées chez nous, RG7).
 - Coût : calculé à partir des jetons consommés renvoyés dans la réponse et des tarifs du modèle (en USD), converti en micro-euros par une constante révisée chaque mois.
 - Vérifier les conditions de conservation des données côté fournisseur et l'accord de traitement (D4).
+- Installé en U07 : `src/server/ai/` (`OpenAIVisionProvider`, consigne `identify.v1`, `pricing.ts`, `retry.ts`). Appel : `client.responses.parse({ model, instructions, input: [{ role: "user", content: [input_text, input_image…] }], text: { format: zodTextFormat(schema, "identification") }, store: false, max_output_tokens }, { timeout, maxRetries: 0, signal })`, puis `output_parsed` revalidé par zod. Refus : élément de contenu `type: "refusal"` dans `output`.
+- Sorties structurées : tous les champs requis, absences en `nullable()` ; pas de bornes (min/max) dans le schéma envoyé, elles sont appliquées après (`normalizeAnswer`).
+- Erreurs passagères (nouvelle tentative) : `APIConnectionError` (dont `APIConnectionTimeoutError`), `RateLimitError`, `InternalServerError`. Détail d'image : `low | high | auto | original` (défaut `auto`).
+- Jetons : `usage.input_tokens`, `usage.input_tokens_details.cached_tokens`, `usage.output_tokens` (inclut le raisonnement). La consigne est mise en cache par OpenAI d'un appel à l'autre (jetons en cache facturés 20 fois moins cher).
+- Mesures réelles (15 octobre 2026, `gpt-6.1-sol`, détail `auto`, 2 images 768 px) : 2,3 à 2,6 s, 0,0005 à 0,0018 € par appel ; *Le Voyage dans la Lune* (domaine public) reconnu à 100 %. Test en direct : `npm run test:ai`.
 
 ## TMDB API v3
 
@@ -153,6 +161,10 @@ Plans d'hébergement : **Vercel Pro** obligatoire (le plan Hobby est réservé �
 - Où regarder : `movie/{id}/watch/providers` et `tv/{id}/watch/providers` (données fournies par JustWatch, **attribution JustWatch obligatoire**). Licence commerciale TMDB requise (D2).
 - Mention obligatoire et logo : https://www.themoviedb.org/about/logos-attribution
 - Respecter les limites de débit et mettre en cache selon leurs conditions.
+- **Conditions (vérifiées le 15 octobre 2026)** : cache de 6 mois au maximum (section 1.C) ; logo TMDB et mention « uses TMDB and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB » (section 3) ; **tout usage payant exige un accord écrit** (section 2.A, D2). Pas de réponse TMDB stockée dans le dépôt (pas de fixtures).
+- Installé en U08 : `src/server/catalog/` (`TmdbCatalog`, `createTmdbClient` : délai 5 s, une nouvelle tentative sur 429 / 5xx avec `Retry-After` borné à 2 s, zod sur chaque réponse ; cache Redis 7 jours `tmdb:search|details|configuration`). Authentification par **jeton de lecture** (`Authorization: Bearer`, JWT `eyJ…`).
+- **Piège `search/multi`** : la recherche française peut ne pas remonter la bonne fiche quand le titre est anglais (« Attack on Titan » : la série n'apparaît qu'en `en-US`). `matchProposedTitle` interroge toujours `fr-FR` et `en-US` en parallèle et fusionne les titres d'une même fiche. Les résultats mêlent films, séries et personnes : valider chaque élément à part.
+- Test en direct : `npm run test:tmdb` (20 titres, clés de `.env.local`, hors CI).
 
 ## Watchmode (secours pour « où regarder »)
 
@@ -161,6 +173,8 @@ Plans d'hébergement : **Vercel Pro** obligatoire (le plan Hobby est réservé �
 ## Upstash Redis et Ratelimit
 
 - Doc : https://upstash.com/docs/redis/overall/getstarted — Ratelimit : https://upstash.com/docs/redis/sdks/ratelimit-ts/overview
+- Installé en U08 : `@upstash/redis` 1.39.0, `getRedis()` / `cachedJson()` dans `src/server/cache/redis.ts` (délai 1,5 s par `signal: () => AbortSignal.timeout(…)`, 1 nouvelle tentative, `enableTelemetry: false`, valeurs revalidées par zod à la lecture, panne Redis = pas de cache). Sans `UPSTASH_REDIS_REST_*`, pas de cache (local, CI).
+- Installé en U11 : `@upstash/ratelimit` 2.2.0 (`src/server/http/rate-limit.ts` : `slidingWindow(10, "1 m")` et `fixedWindow(60, "1 d")` par IP, `analytics: false`, `timeout`, `await result.pending`). Quota : script Lua via `redis.eval(script, [clé], [args])` (`src/server/quota/quota-store.ts`) ; vérifié en direct (`npm run test:quota`) : 20 réservations simultanées pour une limite de 3 → exactement 3.
 - Quota : `INCR` + `EXPIREAT` sur la clé du jour (minuit Europe/Paris), réservation puis confirmation/libération (`DECR`) pour éviter les dépassements en cas de requêtes simultanées.
 
 ## Paiement (selon D1)
@@ -176,20 +190,17 @@ Plans d'hébergement : **Vercel Pro** obligatoire (le plan Hobby est réservé �
 - Doc : https://resend.com/docs — https://react.email/docs
 - Domaine d'envoi vérifié (SPF, DKIM, DMARC) avant U23.
 
-## Sentry
+## PostHog (suivi des erreurs et analytique, AD-28)
 
-- Performance (U02) : le SDK navigateur pèse l'essentiel du JavaScript inutilisé signalé par Lighthouse (~69 Ko, TBT 400 ms en mobile simulé). Les options `webpack.treeshake.*` de Sentry 11 ne s'appliquent pas à Turbopack (Next 16). Piste à étudier avant le lancement : désactiver le traçage navigateur ou charger Sentry après l'interaction.
-
-- Doc : https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
-- Fichiers (U01) : `src/instrumentation.ts` (`register` + `onRequestError = Sentry.captureRequestError`), `src/sentry.server.config.ts`, `src/sentry.edge.config.ts`, `src/instrumentation-client.ts` (`onRouterTransitionStart`), `src/app/global-error.tsx`, `withSentryConfig` importé depuis **`@sentry/nextjs/config`** dans `next.config.ts`.
-- **Piège v11** : `sendDefaultPii` n'existe plus, remplacé par `dataCollection`, qui collecte **par défaut** utilisateur, cookies, en-têtes, corps HTTP, paramètres d'URL et variables locales. Tout est coupé dans `src/shared/observability/sentry.ts` ; `beforeSend: scrubEvent` (testé) sert de seconde barrière (emails masqués).
-- Pas de Session Replay ni de widget de retour (Q15). `telemetry: false` sur le plugin de build.
-- Source maps envoyées seulement si `SENTRY_AUTH_TOKEN` est défini (build Vercel) ; en CI, l'avertissement « No auth token provided » est normal.
-
-## Analytique
-
-- PostHog : https://posthog.com/docs/libraries/next-js — Plausible : https://plausible.io/docs
-- Choix ouvert. Pas d'identifiant personnel dans les événements ; consentement si cookies non essentiels.
+- Doc : https://posthog.com/docs/libraries/next-js — erreurs : https://posthog.com/docs/error-tracking/installation/nextjs — options navigateur : https://posthog.com/docs/libraries/js/config — sans cookie : https://posthog.com/docs/privacy/data-collection
+- Fichiers : `src/client/observability/posthog.ts` (`loadPostHog` : `import("posthog-js")` différé puis `posthog.init`, seulement si une clé existe ; `reportBoundaryError`), `src/instrumentation-client.ts` (déclenche le chargement), `src/instrumentation.ts` (`onRequestError` → `captureServerError`, runtime Node.js seulement), `src/server/observability/posthog-server.ts`, `src/shared/observability/posthog.ts` (`scrubEvent`, `withEnvironment`, testés), `src/app/error.tsx` et `src/app/global-error.tsx` (`reportBoundaryError` : la capture automatique écoute `window.onerror` et ne voit pas les erreurs attrapées par une page d'erreur).
+- Navigateur : `cookieless_mode: "always"` (aucun cookie ni stockage, pas de bandeau) **exige** le réglage projet « Cookieless server hash mode » (Settings → Project → Web analytics), sinon aucun événement n'est enregistré. Avec ce mode : jamais d'`identify` ni d'`alias`, `person_profiles: "never"`. `defaults: "2026-05-30"`, `capture_pageview: "history_change"` (navigations App Router), `autocapture`, enregistrement des sessions et sondages coupés, `capture_exceptions: true`.
+- `before_send` accepte un tableau de fonctions (navigateur et Node) ; renvoyer `null` rejette l'événement. Les exceptions sont dans `properties.$exception_list[].value`.
+- Serveur (Vercel) : `new PostHog(token, { host, flushAt: 1, flushInterval: 0 })` et `await captureExceptionImmediate(error, distinctId?, properties?)` avant la fin de la requête. Sans `distinctId`, l'événement est anonyme. `disableGeoip` vaut `true` par défaut côté Node.
+- Chargement : `instrumentation-client.ts` attend l'événement `load` puis `requestIdleCallback` (délai max 5 s) avant `loadPostHog()`. Chargé dès l'hydratation, posthog-js (≈ 300 Ko non compressés) faisait perdre ≈ 12 points de performance mobile. Le bundle `posthog-js/dist/module.slim` (≈ 150 Ko) existe, mais son option `__extensionClasses` est marquée `@internal` : non utilisée.
+- Pas de proxy inverse : le mode sans cookie calcule son identifiant anonyme à partir de l'IP réelle du visiteur. Le navigateur appelle `eu.i.posthog.com` directement (à autoriser dans la CSP en U28).
+- Source maps non envoyées (clé personnelle PostHog requise, `@posthog/nextjs-config`) : prévu en U29. Les piles d'erreurs navigateur restent minifiées d'ici là.
+- Clé de projet `phc_…` (publique, envoi d'événements seulement) ≠ clé personnelle `phx_…` (accès au compte : jamais dans l'application). `env.ts` refuse une clé qui ne commence pas par `phc_`.
 
 ## Vercel
 
@@ -215,6 +226,8 @@ Plans d'hébergement : **Vercel Pro** obligatoire (le plan Hobby est réservé �
 
 - Doc : https://sharp.pixelplumbing.com
 - Côté serveur : lire les métadonnées pour vérifier le format réel (JPEG) et les dimensions, rejeter le reste. Calculer les dHash (redimensionnement 9 × 8 en niveaux de gris). Runtime Node uniquement.
+- Installé en U10 : `sharp` 0.35.5 (libvips 8.18). dHash : `sharp(buf).greyscale().resize(9, 8, { fit: "fill" }).raw().toBuffer({ resolveWithObject: true })`, puis lire un octet sur `info.channels` (un canal alpha peut subsister) et appliquer `dHash` de `src/shared/frames/analysis.ts` (`src/server/identification/frame-hashes.ts`).
+- dHash stocké en `bigint` PostgreSQL signé : `BigInt.asIntN(64, h)` ; la distance se calcule en SQL par `bit_count((a # b)::bit(64))` (PostgreSQL 14+).
 
 ## Vitest et Playwright
 

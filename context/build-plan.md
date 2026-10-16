@@ -30,8 +30,8 @@ Pas de code. Chaque décision est consignée dans `progress-tracker.md`.
 
 ### U01 — Socle du dépôt et déploiement
 - **Objectif** : application Next.js vide déployée en préproduction et production.
-- **Périmètre** : `create-next-app` (TS strict, App Router, Tailwind 4, ESLint), structure de dossiers de `architecture.md`, scripts npm de `CLAUDE.md`, `src/server/env.ts` (validation zod), GitHub Actions (lint, typecheck, test, build), projets Vercel, Sentry branché.
-- **Fin** : un push sur `main` déploie ; la CI échoue si le typecheck échoue ; une erreur volontaire remonte dans Sentry.
+- **Périmètre** : `create-next-app` (TS strict, App Router, Tailwind 4, ESLint), structure de dossiers de `architecture.md`, scripts npm de `CLAUDE.md`, `src/server/env.ts` (validation zod), GitHub Actions (lint, typecheck, test, build), projets Vercel, suivi des erreurs branché (Sentry, remplacé par PostHog : AD-28).
+- **Fin** : un push sur `main` déploie ; la CI échoue si le typecheck échoue ; une erreur volontaire remonte dans PostHog (AD-28).
 - **Dépend de** : D6, D9.
 
 ### U02 — Tokens de design et coquille de mise en page
@@ -112,7 +112,7 @@ Pas de code. Chaque décision est consignée dans `progress-tracker.md`.
 
 ### U14 — Plafond de dépense IA
 - **Objectif** : couper l'IA au-delà du plafond quotidien.
-- **Périmètre** : compteur Redis `ai:spend:{jour}` avec réservation du coût maximal estimé puis ajustement, miroir `ai_spend_daily`, réponse `AI_PAUSED`, message d'attente côté UI, alerte à l'admin via Sentry (l'alerte email s'ajoute en U23). RG5.
+- **Périmètre** : compteur Redis `ai:spend:{jour}` avec réservation du coût maximal estimé puis ajustement, miroir `ai_spend_daily`, réponse `AI_PAUSED`, message d'attente côté UI, alerte à l'admin via PostHog (l'alerte email s'ajoute en U23). RG5.
 - **Fin** : test : plafond à 0 → aucune identification IA, le cache fonctionne encore ; des requêtes simultanées ne dépassent pas le plafond de plus d'un appel.
 - **Dépend de** : U11.
 
@@ -205,7 +205,7 @@ Pas de code. Chaque décision est consignée dans `progress-tracker.md`.
 - **Dépend de** : U26.
 
 ### U29 — Observabilité et analytique
-- **Périmètre** : événements (identification, résultat, ajout à la liste, passage Premium), sonde de disponibilité, alertes Sentry, suivi du coût IA. CDC 16, 17.
+- **Périmètre** : événements (identification, résultat, ajout à la liste, passage Premium), sonde de disponibilité, alertes PostHog (erreurs), envoi des source maps à PostHog, suivi du coût IA. CDC 16, 17.
 - **Fin** : un événement de chaque type visible ; une panne simulée déclenche une alerte.
 - **Dépend de** : U12, U22.
 

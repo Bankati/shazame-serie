@@ -1,0 +1,163 @@
+import "server-only";
+
+import OpenAI, { APIConnectionError, InternalServerError, RateLimitError } from "openai";
+import { zodTextFormat } from "openai/helpers/zod";
+
+import { env } from "@/server/env";
+import { log } from "@/server/log";
+
+import { costMicroEur, isPricedModel } from "./pricing";
+import { IDENTIFY_INSTRUCTIONS, IDENTIFY_PROMPT_VERSION, identifyUserText } from "./prompts/identify.v1";
+import { withRetries } from "./retry";
+import {
+  modelAnswerSchema,
+  normalizeAnswer,
+  type VisionProvider,
+  type VisionResult,
+  type VisionUsage,
+  VisionError,
+} from "./vision-provider";
+
+// Seul module (avec src/server/ai/**) autorisé à importer le SDK OpenAI (invariant 2, règle ESLint).
+// Les images partent en base64 et ne sont pas conservées par OpenAI (`store: false`, RG7).
+
+const ATTEMPT_TIMEOUT_MS = 12_000;
+const MAX_OUTPUT_TOKENS = 800;
+const PROVIDER = "openai";
+
+type ImageDetail = "low" | "high" | "auto" | "original";
+type ReasoningEffort = "none" | "minimal" | "low" | "medium" | "high";
+
+/** Sous-ensemble du client OpenAI utilisé : permet de le simuler dans les tests. */
+export type ResponsesClient = Pick<OpenAI["responses"], "parse">;
+
+export type OpenAIVisionOptions = {
+  client: ResponsesClient;
+  model: string;
+  detail: ImageDetail;
+  reasoningEffort?: ReasoningEffort;
+  sleep?: (ms: number) => Promise<void>;
+  now?: () => number;
+};
+
+export class OpenAIVisionProvider implements VisionProvider {
+  constructor(private readonly options: OpenAIVisionOptions) {}
+
+  async identify(images: readonly Buffer[], context: { signal?: AbortSignal } = {}): Promise<VisionResult> {
+    const { client, model, detail, reasoningEffort, sleep, now = Date.now } = this.options;
+    // Sans tarif, impossible de compter la dépense (RG5) : on n'appelle pas le modèle.
+    if (!isPricedModel(model)) {
+      throw new VisionError("unpriced_model");
+    }
+
+    const usage: VisionUsage = { inputTokens: 0, cachedInputTokens: 0, outputTokens: 0 };
+    let spent = 0;
+    let attempts = 0;
+    const startedAt = now();
+
+    const content = [
+      { type: "input_text" as const, text: identifyUserText(images.length) },
+      ...images.map((image) => ({
+        type: "input_image" as const,
+        image_url: `data:image/jpeg;base64,${image.toString("base64")}`,
+        detail,
+      })),
+    ];
+
+    try {
+      const answer = await withRetries(
+        async () => {
+          attempts += 1;
+          const response = await client.parse(
+            {
+              model,
+              instructions: IDENTIFY_INSTRUCTIONS,
+              input: [{ role: "user", content }],
+              text: { format: zodTextFormat(modelAnswerSchema, "identification") },
+              max_output_tokens: MAX_OUTPUT_TOKENS,
+              store: false,
+              ...(reasoningEffort ? { reasoning: { effort: reasoningEffort } } : {}),
+            },
+            { timeout: ATTEMPT_TIMEOUT_MS, maxRetries: 0, signal: context.signal },
+          );
+
+          // Toute réponse reçue est facturée, même refusée ou incomplète.
+          if (response.usage) {
+            const attemptUsage = {
+              inputTokens: response.usage.input_tokens,
+              cachedInputTokens: response.usage.input_tokens_details?.cached_tokens ?? 0,
+              outputTokens: response.usage.output_tokens,
+            };
+            usage.inputTokens += attemptUsage.inputTokens;
+            usage.cachedInputTokens += attemptUsage.cachedInputTokens;
+            usage.outputTokens += attemptUsage.outputTokens;
+            spent += costMicroEur(model, attemptUsage);
+          }
+
+          if (hasRefusal(response.output)) {
+            throw new VisionError("refused");
+          }
+          const parsed = modelAnswerSchema.safeParse(response.output_parsed);
+          if (!parsed.success) {
+            throw new VisionError("invalid_response");
+          }
+          return normalizeAnswer(parsed.data);
+        },
+        { isRetryable: isTransient, sleep, signal: context.signal },
+      );
+
+      return {
+        answer,
+        provider: PROVIDER,
+        model,
+        promptVersion: IDENTIFY_PROMPT_VERSION,
+        attempts,
+        latencyMs: now() - startedAt,
+        usage,
+        costMicroEur: spent,
+      };
+    } catch (error) {
+      const reason = error instanceof VisionError ? error.reason : "unavailable";
+      log.warn("ai.identify_failed", { provider: PROVIDER, model, reason, attempts, status: statusOf(error) });
+      throw new VisionError(reason, spent);
+    }
+  }
+}
+
+/** Panne passagère : délai dépassé ou connexion (APIConnectionError), saturation (429), erreur serveur (5xx). */
+export function isTransient(error: unknown): boolean {
+  return error instanceof APIConnectionError || error instanceof RateLimitError || error instanceof InternalServerError;
+}
+
+function hasRefusal(output: readonly unknown[]): boolean {
+  return output.some(
+    (item) =>
+      typeof item === "object" &&
+      item !== null &&
+      "content" in item &&
+      Array.isArray(item.content) &&
+      item.content.some((part: unknown) => typeof part === "object" && part !== null && "type" in part && part.type === "refusal"),
+  );
+}
+
+function statusOf(error: unknown): number | null {
+  return typeof error === "object" && error !== null && "status" in error && typeof error.status === "number" ? error.status : null;
+}
+
+let provider: OpenAIVisionProvider | undefined;
+
+/** Fournisseur applicatif ; lève si OpenAI n'est pas configuré. */
+export function getVisionProvider(): OpenAIVisionProvider {
+  if (!provider) {
+    if (!env.OPENAI_API_KEY) {
+      throw new VisionError("unavailable");
+    }
+    provider = new OpenAIVisionProvider({
+      client: new OpenAI({ apiKey: env.OPENAI_API_KEY, maxRetries: 0 }).responses,
+      model: env.OPENAI_VISION_MODEL,
+      detail: env.OPENAI_IMAGE_DETAIL,
+      reasoningEffort: env.OPENAI_REASONING_EFFORT,
+    });
+  }
+  return provider;
+}

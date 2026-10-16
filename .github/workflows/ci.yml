@@ -94,6 +94,8 @@ jobs:
           version: 2.120.0
 
       # Pile minimale : Postgres, Auth, API REST et Storage (ce que testent les tests d'intégration).
+      # Échec ponctuel connu (8 octobre 2026) : « toomanyrequests: Rate exceeded » sur public.ecr.aws, puis
+      # « port 54322 already in use ». Incident du runner, pas du code : relancer le job (Re-run failed jobs).
       - name: Démarrer Supabase
         run: supabase start -x realtime,imgproxy,mailpit,studio,edge-runtime,logflare,vector,supavisor
 

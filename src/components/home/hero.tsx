@@ -2,9 +2,8 @@ import { Sparkles } from "lucide-react";
 
 import { FilmStripDecor } from "@/components/decor/film-strip-decor";
 import { PosterWall } from "@/components/decor/poster-wall";
+import { IdentifyPanel } from "@/components/identify/identify-panel";
 import { HOME_TEXT } from "@/content/fr/home";
-
-import { ClipDropzonePreview } from "./clip-dropzone-preview";
 
 // Premier écran : salle de projection sombre, l'action d'identification visible tout de suite.
 export function Hero() {
@@ -24,7 +23,7 @@ export function Hero() {
           </h1>
           <p className="max-w-prose text-base text-inverse-muted md:text-lg">{hero.subtitle}</p>
         </div>
-        <ClipDropzonePreview />
+        <IdentifyPanel />
       </div>
       <FilmStripDecor className="relative" />
     </section>

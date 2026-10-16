@@ -7,13 +7,6 @@ export const HOME_TEXT = {
     subtitle:
       "Vous avez vu un extrait sur TikTok, YouTube ou Instagram sans connaître son titre ? Envoyez le clip : nous retrouvons le film ou la série, sa fiche complète et où le regarder.",
   },
-  dropzone: {
-    title: "Choisir un clip",
-    constraints: "MP4, MOV ou WebM, 60 secondes et 50 Mo au maximum",
-    button: "Choisir un clip",
-    comingSoon: "L'identification ouvre très bientôt.",
-    privacy: "Votre vidéo reste sur votre appareil : seules quelques images sont analysées.",
-  },
   howItWorks: {
     eyebrow: "Comment ça marche",
     title: "Trois étapes, quelques secondes",

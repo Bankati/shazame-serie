@@ -41,7 +41,7 @@ Sans plan ni description, demander au développeur ce que l'unité devait faire.
 6. Mutation admin + journal d'audit dans la même transaction.
 7. Validation zod puis session, rôle et propriété avant toute logique, dans chaque route **et** Server Action.
 8. Pas de logique métier ni d'accès base dans `src/app/**`.
-9. Aucune donnée sensible dans les journaux, Sentry, l'analytique.
+9. Aucune donnée sensible dans les journaux, le suivi des erreurs (PostHog), l'analytique.
 10. Pas d'usage B2B sans consentement.
 11. Pas de travail long après la réponse dans un route handler.
 12. Mention TMDB / source streaming présente si l'unité affiche une fiche.

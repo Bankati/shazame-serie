@@ -11,7 +11,7 @@
 
 ## TypeScript
 
-- `strict: true` et `noUncheckedIndexedAccess: true`. (`exactOptionalPropertyTypes` n'est pas activé : il crée des conflits avec les types de shadcn/ui, Drizzle et des SDK.)
+- `strict: true` et `noUncheckedIndexedAccess: true`. Cible `ES2020` (U06) : les empreintes dHash de 64 bits utilisent `BigInt` ; Next 16 vise de toute façon Chrome 111+ et Safari 16.4+. (`exactOptionalPropertyTypes` n'est pas activé : il crée des conflits avec les types de shadcn/ui, Drizzle et des SDK.)
 - Interdit : `any`, `as unknown as`, `@ts-ignore`. `@ts-expect-error` seulement avec un commentaire qui explique pourquoi.
 - Toute donnée externe (requête HTTP, réponse IA, réponse TMDB, webhook, variable d'environnement) est validée par un schéma zod avant d'être utilisée. Les types se dérivent des schémas (`z.infer`).
 - Préférer les unions discriminées aux booléens multiples (`status: 'idle' | 'extracting' | 'uploading' | 'done' | 'error'`).
@@ -67,7 +67,7 @@ type Result<T, E = AppError> = { ok: true; value: T } | { ok: false; error: E };
 | `FRAMES_UNUSABLE` | 422 | Moins de 2 images exploitables |
 | `AI_PAUSED` | 503 | Plafond de dépense IA atteint |
 | `UPSTREAM_ERROR` | 502 | IA, TMDB ou prestataire en échec après 3 tentatives |
-| `INTERNAL_ERROR` | 500 | Inattendu (envoyé à Sentry) |
+| `INTERNAL_ERROR` | 500 | Inattendu (envoyé au suivi des erreurs PostHog) |
 
 - Webhooks : lire le corps brut, vérifier la signature, vérifier l'idempotence (`billing_events`), traiter, répondre 2xx rapidement.
 - Jamais de détail technique (stack, SQL, réponse brute d'un fournisseur) dans un message d'erreur renvoyé au client.
@@ -86,7 +86,7 @@ type Result<T, E = AppError> = { ok: true; value: T } | { ok: false; error: E };
 ## Security
 
 - Secrets uniquement dans les variables d'environnement serveur, lus via `src/server/env.ts`.
-- En-têtes de sécurité définis globalement (CSP, HSTS, X-Content-Type-Options, Referrer-Policy, `frame-ancestors 'none'`). La CSP suit la méthode à nonce décrite dans la doc Next.js de la version installée et autorise explicitement : images `image.tmdb.org`, cadre `www.youtube-nocookie.com` (bandes-annonces), connexions Supabase, Sentry, analytique, et le domaine du prestataire de paiement si nécessaire.
+- En-têtes de sécurité définis globalement (CSP, HSTS, X-Content-Type-Options, Referrer-Policy, `frame-ancestors 'none'`). La CSP suit la méthode à nonce décrite dans la doc Next.js de la version installée et autorise explicitement : images `image.tmdb.org`, cadre `www.youtube-nocookie.com` (bandes-annonces), connexions Supabase, PostHog (`eu.i.posthog.com`, erreurs et analytique), et le domaine du prestataire de paiement si nécessaire.
 - Bandes-annonces : lecteur `youtube-nocookie.com`, chargé seulement au clic.
 - Contrôle du type réel des images reçues (octets magiques via `sharp`), pas seulement du type MIME annoncé.
 - Limitation de débit sur : connexion, inscription, reset, identification, signalement, export.

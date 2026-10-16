@@ -19,7 +19,7 @@
 | Où regarder | TMDB `watch/providers` (données JustWatch) **(proposé)**, Watchmode en secours | Disponibilité par pays |
 | Paiement | Prestataire derrière l'interface `BillingProvider` **(à décider : Stripe si l'entité est éligible, sinon Paddle ou Lemon Squeezy)** | Abonnements, page de paiement hébergée, factures |
 | Emails | Supabase Auth (emails d'authentification via SMTP Resend) + Resend / React Email (autres emails) | Emails transactionnels en français |
-| Observabilité | Sentry (erreurs), PostHog ou Plausible (analytique), sonde externe de disponibilité | Alertes et mesures |
+| Observabilité | PostHog région UE, sans cookie (suivi des erreurs + analytique, AD-28), sonde externe de disponibilité | Alertes et mesures |
 | Hébergement | Vercel **plan Pro** (le plan Hobby interdit l'usage commercial) | Déploiement continu, crons |
 | CI/CD | GitHub Actions | Lint, typecheck, tests, build, déploiement |
 | Tests | Vitest (unitaires), Playwright (bout en bout), harnais `eval/` | Qualité et précision d'identification |
@@ -38,13 +38,14 @@ src/
 │   ├── ui/                   # shadcn/ui généré — PROTÉGÉ, ne pas éditer à la main
 │   └── <feature>/            # composants d'une fonctionnalité (identify, title, account, admin…)
 ├── client/                   # Code navigateur uniquement
-│   └── frames/               # extraction d'images, contrôle qualité, dédoublonnage
+│   ├── frames/               # extraction d'images, contrôle qualité, dédoublonnage
+│   └── observability/        # chargement différé de PostHog, erreurs des pages d'erreur
 ├── server/                   # Logique métier, 'server-only'. Jamais importé par un composant client.
 │   ├── env.ts                # variables d'environnement validées par zod
 │   ├── log.ts                # logger structuré (sans données sensibles)
 │   ├── http/                 # réponses JSON { ok, data | error }
-│   ├── health/               # route de santé, erreur volontaire Sentry
-│   ├── observability/        # options Sentry des runtimes serveur
+│   ├── health/               # route de santé, erreur volontaire de vérification
+│   ├── observability/        # client PostHog serveur (erreurs serveur)
 │   ├── db/                   # schéma Drizzle, client, requêtes
 │   ├── auth/                 # session, rôles, garde-fous (requireUser, requireAdmin), visiteur
 │   ├── identification/       # pipeline, score, empreintes, cache de résultats
@@ -58,12 +59,12 @@ src/
 │   └── audit/                # journal d'audit
 ├── shared/                   # Code pur utilisable côté client ET serveur (aucun effet de bord)
 │   ├── frames/               # paramètres d'échantillonnage communs au navigateur et à l'eval
-│   └── observability/        # options et filtrage Sentry communs (aucune donnée personnelle)
+│   └── observability/        # réglages et filtrage PostHog communs (aucune donnée personnelle)
 ├── schemas/                  # Schémas zod partagés (entrées API, réponses IA) et codes d'erreur
 ├── content/fr/               # Textes d'interface centralisés (prépare la V2 multilingue)
 ├── lib/                      # Utilitaires purs (dates Europe/Paris, slugs, formatage)
-├── instrumentation.ts        # init Sentry serveur/edge (charge env.ts : refus de démarrer si une variable manque)
-├── instrumentation-client.ts # init Sentry navigateur
+├── instrumentation.ts        # charge env.ts (refus de démarrer si une variable manque) ; onRequestError → PostHog
+├── instrumentation-client.ts # déclenche le chargement différé de PostHog (client/observability)
 └── proxy.ts                  # (ex-middleware, à vérifier selon la version) rafraîchissement de session
 eval/                         # Harnais du jeu de test : manifeste des 100 clips + script de mesure
 drizzle/                      # Migrations SQL générées — ne jamais éditer une migration appliquée
@@ -109,7 +110,7 @@ Signalement : les images ne sont jamais écrites sur disque ou en stockage penda
 ## Cache de résultats
 
 - `result_cache` : une entrée par résultat retenu ; `result_cache_frames` : les dHash 64 bits (`bigint`) de chaque image de l'entrée.
-- Correspondance exacte : empreinte = SHA-256 des dHash triés → clé Redis `cache:fp:{empreinte}`.
+- Correspondance exacte : empreinte = SHA-256 des dHash triés, recherchée par l'index unique de `result_cache.fingerprint` (AD-29 : pas de raccourci Redis en V1).
 - Correspondance proche : une entrée est retenue si au moins `CACHE_MIN_MATCHING_FRAMES` (2) images ont une distance de Hamming ≤ `CACHE_MAX_HAMMING` (valeur à calibrer, départ 6) avec ses images. Requête SQL `bit_count((a # b)::bit(64))`. Volume V1 faible : un balayage indexé suffit ; à revoir au-delà de ~100 000 entrées.
 - Écriture seulement si la confiance finale ≥ `CACHE_MIN_CONFIDENCE` (départ 80 %) ou après validation admin.
 - Un signalement sur un résultat servi par le cache désactive l'entrée (`disabled = true`) jusqu'à revue admin. L'admin peut la corriger (`validated = true`, nouveau `tmdb_id`).
@@ -129,7 +130,7 @@ Signalement : les images ne sont jamais écrites sur disque ou en stockage penda
   - `admin_audit_log` (id, admin_id, action, target_type, target_id, before jsonb, after jsonb, created_at)
   - `consents` (user_id, kind `terms|privacy|b2b`, version, granted bool, created_at) — le consentement aux images est porté par chaque `reports.images_consent`
   - `data_exports` (id, user_id, storage_path, expires_at, created_at)
-- **Redis (Upstash)** : `quota:{user|visitor}:{id}:{YYYY-MM-DD Paris}` (expire après minuit Paris), `ai:spend:{YYYY-MM-DD Paris}`, `rl:*` (limitation de débit), `tmdb:*` (réponses TMDB, durée selon leurs conditions), `cache:fp:{empreinte}`.
+- **Redis (Upstash)** : `quota:{user|visitor}:{id}:{YYYY-MM-DD Paris}` (expire après minuit Paris), `ai:spend:{YYYY-MM-DD Paris}`, `rl:*` (limitation de débit), `tmdb:*` (réponses TMDB, durée selon leurs conditions).
 - **Supabase Storage**, buckets privés : `reports` (images consenties, chemins aléatoires, lecture admin par URL signée), `avatars` (photos de profil), `exports` (JSON d'export, URL signée valable 24 h, supprimé par cron).
 - **Aucune vidéo, nulle part.** Montants en entiers : centimes pour les prix, micro-euros pour les coûts (le fournisseur IA facture en USD : conversion par une constante `USD_TO_EUR` révisée chaque mois). Dates en UTC ; le « jour » de quota et de dépense se calcule en `Europe/Paris`.
 
@@ -162,11 +163,11 @@ Chaque appel externe : délai maximal, journalisation sans donnée personnelle, 
 
 ## Environnements et secrets
 
-- `development` (local), `preview` (préproduction, projet Supabase séparé), `production`. Supabase de production sur un plan payant (le plan gratuit met les projets en pause après une période d'inactivité).
-- Variables serveur : `DATABASE_URL`, `SUPABASE_SECRET_KEY` (clé « secret » des nouvelles clés Supabase, remplace `service_role`), `OPENAI_API_KEY`, `OPENAI_VISION_MODEL`, `TMDB_API_TOKEN`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `BILLING_*`, `RESEND_API_KEY`, `SENTRY_DSN`, `CRON_SECRET`, `VISITOR_COOKIE_SECRET`, `ADMIN_ALERT_EMAIL`.
-- Variables publiques (`NEXT_PUBLIC_*`) : URL du site, `NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (clé « publishable », ex-« anon »), clé analytique, DSN Sentry navigateur. Rien d'autre.
-- `src/server/env.ts` valide les variables au démarrage : l'application refuse de démarrer si l'une manque. Les variables sont ajoutées au fil des unités ; celles des services externes sont obligatoires quand `VERCEL_ENV` vaut `preview` ou `production`, facultatives en local et en CI. Liste à jour : `.env.example`.
-- Santé : `GET /api/health` (sonde et test de fumée), `GET /api/health/sentry-check` (erreur volontaire, `Authorization: Bearer <CRON_SECRET>`). Réglages Vercel/Sentry/GitHub : `docs/setup-deploiement.md`.
+- `development` (local, Supabase dans Docker), `preview` (préproduction), `production`. **Un seul projet Supabase en ligne** (`shazam_serie`) sert à la préproduction et à la production (AD-27) : la préproduction travaille sur les données réelles, et seules les migrations fusionnées dans `main` y sont appliquées. Plan payant avant le lancement (le plan gratuit met les projets en pause après une période d'inactivité). Fonctions Vercel en région `dub1` (Dublin, `vercel.json`), à côté de la base Supabase `eu-west-1`. Chaque requête applicative passe par `withQueryTimeout` (délai de 5 s).
+- Variables serveur : `DATABASE_URL`, `SUPABASE_SECRET_KEY` (clé « secret » des nouvelles clés Supabase, remplace `service_role`), `OPENAI_API_KEY`, `OPENAI_VISION_MODEL`, `TMDB_API_TOKEN`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `BILLING_*`, `RESEND_API_KEY`, `CRON_SECRET`, `VISITOR_COOKIE_SECRET`, `ADMIN_ALERT_EMAIL`.
+- Variables publiques (`NEXT_PUBLIC_*`) : URL du site, `NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (clé « publishable », ex-« anon »), `NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN` (clé de projet PostHog, publique par nature) et `NEXT_PUBLIC_POSTHOG_HOST`. Rien d'autre.
+- `src/server/env.ts` valide les variables au démarrage : l'application refuse de démarrer si l'une manque. Les variables sont ajoutées au fil des unités ; celles des services externes sont obligatoires quand `VERCEL_ENV` vaut `production`, facultatives en preview, en local et en CI (AD-28 ; chaque unité qui ajoute une variable précise si la preview l'exige). Liste à jour : `.env.example`.
+- Santé : `GET /api/health` (sonde et test de fumée), `GET /api/health/error-check` (erreur volontaire, `Authorization: Bearer <CRON_SECRET>`). Réglages Vercel/PostHog/GitHub : `docs/setup-deploiement.md`.
 
 ## Tâches planifiées (Vercel Cron → `/api/cron/*`, protégées par `CRON_SECRET`)
 
@@ -183,7 +184,7 @@ Chaque appel externe : délai maximal, journalisation sans donnée personnelle, 
 6. Toute mutation admin écrit dans `admin_audit_log` dans la même transaction.
 7. Toute route API ou Server Action valide son entrée avec zod avant toute logique, et vérifie session, rôle et propriété avant toute lecture ou mutation de données utilisateur.
 8. `src/app/**` ne contient ni logique métier ni accès direct à la base : il appelle `src/server/**`.
-9. Aucune image, mot de passe, jeton, email complet ou donnée de carte dans les journaux, Sentry ou l'analytique.
+9. Aucune image, mot de passe, jeton, email complet ou donnée de carte dans les journaux, le suivi des erreurs ou l'analytique (PostHog).
 10. Aucune donnée n'est utilisée à des fins B2B sans consentement `b2b` actif (RG17).
 11. Aucun travail long après la réponse dans un route handler : les traitements différés passent par les crons.
 12. La mention TMDB (et celle de la source des données de streaming) est visible sur chaque fiche et dans les pages légales.

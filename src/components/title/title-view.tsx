@@ -6,9 +6,10 @@ import { SimilarTitles } from "./similar-titles";
 import { SourceAttribution } from "./source-attribution";
 import { TitleHeader } from "./title-header";
 import { TrailerPlayer } from "./trailer-player";
+import { WatchProviders } from "./watch-providers";
 
-// Fiche titre (ui-context.md) : en-tête, puis sections dans l'ordre fixe. « Où regarder » s'insérera
-// en premier (U16), avant la bande-annonce.
+// Fiche titre (ui-context.md) : en-tête, puis sections dans l'ordre fixe : Où regarder (U16) → Bande-annonce
+// → Synopsis → Distribution → Titres similaires → Sources.
 export function TitleView({ page }: { page: TitlePage }) {
   const { sections } = TITLE_TEXT;
 
@@ -16,6 +17,9 @@ export function TitleView({ page }: { page: TitlePage }) {
     <article>
       <TitleHeader page={page} />
       <div className="mx-auto flex max-w-6xl flex-col gap-10 px-4 py-10 sm:px-6 md:py-14">
+        <Section id="ou-regarder" title={sections.watch}>
+          <WatchProviders mediaType={page.mediaType} tmdbId={page.tmdbId} />
+        </Section>
         {page.trailerKey ? (
           <Section id="bande-annonce" title={sections.trailer}>
             <div className="max-w-3xl">

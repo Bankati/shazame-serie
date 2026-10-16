@@ -260,6 +260,25 @@ Dernière mise à jour : 16 octobre 2026 (U15)
 
 **Notes de pattern :** ordre fixe des sections (ui-context.md) : Où regarder (U16, en premier) → Bande-annonce → Synopsis → Distribution → Titres similaires → Sources. La bande-annonce n'appelle YouTube qu'au clic (`youtube-nocookie.com`). Accroche entre guillemets français avec espaces insécables. Distribution : défilement horizontal (`overflow-x-auto`, marges négatives `-mx-4` compensées sur mobile). Logo TMDB `public/brand/tmdb-logo.svg` + mention des conditions TMDB (invariant 12). `TitlePoster` accepte `alt` pour les photos (« Photo de {nom} »).
 
+### WatchProviders (Où regarder)
+
+Fichier : `src/components/title/watch-providers.tsx`
+Dernière mise à jour : 16 octobre 2026 (U16)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | service `bg-card` ; sélecteur `bg-card` |
+| Bordure | service `border border-border` ; sélecteur (champ) `border border-input` |
+| Radius | service et sélecteur `rounded-md` ; logo `rounded-sm` |
+| Texte principal | nom du service `text-sm text-foreground` ; message « aucun service » `text-base text-foreground` |
+| Texte secondaire | type d'accès, invitation, attribution `text-sm text-muted-foreground` |
+| Espacement | bloc `gap-4`, groupe `gap-2`, services `gap-3`, service `px-2 py-1.5 gap-2` |
+| Hover / focus | lien `text-primary hover:underline underline-offset-4` ; sélecteur et lien `focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring` |
+| Ombre | none |
+| Accent | icône `ExternalLink` `size-4` sur le lien |
+
+**Notes de pattern :** premier bloc de la fiche. Chargé côté navigateur (pays du visiteur) : squelette pendant le chargement, `aria-live="polite"`. Sélecteur natif `<select>` `h-11` avec libellé « Pays » (noms de pays par `Intl.DisplayNames` en français). Logos TMDB w92 affichés en 28 px, non optimisés par Vercel. Mention « Disponibilités fournies par JustWatch. » toujours visible (invariant 12).
+
 ### HowItWorks (carte d'étape)
 
 Fichier : `src/components/home/how-it-works.tsx`

@@ -159,6 +159,7 @@ Plans d'hébergement : **Vercel Pro** obligatoire (le plan Hobby est réservé �
 - Doc : https://developer.themoviedb.org/docs — référence : https://developer.themoviedb.org/reference/intro/getting-started
 - Usage : `search/movie`, `search/tv`, `movie/{id}`, `tv/{id}` avec `append_to_response=credits,videos,similar,recommendations`, `configuration` pour les URL d'images. Toujours `language=fr-FR`, repli sur `en-US` si synopsis vide.
 - Où regarder : `movie/{id}/watch/providers` et `tv/{id}/watch/providers` (données fournies par JustWatch, **attribution JustWatch obligatoire**). Licence commerciale TMDB requise (D2).
+- Installé en U16 (`src/server/catalog/watch/`) : une requête renvoie tous les pays (`results.{FR,BE,…}` avec `link`, `flatrate`, `free`, `ads`, `rent`, `buy`) ; **un seul lien par pays** (page récapitulative TMDB avec les liens JustWatch par service), pas de lien direct par service. 89 pays couverts pour *Matrix* ; **le Togo n'est pas couvert**. Cache Redis 12 h. Pays du visiteur : en-tête Vercel `x-vercel-ip-country`.
 - Mention obligatoire et logo : https://www.themoviedb.org/about/logos-attribution
 - Respecter les limites de débit et mettre en cache selon leurs conditions.
 - **Conditions (vérifiées le 15 octobre 2026)** : cache de 6 mois au maximum (section 1.C) ; logo TMDB et mention « uses TMDB and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB » (section 3) ; **tout usage payant exige un accord écrit** (section 2.A, D2). Pas de réponse TMDB stockée dans le dépôt (pas de fixtures).

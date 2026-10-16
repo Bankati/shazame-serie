@@ -86,6 +86,10 @@ Mettre à jour ce fichier après chaque changement d'implémentation significati
   - Piège corrigé : Upstash (`fetch` no-store) interdit dans une page ISR → catalogue sans Redis pour les pages statiques.
   - À faire : fixer `NEXT_PUBLIC_SITE_URL` quand le domaine sera choisi (D8) ; sinon l'adresse Vercel de production est utilisée.
 
+- U16 — Où regarder (plan : `context/plans/U16.md`, décidé sur délégation le 16 octobre 2026).
+  - Fait (16 octobre 2026) : `WatchProvider` / `TmdbWatchProviders` (cache 12 h), `GET /api/titles/{movie|tv}/{id}/watch` (pays de l'en-tête Vercel, `?country=`, France par défaut, `private, no-store`), `WatchProviders` en tête de la fiche (types d'accès, logos, lien récapitulatif, mention JustWatch, sélecteur de pays, message si aucun service). Vérifié en direct FR, BE, CH ; Togo sans données → message explicite, choix d'un autre pays.
+  - Écart assumé au CDC 12.3 : TMDB ne fournit qu'un lien par pays (page récapitulative), pas de lien direct par service.
+
 ## Next Up
 
 - U04 — Authentification email et Google (dépend de D8 : nom commercial et domaine).
@@ -146,6 +150,7 @@ Mettre à jour ce fichier après chaque changement d'implémentation significati
 | AD-30 | Redis réservé au cache des réponses TMDB, aux quotas, au plafond de dépense IA et à la limitation de débit ; les sessions restent gérées par Supabase Auth (cookies HttpOnly, renouvellement, RG9) | Une copie des jetons de session dans Redis serait une seconde source de vérité à synchroniser et une surface d'attaque de plus. | Décidé (option A, 15 octobre 2026) |
 | AD-31 | Modèle de vision par défaut `gpt-6.1-sol` (≈ 0,011 € par identification à 4 images), second candidat `gpt-5.6-luna` ; choix définitif par l'eval (Q4) | Reconnaître un titre demande une large culture générale ; coût sous la cible de 0,015 € (CDC 15.1). | Décidé (U07, 15 octobre 2026) |
 | AD-32 | Garde de dépense IA dans la couche IA (enveloppe du fournisseur de vision) plutôt que dans l'orchestrateur | Aucun appel au modèle ne peut contourner le plafond (invariant 2), y compris depuis l'eval (U13) ou d'autres usages futurs. | Décidé (U14, 16 octobre 2026) |
+| AD-33 | « Où regarder » : TMDB `watch/providers` (données JustWatch) retenu pour la V1 (D3) ; bloc chargé côté navigateur pour garder la fiche en cache | Source recommandée par l'architecture, sans coût supplémentaire ; Watchmode reste le secours derrière l'interface `WatchProvider`. Licence commerciale à confirmer avec TMDB (Q3). | Décidé (U16, 16 octobre 2026) |
 | AD-18 | Trois branches `dev` → `staging` → `main`, promotion par PR uniquement, `hotfix/*` en exception | Demande du fondateur ; `staging` correspond à l'environnement `preview`, `main` à `production`. | Décidé |
 
 ## Eval History

@@ -20,7 +20,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "tsx --env-file-if-exists=.env.local scripts/db-seed.ts",
     "test:db": "vitest run --config vitest.db.config.mts",
-    "test:tmdb": "vitest run --config vitest.live.config.mts tests/live/tmdb-titles.test.ts tests/live/tmdb-title-page.test.ts",
+    "test:tmdb": "vitest run --config vitest.live.config.mts tests/live/tmdb-titles.test.ts tests/live/tmdb-title-page.test.ts tests/live/tmdb-watch.test.ts",
     "test:ai": "vitest run --config vitest.live.config.mts tests/live/openai-vision.test.ts",
     "test:quota": "vitest run --config vitest.live.config.mts tests/live/quota-upstash.test.ts tests/live/spend-upstash.test.ts",
     "test:e2e": "playwright test"

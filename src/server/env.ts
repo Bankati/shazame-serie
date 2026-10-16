@@ -31,6 +31,8 @@ const envSchema = z.object({
   OPENAI_VISION_MODEL: z.preprocess(emptyToUndefined, z.string().min(1).default("gpt-6.1-sol")),
   OPENAI_IMAGE_DETAIL: z.preprocess(emptyToUndefined, z.enum(["low", "high", "auto", "original"]).default("auto")),
   OPENAI_REASONING_EFFORT: optional(z.enum(["none", "minimal", "low", "medium", "high"])),
+  // Signature du cookie visiteur (U11, RG2). Différent par environnement.
+  VISITOR_COOKIE_SECRET: optional(z.string().min(32)),
 });
 
 const REQUIRED_IN_PRODUCTION = [
@@ -41,6 +43,7 @@ const REQUIRED_IN_PRODUCTION = [
   "UPSTASH_REDIS_REST_URL",
   "UPSTASH_REDIS_REST_TOKEN",
   "OPENAI_API_KEY",
+  "VISITOR_COOKIE_SECRET",
 ] as const;
 
 export type Env = z.infer<typeof envSchema>;

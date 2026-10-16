@@ -68,6 +68,12 @@ Mettre à jour ce fichier après chaque changement d'implémentation significati
 - U09 — Score de confiance (plan validé le 15 octobre 2026 : `context/plans/U09.md`).
   - Fait (15 octobre 2026) : `src/server/identification/scoring.ts` (confiance finale = IA × (0,5 + 0,5 × qualité TMDB), candidats sans fiche écartés, meilleur score en principal, doublons fusionnés, décisions ≥ 80 / 50-79 / < 50). 18 tests. Seconde analyse hors V1.
 
+- U11 — Route `/api/identify` et quotas (plan validé le 15 octobre 2026 : `context/plans/U11.md`).
+  - Fait (16 octobre 2026) : `src/lib/paris-time.ts` (jour et minuit Paris, changements d'heure testés), `src/server/quota/` (réservation atomique par script Lua Upstash, stockage en mémoire pour les tests, limites `app_settings`), cookie visiteur signé, limitation de débit par IP, `validateFrames` (2-5 JPEG, 1,5 Mo, type réel `sharp`), orchestrateur `identifyClip` (ordre exact du flux, confirmation ≥ 50 % sinon libération, journal `identifications`, écriture du cache), routes `POST /api/identify` et `GET /api/quota`, envoi automatique et résultat en texte sur l'accueil. 249 tests unitaires, 67 tests de base, `test:quota` en direct.
+  - Essai réel de bout en bout (Chrome, largeur mobile, clés réelles) : extrait du *Voyage dans la Lune* (1902, domaine public) → « Le Voyage dans la Lune (1902), 98 %, très probable » en 15,4 s, décompté ; même extrait → cache en 2,3 s, non décompté ; images sans film → non reconnu, non décompté.
+  - À mesurer en U13 : temps du premier envoi (15 s, dont recherches TMDB à froid en deux langues pour chaque candidat).
+  - Reste (fondateur) : `VISITOR_COOKIE_SECRET` dans Vercel (Production obligatoire, Preview conseillée). Recommandé : U14 (plafond de dépense IA) avant toute diffusion publique.
+
 ## Next Up
 
 - U04 — Authentification email et Google (dépend de D8 : nom commercial et domaine).

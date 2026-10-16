@@ -174,6 +174,7 @@ Plans d'hébergement : **Vercel Pro** obligatoire (le plan Hobby est réservé �
 
 - Doc : https://upstash.com/docs/redis/overall/getstarted — Ratelimit : https://upstash.com/docs/redis/sdks/ratelimit-ts/overview
 - Installé en U08 : `@upstash/redis` 1.39.0, `getRedis()` / `cachedJson()` dans `src/server/cache/redis.ts` (délai 1,5 s par `signal: () => AbortSignal.timeout(…)`, 1 nouvelle tentative, `enableTelemetry: false`, valeurs revalidées par zod à la lecture, panne Redis = pas de cache). Sans `UPSTASH_REDIS_REST_*`, pas de cache (local, CI).
+- Installé en U11 : `@upstash/ratelimit` 2.2.0 (`src/server/http/rate-limit.ts` : `slidingWindow(10, "1 m")` et `fixedWindow(60, "1 d")` par IP, `analytics: false`, `timeout`, `await result.pending`). Quota : script Lua via `redis.eval(script, [clé], [args])` (`src/server/quota/quota-store.ts`) ; vérifié en direct (`npm run test:quota`) : 20 réservations simultanées pour une limite de 3 → exactement 3.
 - Quota : `INCR` + `EXPIREAT` sur la clé du jour (minuit Europe/Paris), réservation puis confirmation/libération (`DECR`) pour éviter les dépassements en cas de requêtes simultanées.
 
 ## Paiement (selon D1)

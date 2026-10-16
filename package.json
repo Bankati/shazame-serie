@@ -21,10 +21,12 @@
     "db:seed": "tsx --env-file-if-exists=.env.local scripts/db-seed.ts",
     "test:db": "vitest run --config vitest.db.config.mts",
     "test:tmdb": "vitest run --config vitest.live.config.mts tests/live/tmdb-titles.test.ts",
-    "test:ai": "vitest run --config vitest.live.config.mts tests/live/openai-vision.test.ts"
+    "test:ai": "vitest run --config vitest.live.config.mts tests/live/openai-vision.test.ts",
+    "test:quota": "vitest run --config vitest.live.config.mts tests/live/quota-upstash.test.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.117.3",
+    "@upstash/ratelimit": "2.2.0",
     "@upstash/redis": "1.39.0",
     "class-variance-authority": "0.7.1",
     "cn": "0.4.0",

@@ -13,6 +13,7 @@ export const IDENTIFY_TEXT = {
   },
   steps: {
     reading: "Lecture du clip…",
+    analyzing: "Analyse des images…",
     extracting: (current: number, total: number) => `Extraction des images (${current} sur ${total})…`,
   },
   strip: {
@@ -28,10 +29,24 @@ export const IDENTIFY_TEXT = {
   },
   result: {
     ready: (count: number) => `${count} images prêtes.`,
-    comingSoon: "L'identification ouvre très bientôt.",
     insufficient:
       "Moins de 2 images exploitables dans ce clip (trop sombres, floues ou identiques). Choisissez un extrait plus lumineux, où l'image change.",
     another: "Choisir un autre clip",
+    title: (title: string, year: number | null) => (year ? `${title} (${year})` : title),
+    confidence: (percent: number, decision: "show" | "show_with_alternatives") =>
+      `${percent} %, ${decision === "show" ? "très probable" : "probable"}`,
+    alternatives: "Autres pistes :",
+    notRecognized: "Nous n'avons pas reconnu ce clip avec assez de certitude. Essayez un autre extrait.",
+    remaining: (count: number) =>
+      count === 0
+        ? "C'était votre dernière identification aujourd'hui."
+        : `Il vous reste ${count} identification${count > 1 ? "s" : ""} aujourd'hui.`,
+  },
+  failures: {
+    quota: "Vous avez atteint votre limite d'identifications pour aujourd'hui. Elle se renouvelle à minuit (heure de Paris).",
+    rate_limited: "Trop d'essais rapprochés. Patientez une minute, puis réessayez.",
+    frames: "Ces images n'ont pas pu être analysées. Choisissez un autre extrait.",
+    unavailable: "L'identification est momentanément indisponible. Réessayez dans quelques instants.",
   },
   problems: {
     unsupported_format: "Ce format n'est pas pris en charge. Choisissez un clip MP4, MOV ou WebM.",

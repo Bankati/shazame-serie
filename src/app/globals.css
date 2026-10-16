@@ -1,26 +1,128 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/*
+ * Thème clair uniquement en V1 (AD-08). La variante `dark` reste liée à une classe `.dark` jamais posée :
+ * sans cette ligne, Tailwind 4 l'appliquerait selon le mode sombre du système et les classes `dark:`
+ * des composants shadcn casseraient le thème clair.
+ */
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Tokens propres au projet (ui-context.md) */
+  --color-primary-hover: var(--primary-hover);
+  --color-inverse: var(--inverse);
+  --color-inverse-foreground: var(--inverse-foreground);
+  --color-inverse-muted: var(--inverse-muted);
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-subtle: var(--brand-subtle);
+  --color-brand-subtle-foreground: var(--brand-subtle-foreground);
+  --color-warning: var(--warning);
+  --color-success: var(--success);
+
+  --font-sans: var(--font-public-sans);
+  --font-display: var(--font-archivo);
+  --font-display--font-variation-settings: "wdth" 75;
+  --font-heading: var(--font-archivo);
+  --font-heading--font-variation-settings: "wdth" 75;
+
+  --text-display: 2rem;
+  --text-display--line-height: 1.05;
+  --text-display-lg: 3rem;
+  --text-display-lg--line-height: 1.05;
+  --text-display-xl: 4.5rem;
+  --text-display-xl--line-height: 1;
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-poster: 2px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+:root {
+  --radius: 0.625rem;
+  --background: #f6f7f9;
+  --foreground: #1f2937;
+  --card: #ffffff;
+  --card-foreground: #1f2937;
+  --popover: #ffffff;
+  --popover-foreground: #1f2937;
+  --primary: #0052cc;
+  --primary-foreground: #ffffff;
+  --secondary: #eef1f5;
+  --secondary-foreground: #1f2937;
+  --muted: #eef1f5;
+  --muted-foreground: #4b5563;
+  --accent: #eef1f5;
+  --accent-foreground: #1f2937;
+  --destructive: #b91c1c;
+  --border: #e5e7eb;
+  --input: #6b7280;
+  --ring: #0052cc;
+
+  --primary-hover: #003d99;
+  --inverse: #1f2937;
+  --inverse-foreground: #ffffff;
+  /* Texte secondaire sur surface inversée : 9,9:1 sur #1F2937 */
+  --inverse-muted: #d1d5db;
+  --brand: #10b981;
+  --brand-strong: #047857;
+  --brand-subtle: #ecfdf5;
+  --brand-subtle-foreground: #065f46;
+  --warning: #b45309;
+  --success: #047857;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
   }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  html {
+    @apply font-sans;
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
 }

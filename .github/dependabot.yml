@@ -7,6 +7,15 @@ updates:
       interval: weekly
     open-pull-requests-limit: 5
     versioning-strategy: increase
+    # AD-21 : typescript-eslint exige TypeScript < 6.1 et les plugins de eslint-config-next s'arrêtent à ESLint 9.
+    ignore:
+      - dependency-name: typescript
+        versions: [">=6.1.0"]
+      - dependency-name: eslint
+        versions: [">=10.0.0"]
+      # Types alignés sur le runtime Node 24.
+      - dependency-name: "@types/node"
+        versions: [">=25.0.0"]
 
   - package-ecosystem: github-actions
     directory: /

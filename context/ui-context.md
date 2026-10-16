@@ -25,7 +25,8 @@ Les composants utilisent **les noms de classes de shadcn/ui** (`bg-background`, 
 | Accent survol | `--primary-hover` | `bg-primary-hover` | `#003D99` | |
 | Secondaire | `--secondary` | `bg-secondary` | `#EEF1F5` | Texte `text-secondary-foreground` = `#1F2937` |
 | Survol neutre | `--accent` | `bg-accent` | `#EEF1F5` | Convention shadcn (survol de menus) — ce n'est **pas** la couleur de marque |
-| Surface inversée | `--inverse` | `bg-inverse` | `#1F2937` | Pellicule, pied de page |
+| Surface inversée | `--inverse` | `bg-inverse` | `#1F2937` | Pellicule, pied de page, hero, blocs sombres |
+| Texte secondaire sur surface inversée | `--inverse-muted` | `text-inverse-muted` | `#D1D5DB` | 9,9:1 sur `bg-inverse` (ajouté en U02) |
 | Texte sur surface inversée | `--inverse-foreground` | `text-inverse-foreground` | `#FFFFFF` | |
 | Vert de marque | `--brand` | `bg-brand` | `#10B981` | Remplissages, indicateurs, éléments sur `bg-inverse` (5,8:1). **Jamais en texte ni en icône sur fond clair (2,5:1).** |
 | Vert texte | `--brand-strong` | `text-brand-strong` | `#047857` | Vert lisible sur fond clair (5,5:1) |
@@ -99,6 +100,8 @@ Les composants utilisent **les noms de classes de shadcn/ui** (`bg-background`, 
 }
 ```
 
+Écarts constatés à l'installation (U02, shadcn 4.21.4, preset `radix-nova`) : couleurs générées en `oklch` (remplacées par les valeurs du tableau), variables `sidebar-*` et `chart-*` retirées (inutiles en V1), `--font-heading` (utilisé par les titres de `Dialog` et `Sheet`) relié à Archivo, `--font-display--font-variation-settings: "wdth" 75` pour l'effet condensé, token `--text-display-xl` (4,5 rem) pour le titre du hero. La variante `dark` reste liée à la classe `.dark` (jamais posée) : sinon les classes `dark:` des composants suivraient le thème du système.
+
 Vérifier après `init` que les variables générées portent bien ces noms (le format exact peut évoluer avec la CLI) et adapter ce bloc si besoin, puis noter l'écart ici.
 
 ## Typography
@@ -127,8 +130,12 @@ Règles : casse de phrase partout (pas de libellés en majuscules), synopsis lim
 | Contexte | Classe | Valeur |
 | --- | --- | --- |
 | Badges | `rounded-sm` | 6 px |
-| Boutons, champs | `rounded-md` | 8 px |
+| Champs | `rounded-md` | 8 px |
+| Boutons (preset shadcn « radix-nova », généré) | `rounded-lg` | 10 px |
 | Cartes, panneaux | `rounded-lg` | 10 px |
+| Cartes de section des pages vitrines (étapes, arguments, tarifs, FAQ) et carte d'envoi | `rounded-xl` | 14 px (AD-23) |
+| Blocs sombres pleine largeur dans le conteneur (confidentialité, appel final, pages d'erreur) | `rounded-2xl` | 18 px (AD-23) |
+| Pastilles (sur-titre du hero), cercles d'icône | `rounded-full` | |
 | Modales, feuille mobile (haut seulement : `rounded-t-xl`) | `rounded-xl` | 14 px |
 | Affiches | `rounded-poster` | 2 px — une affiche reste un rectangle |
 | Pellicule | `rounded-none` | 0 |
@@ -137,7 +144,8 @@ Règles : casse de phrase partout (pas de libellés en majuscules), synopsis lim
 
 - Échelle Tailwind par pas de 4 px. Espacements usuels : `gap-2` (éléments inline), `gap-4` (dans une carte), `gap-8` (entre sections), padding de carte `p-4` mobile / `p-6` desktop.
 - Marges de page : `px-4` mobile, `px-6` tablette, conteneur `max-w-6xl mx-auto` sur desktop.
-- Ombres : aucune par défaut. Séparation par fond (`bg-card` sur `bg-background`) et bordure `border-border`. Seuls les menus et modales ont `shadow-lg`.
+- Ombres : aucune par défaut. Séparation par fond (`bg-card` sur `bg-background`) et bordure `border-border`. Seuls les menus, modales et la carte d'envoi posée sur le hero sombre ont `shadow-lg`.
+- Hauteur des boutons : le preset Nova génère des boutons de 32 px ; nos composants posent `h-11` (44 px) pour respecter les zones tactiles.
 
 ## Component Library
 
@@ -169,7 +177,7 @@ Composants métier attendus en V1 :
 ## Layout Patterns
 
 - **Navigation** : barre supérieure fine sur `bg-card` avec bordure basse `border-border` : logo, compteur de quota, liens Liste / Historique, avatar. Sur mobile : logo + quota + menu.
-- **Accueil (mobile d'abord)** : la zone d'envoi occupe le premier écran ; un exemple concret en dessous ; aucune section marketing avant l'action.
+- **Accueil (mobile d'abord)** : la zone d'envoi occupe le premier écran ; aucune section marketing avant l'action. Direction validée en U02 (AD-23, références Netflix, Flowblox, Bankai) : hero `bg-inverse` avec mosaïque de cadres d'affiches et bande de pellicule, puis sections claires alternant `bg-background` et `bg-card` (étapes numérotées, grille asymétrique d'arguments, bloc sombre confidentialité, tarifs, FAQ en accordéon, appel final sombre), pied de page `bg-inverse` en colonnes.
 
 ```
 ┌──────────────────────────────┐
@@ -199,7 +207,8 @@ Composants métier attendus en V1 :
 
 ## Writing
 
-- Tutoiement ou vouvoiement : **vouvoiement** (cible 16–45 ans, ton respectueux et simple). À confirmer avec le fondateur.
+- **Vouvoiement** (confirmé par le fondateur, Q13).
+- Typographie française : espace insécable avant `? ! : ;` et à l'intérieur des guillemets « », dans tous les textes de `src/content/fr/`.
 - Verbes d'action précis : « Choisir un clip », « Ajouter à ma liste », « Passer au Premium ». Le même mot reste le même dans tout le parcours (le bouton « Ajouter à ma liste » produit le message « Ajouté à votre liste »).
 - Pas de flèches ajoutées aux libellés, pas de points médians pour séparer les métadonnées : utiliser des virgules ou des éléments séparés.
 

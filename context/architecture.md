@@ -7,7 +7,7 @@
 
 | Layer | Technology | Role |
 | --- | --- | --- |
-| Framework | Next.js 16 (App Router) + TypeScript strict, Node.js 24 LTS **(proposé : le CDC cite Next 14 et Node 20, tous deux hors support en octobre 2026)** | Pages (SSR pour les fiches titres), routes API, une seule base de code |
+| Framework | Next.js 16 (App Router) + TypeScript strict, Node.js 24 LTS (AD-01, AD-02 : le CDC cite Next 14 et Node 20, hors support en octobre 2026) | Pages (SSR pour les fiches titres), routes API, une seule base de code |
 | UI | Tailwind CSS 4 + shadcn/ui + lucide-react | Composants accessibles, tokens de design en variables CSS |
 | Formulaires | react-hook-form + zod | Validation partagée client/serveur |
 | Auth | Supabase Auth via `@supabase/ssr` (email + Google) | Sessions par cookies HttpOnly, confirmation d'email, reset |
@@ -19,7 +19,7 @@
 | Où regarder | TMDB `watch/providers` (données JustWatch) **(proposé)**, Watchmode en secours | Disponibilité par pays |
 | Paiement | Prestataire derrière l'interface `BillingProvider` **(à décider : Stripe si l'entité est éligible, sinon Paddle ou Lemon Squeezy)** | Abonnements, page de paiement hébergée, factures |
 | Emails | Supabase Auth (emails d'authentification via SMTP Resend) + Resend / React Email (autres emails) | Emails transactionnels en français |
-| Observabilité | Sentry (erreurs), PostHog ou Plausible (analytique), sonde externe de disponibilité | Alertes et mesures |
+| Observabilité | PostHog région UE, sans cookie (suivi des erreurs + analytique, AD-28), sonde externe de disponibilité | Alertes et mesures |
 | Hébergement | Vercel **plan Pro** (le plan Hobby interdit l'usage commercial) | Déploiement continu, crons |
 | CI/CD | GitHub Actions | Lint, typecheck, tests, build, déploiement |
 | Tests | Vitest (unitaires), Playwright (bout en bout), harnais `eval/` | Qualité et précision d'identification |
@@ -38,10 +38,14 @@ src/
 │   ├── ui/                   # shadcn/ui généré — PROTÉGÉ, ne pas éditer à la main
 │   └── <feature>/            # composants d'une fonctionnalité (identify, title, account, admin…)
 ├── client/                   # Code navigateur uniquement
-│   └── frames/               # extraction d'images, contrôle qualité, dédoublonnage
+│   ├── frames/               # extraction d'images, contrôle qualité, dédoublonnage
+│   └── observability/        # chargement différé de PostHog, erreurs des pages d'erreur
 ├── server/                   # Logique métier, 'server-only'. Jamais importé par un composant client.
 │   ├── env.ts                # variables d'environnement validées par zod
 │   ├── log.ts                # logger structuré (sans données sensibles)
+│   ├── http/                 # réponses JSON { ok, data | error }
+│   ├── health/               # route de santé, erreur volontaire de vérification
+│   ├── observability/        # client PostHog serveur (erreurs serveur)
 │   ├── db/                   # schéma Drizzle, client, requêtes
 │   ├── auth/                 # session, rôles, garde-fous (requireUser, requireAdmin), visiteur
 │   ├── identification/       # pipeline, score, empreintes, cache de résultats
@@ -54,10 +58,13 @@ src/
 │   ├── admin/                # statistiques, actions admin
 │   └── audit/                # journal d'audit
 ├── shared/                   # Code pur utilisable côté client ET serveur (aucun effet de bord)
-│   └── frames/               # paramètres d'échantillonnage communs au navigateur et à l'eval
+│   ├── frames/               # paramètres d'échantillonnage communs au navigateur et à l'eval
+│   └── observability/        # réglages et filtrage PostHog communs (aucune donnée personnelle)
 ├── schemas/                  # Schémas zod partagés (entrées API, réponses IA) et codes d'erreur
 ├── content/fr/               # Textes d'interface centralisés (prépare la V2 multilingue)
 ├── lib/                      # Utilitaires purs (dates Europe/Paris, slugs, formatage)
+├── instrumentation.ts        # charge env.ts (refus de démarrer si une variable manque) ; onRequestError → PostHog
+├── instrumentation-client.ts # déclenche le chargement différé de PostHog (client/observability)
 └── proxy.ts                  # (ex-middleware, à vérifier selon la version) rafraîchissement de session
 eval/                         # Harnais du jeu de test : manifeste des 100 clips + script de mesure
 drizzle/                      # Migrations SQL générées — ne jamais éditer une migration appliquée
@@ -103,7 +110,7 @@ Signalement : les images ne sont jamais écrites sur disque ou en stockage penda
 ## Cache de résultats
 
 - `result_cache` : une entrée par résultat retenu ; `result_cache_frames` : les dHash 64 bits (`bigint`) de chaque image de l'entrée.
-- Correspondance exacte : empreinte = SHA-256 des dHash triés → clé Redis `cache:fp:{empreinte}`.
+- Correspondance exacte : empreinte = SHA-256 des dHash triés, recherchée par l'index unique de `result_cache.fingerprint` (AD-29 : pas de raccourci Redis en V1).
 - Correspondance proche : une entrée est retenue si au moins `CACHE_MIN_MATCHING_FRAMES` (2) images ont une distance de Hamming ≤ `CACHE_MAX_HAMMING` (valeur à calibrer, départ 6) avec ses images. Requête SQL `bit_count((a # b)::bit(64))`. Volume V1 faible : un balayage indexé suffit ; à revoir au-delà de ~100 000 entrées.
 - Écriture seulement si la confiance finale ≥ `CACHE_MIN_CONFIDENCE` (départ 80 %) ou après validation admin.
 - Un signalement sur un résultat servi par le cache désactive l'entrée (`disabled = true`) jusqu'à revue admin. L'admin peut la corriger (`validated = true`, nouveau `tmdb_id`).
@@ -111,11 +118,11 @@ Signalement : les images ne sont jamais écrites sur disque ou en stockage penda
 ## Storage Model
 
 - **PostgreSQL (Supabase)** — tables :
-  - `profiles` (id = auth.users.id, display_name, avatar_url, role `user|admin`, status `active|suspended`, deleted_at, created_at)
-  - `identifications` (id, user_id nullable, visitor_key nullable, fingerprint, tmdb_id nullable, media_type, confidence, alternatives jsonb, counted bool, source `ai|cache`, outcome `shown|low_confidence|failed`, prompt_version, provider, model, cost_micro_eur, latency_ms, created_at)
+  - `profiles` (id = auth.users.id, display_name, avatar_path (chemin dans le bucket privé `avatars`), role `user|admin`, status `active|suspended`, deleted_at, created_at)
+  - `identifications` (id, user_id nullable, visitor_key nullable (l'un des deux obligatoire), fingerprint, tmdb_id nullable, media_type, confidence, alternatives jsonb, counted bool, source `ai|cache`, outcome `shown|low_confidence|failed`, prompt_version, provider, model, cost_micro_eur, latency_ms, created_at)
   - `result_cache` (id, fingerprint unique, tmdb_id, media_type, confidence, alternatives jsonb, validated bool, disabled bool, hits, created_at) et `result_cache_frames` (cache_id, frame_hash bigint)
   - `watchlist_items` (user_id, tmdb_id, media_type, added_at) — unique (user_id, tmdb_id, media_type)
-  - `reports` (id, identification_id, user_id nullable, proposed_tmdb_id, corrected_tmdb_id, images_consent bool, storage_paths text[], status `open|reviewed|added_to_eval|rejected`, created_at)
+  - `reports` (id, identification_id, user_id nullable, proposed_tmdb_id + proposed_media_type, corrected_tmdb_id + corrected_media_type (un identifiant TMDB n'est unique que par type), images_consent bool, storage_paths text[], status `open|reviewed|added_to_eval|rejected`, created_at)
   - `subscriptions` (user_id unique, provider, provider_customer_id, provider_subscription_id, plan `monthly|yearly`, status normalisé `active|past_due|canceled|expired`, current_period_end, cancel_at_period_end, updated_at)
   - `billing_events` (provider_event_id unique, type, processed_at) — idempotence des webhooks
   - `ai_spend_daily` (day date Paris, total_micro_eur, calls) — miroir durable du compteur Redis, pour le tableau de bord
@@ -123,7 +130,7 @@ Signalement : les images ne sont jamais écrites sur disque ou en stockage penda
   - `admin_audit_log` (id, admin_id, action, target_type, target_id, before jsonb, after jsonb, created_at)
   - `consents` (user_id, kind `terms|privacy|b2b`, version, granted bool, created_at) — le consentement aux images est porté par chaque `reports.images_consent`
   - `data_exports` (id, user_id, storage_path, expires_at, created_at)
-- **Redis (Upstash)** : `quota:{user|visitor}:{id}:{YYYY-MM-DD Paris}` (expire après minuit Paris), `ai:spend:{YYYY-MM-DD Paris}`, `rl:*` (limitation de débit), `tmdb:*` (réponses TMDB, durée selon leurs conditions), `cache:fp:{empreinte}`.
+- **Redis (Upstash)** : `quota:{user|visitor}:{id}:{YYYY-MM-DD Paris}` (expire après minuit Paris), `ai:spend:{YYYY-MM-DD Paris}`, `rl:*` (limitation de débit), `tmdb:*` (réponses TMDB, durée selon leurs conditions).
 - **Supabase Storage**, buckets privés : `reports` (images consenties, chemins aléatoires, lecture admin par URL signée), `avatars` (photos de profil), `exports` (JSON d'export, URL signée valable 24 h, supprimé par cron).
 - **Aucune vidéo, nulle part.** Montants en entiers : centimes pour les prix, micro-euros pour les coûts (le fournisseur IA facture en USD : conversion par une constante `USD_TO_EUR` révisée chaque mois). Dates en UTC ; le « jour » de quota et de dépense se calcule en `Europe/Paris`.
 
@@ -136,10 +143,11 @@ Signalement : les images ne sont jamais écrites sur disque ou en stockage penda
 - Visiteurs : cookie signé `visitor_id` (HttpOnly, 1 an) + adresse IP pour la limitation de débit. Sert uniquement au quota RG2.
 - Rôles : `user`, `admin` dans `profiles.role`, **toujours relu en base côté serveur**. Pas d'interface de promotion en V1 : un admin est désigné par migration de seed ou SQL manuel.
 - Propriété : chaque ressource utilisateur porte `user_id` ; toute requête filtre par l'utilisateur de la session vérifiée (`auth.getUser()`).
-- L'application accède à la base **uniquement côté serveur** via Drizzle. RLS activée sur toutes les tables, sans politique pour `anon` et `authenticated` : la clé publique Supabase n'ouvre aucune table.
+- L'application accède à la base **uniquement côté serveur** via Drizzle. RLS activée sur toutes les tables, sans politique pour `anon` et `authenticated`, **et** aucun droit accordé à ces rôles sur le schéma `public`, y compris pour les tables futures (migration `0002`, AD-24) : la clé publique Supabase n'ouvre aucune table (testé par `npm run test:db`).
+- Schéma : `src/server/db/schema/` ; migrations : `drizzle/` (générées par `drizzle-kit`, plus des migrations SQL personnalisées pour les buckets, les réglages initiaux et les droits). Pile locale : Supabase CLI (`npm run db:start`), configurée dans `supabase/config.toml`.
 - Premium (`server/billing/getEntitlement()`) = `status = 'active'`, ou `status in ('past_due','canceled')` et `current_period_end > now()`. Jamais stocké en double, jamais lu depuis le client.
 - Compte suspendu : ne peut ni identifier ni modifier ses données ; peut exporter et supprimer.
-- Compte supprimé : désactivé immédiatement (déconnexion, `deleted_at`, utilisateur Auth supprimé, abonnement annulé), données effacées définitivement par cron sous 30 jours (CDC 18.1).
+- Compte supprimé (AD-26, 8 octobre 2026) : abonnement annulé, fichiers de l'utilisateur supprimés des buckets `avatars` et `exports` (la cascade SQL ne touche pas Storage), email de confirmation envoyé à l'adresse lue avant suppression, puis utilisateur Auth supprimé ; la cascade `auth.users` → `profiles` → données efface tout immédiatement, ce qui respecte « effacé sous 30 jours » (CDC 18.1). Les signalements restent, anonymisés (`user_id` à null). Seules les factures restent chez le prestataire de paiement (obligation légale).
 
 ## External Services and Abstractions
 
@@ -155,15 +163,16 @@ Chaque appel externe : délai maximal, journalisation sans donnée personnelle, 
 
 ## Environnements et secrets
 
-- `development` (local), `preview` (préproduction, projet Supabase séparé), `production`. Supabase de production sur un plan payant (le plan gratuit met les projets en pause après une période d'inactivité).
-- Variables serveur : `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `OPENAI_API_KEY`, `OPENAI_VISION_MODEL`, `TMDB_API_TOKEN`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `BILLING_*`, `RESEND_API_KEY`, `SENTRY_DSN`, `CRON_SECRET`, `VISITOR_COOKIE_SECRET`, `ADMIN_ALERT_EMAIL`.
-- Variables publiques (`NEXT_PUBLIC_*`) : URL du site, URL et clé publique Supabase, clé analytique, DSN Sentry navigateur. Rien d'autre.
-- `src/server/env.ts` valide les variables au démarrage : l'application refuse de démarrer si l'une manque.
+- `development` (local, Supabase dans Docker), `preview` (préproduction), `production`. **Un seul projet Supabase en ligne** (`shazam_serie`) sert à la préproduction et à la production (AD-27) : la préproduction travaille sur les données réelles, et seules les migrations fusionnées dans `main` y sont appliquées. Plan payant avant le lancement (le plan gratuit met les projets en pause après une période d'inactivité). Fonctions Vercel en région `dub1` (Dublin, `vercel.json`), à côté de la base Supabase `eu-west-1`. Chaque requête applicative passe par `withQueryTimeout` (délai de 5 s).
+- Variables serveur : `DATABASE_URL`, `SUPABASE_SECRET_KEY` (clé « secret » des nouvelles clés Supabase, remplace `service_role`), `OPENAI_API_KEY`, `OPENAI_VISION_MODEL`, `TMDB_API_TOKEN`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `BILLING_*`, `RESEND_API_KEY`, `CRON_SECRET`, `VISITOR_COOKIE_SECRET`, `ADMIN_ALERT_EMAIL`.
+- Variables publiques (`NEXT_PUBLIC_*`) : URL du site, `NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (clé « publishable », ex-« anon »), `NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN` (clé de projet PostHog, publique par nature) et `NEXT_PUBLIC_POSTHOG_HOST`. Rien d'autre.
+- `src/server/env.ts` valide les variables au démarrage : l'application refuse de démarrer si l'une manque. Les variables sont ajoutées au fil des unités ; celles des services externes sont obligatoires quand `VERCEL_ENV` vaut `production`, facultatives en preview, en local et en CI (AD-28 ; chaque unité qui ajoute une variable précise si la preview l'exige). Liste à jour : `.env.example`.
+- Santé : `GET /api/health` (sonde et test de fumée), `GET /api/health/error-check` (erreur volontaire, `Authorization: Bearer <CRON_SECRET>`). Réglages Vercel/PostHog/GitHub : `docs/setup-deploiement.md`.
 
 ## Tâches planifiées (Vercel Cron → `/api/cron/*`, protégées par `CRON_SECRET`)
 
 - Toutes les heures : suppression des exports expirés (> 24 h).
-- Chaque jour : purge de l'historique > 2 ans (RG11) ; effacement définitif des comptes supprimés depuis > 30 jours ; rappel de renouvellement J-3 (RG13) si le prestataire ne l'envoie pas ; suppression des images de signalement selon la durée de conservation retenue (Q16) ; consolidation `ai_spend_daily`.
+- Chaque jour : purge de l'historique > 2 ans (RG11) ; rappel de renouvellement J-3 (RG13) si le prestataire ne l'envoie pas ; suppression des images de signalement selon la durée de conservation retenue (Q16) ; consolidation `ai_spend_daily`.
 
 ## Invariants
 
@@ -175,7 +184,7 @@ Chaque appel externe : délai maximal, journalisation sans donnée personnelle, 
 6. Toute mutation admin écrit dans `admin_audit_log` dans la même transaction.
 7. Toute route API ou Server Action valide son entrée avec zod avant toute logique, et vérifie session, rôle et propriété avant toute lecture ou mutation de données utilisateur.
 8. `src/app/**` ne contient ni logique métier ni accès direct à la base : il appelle `src/server/**`.
-9. Aucune image, mot de passe, jeton, email complet ou donnée de carte dans les journaux, Sentry ou l'analytique.
+9. Aucune image, mot de passe, jeton, email complet ou donnée de carte dans les journaux, le suivi des erreurs ou l'analytique (PostHog).
 10. Aucune donnée n'est utilisée à des fins B2B sans consentement `b2b` actif (RG17).
 11. Aucun travail long après la réponse dans un route handler : les traitements différés passent par les crons.
 12. La mention TMDB (et celle de la source des données de streaming) est visible sur chaque fiche et dans les pages légales.

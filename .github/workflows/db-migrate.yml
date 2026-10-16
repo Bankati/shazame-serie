@@ -1,0 +1,57 @@
+# Applique les migrations Drizzle (AD-24) quand du code arrive sur main.
+# Un seul projet Supabase sert à la préproduction et à la production (AD-27) : seules les migrations
+# fusionnées dans main y sont appliquées, après approbation (environnement GitHub « production »).
+# Secret : DATABASE_URL dans l'environnement « production » (URL du « session pooler » Supabase, port 5432 :
+# les runners GitHub n'ont pas d'IPv6). Voir docs/setup-deploiement.md.
+# Migrations rétrocompatibles uniquement (AD-25) : Vercel déploie le code sans attendre ce workflow.
+name: Database migrations
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "drizzle/**"
+      - "src/server/db/schema/**"
+      - "drizzle.config.ts"
+      - ".github/workflows/db-migrate.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: db-migrate-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    name: Appliquer les migrations
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Un lancement manuel depuis une autre branche (ex. dev) appliquerait des migrations non relues.
+    # Second verrou : branche autorisée de l'environnement GitHub (docs/setup-deploiement.md).
+    if: github.ref_name == 'main'
+    environment: production
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - name: Vérifier la présence du secret
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::Secret DATABASE_URL absent de l'environnement GitHub (voir docs/setup-deploiement.md)."
+            exit 1
+          fi
+
+      - name: drizzle-kit migrate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npm run db:migrate

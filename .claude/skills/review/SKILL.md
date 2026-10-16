@@ -51,14 +51,14 @@ Ignorer : `src/components/ui/*`, `drizzle/*` générés, fichiers de verrouillag
 - Vérification de session **et** de propriété avant toute lecture ou mutation.
 - Entrées non validées, SQL hors Drizzle, contenu affiché sans échappement.
 - Secrets ou clé `service_role` atteignables côté client ; variable `NEXT_PUBLIC_*` qui ne devrait pas l'être.
-- Données sensibles dans les journaux, Sentry, l'analytique ou les messages d'erreur renvoyés.
+- Données sensibles dans les journaux, le suivi des erreurs (PostHog), l'analytique ou les messages d'erreur renvoyés.
 - Webhook : corps brut, signature, idempotence.
 - Fichiers reçus : type réel, taille, nombre.
 
 ### Gestion des erreurs
 
 - Chaque appel externe : délai, tentatives (RG16), erreur traduite en code normalisé.
-- `catch` vides ou qui avalent l'erreur ; erreurs inattendues non envoyées à Sentry.
+- `catch` vides ou qui avalent l'erreur ; erreurs inattendues non envoyées au suivi des erreurs (PostHog).
 - Message utilisateur en français, clair, sans détail technique.
 
 ### Performance

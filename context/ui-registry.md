@@ -395,7 +395,7 @@ Dernière mise à jour : 16 octobre 2026
 
 | Propriété | Classe |
 | --- | --- |
-| Arrière-plan | pastille `bg-inverse text-inverse-foreground` ; menu `bg-popover` (DropdownMenu shadcn) |
+| Arrière-plan | pastille `bg-brand text-inverse` (17 octobre 2026 : `bg-inverse` était invisible sur le thème sombre) ; menu `bg-popover` (DropdownMenu shadcn) |
 | Bordure | none |
 | Radius | pastille `rounded-full` (cercle) ; menu `rounded-lg` (généré) |
 | Texte principal | pastille `text-sm font-bold` (initiale) ; email `text-sm font-medium text-foreground truncate` |
@@ -477,3 +477,22 @@ Dernière mise à jour : 17 octobre 2026
 | Accent | étoiles `fill-current text-warning` (vides `text-muted-foreground`), valeur en `sr-only` ; point actif de la vedette `bg-inverse-foreground` (largeur animée 8 → 28 px) |
 
 **Notes de pattern :** composants `m.*` uniquement (LazyMotion strict). Rangées : Embla `dragFree`, flèches à partir de `md`, apparition en cascade (`staggerChildren` 0,06 s). Vedette : Embla `Fade` + `Autoplay` (7 s, pause au survol, bouton pause, coupée si `prefers-reduced-motion` ou pendant l'analyse d'un clip), images montées au fur et à mesure (la première en `priority`), zoom lent `animate-ken-burns`, contrôles en `flex-wrap` (8 cibles de 44 px ne tiennent pas sur un téléphone). Zone d'envoi : `order-1` sur mobile (premier écran), à droite sur ordinateur, avec le `h1` « Quel est ce film ? ». Mention « Titres, affiches et notes fournis par TMDB » sous les rangées.
+
+### HistoryList (historique)
+
+Fichier : `src/components/history/history-list.tsx`, page `src/app/historique/page.tsx` (U17)
+Dernière mise à jour : 17 octobre 2026
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | ligne `bg-card`, survol `hover:bg-accent` ; état vide : carte `bg-card` |
+| Bordure | `border border-border` |
+| Radius | `rounded-lg` ; affiche `rounded-poster` (TitlePoster w92, 56 px) |
+| Texte principal | titre `font-display text-lg font-bold text-foreground`, survol `group-hover:text-link`, tronqué |
+| Texte secondaire | type, année, date `text-sm text-muted-foreground` |
+| Espacement | liste `gap-3` ; ligne `p-3 md:p-4 gap-4` ; colonne de page `max-w-2xl px-4 sm:px-6 py-10 md:py-16 gap-6` |
+| Hover / focus | `focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring` |
+| Ombre | none |
+| Accent | `ConfidenceBadge` (sous la date sur mobile, à droite à partir de `sm`) |
+
+**Notes de pattern :** chaque ligne est un lien vers la fiche (titre inconnu : slug « titre », corrigé par la redirection 308 de la fiche). Lignes en cascade (`staggerChildren` 0,04 s, glissement depuis la gauche). Date déjà formatée côté serveur en heure de Paris (`formatParisDateTime`). Titre indisponible : « Titre indisponible » avec l'affiche de remplacement.

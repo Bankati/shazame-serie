@@ -8,8 +8,9 @@ const MAILPIT_URL = process.env.MAILPIT_URL;
 test.skip(!MAILPIT_URL, "Supabase local et Mailpit requis (MAILPIT_URL)");
 
 const PASSWORD = "motdepasse-e2e";
-// Réponses des Server Actions (Supabase Auth, base) : plus lentes que l'interface seule.
-const SERVER = { timeout: 15_000 };
+// Réponses des Server Actions (Supabase Auth, base) : plus lentes que l'interface seule, surtout en local
+// quand les autres tests (pages animées) tournent en parallèle sur le même serveur.
+const SERVER = { timeout: 30_000 };
 const NEW_PASSWORD = "nouveau-motdepasse-e2e";
 
 type MailpitSearch = { messages: { ID: string; Subject: string }[] };
@@ -31,9 +32,15 @@ async function linkFromEmail(to: string, subject: string): Promise<string> {
   throw new Error(`Aucun email « ${subject} » reçu`);
 }
 
+// Juste après une connexion, la page d'accueil est encore en train de s'afficher : un clic trop tôt
+// peut se perdre. On réessaie jusqu'à ce que le menu soit ouvert.
 async function openMenu(page: Page) {
-  await page.getByRole("button", { name: "Ouvrir le menu" }).click();
-  return page.getByRole("dialog", { name: "Menu" });
+  const menu = page.getByRole("dialog", { name: "Menu" });
+  await expect(async () => {
+    if (!(await menu.isVisible())) await page.getByRole("button", { name: "Ouvrir le menu" }).click();
+    await expect(menu).toBeVisible({ timeout: 1_000 });
+  }).toPass({ timeout: 15_000 });
+  return menu;
 }
 
 test.beforeEach(async ({ page }) => {
@@ -42,7 +49,7 @@ test.beforeEach(async ({ page }) => {
 
 test("inscription → confirmation → déconnexion → connexion, puis lien de réinitialisation à usage unique", async ({ page }) => {
   // Parcours long (une quinzaine d'allers-retours avec Supabase) : plus que les 30 s par défaut.
-  test.setTimeout(90_000);
+  test.setTimeout(150_000);
   const email = `e2e-${Date.now()}-${Math.floor(Math.random() * 1e6)}@example.com`;
 
   // Inscription : la case d'acceptation est obligatoire et non cochée par défaut.

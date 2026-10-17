@@ -9,7 +9,7 @@ import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger 
 import { AUTH_TEXT } from "@/content/fr/auth";
 import { LAYOUT_TEXT } from "@/content/fr/layout";
 
-import { AccountBadge, SIGN_OUT_PATH } from "./account-menu";
+import { AccountBadge, HISTORY_PATH, SIGN_OUT_PATH } from "./account-menu";
 
 // Menu mobile : le Sheet se ferme après un choix pour laisser défiler la page vers l'ancre.
 export function MobileNav() {
@@ -58,6 +58,11 @@ export function MobileNav() {
                   </span>
                 </div>
               </div>
+              <Button asChild variant="outline" className="h-11 w-full text-base">
+                <a href={HISTORY_PATH} onClick={() => setOpen(false)}>
+                  {text.history}
+                </a>
+              </Button>
               <form method="post" action={SIGN_OUT_PATH}>
                 <Button type="submit" variant="outline" className="h-11 w-full text-base">
                   {text.signOut}

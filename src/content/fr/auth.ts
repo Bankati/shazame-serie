@@ -111,6 +111,7 @@ export const AUTH_TEXT = {
     menuLabel: (name: string) => `Compte de ${name}`,
     signedInAs: "Connecté en tant que",
     signOut: "Se déconnecter",
+    history: "Historique",
     fallbackName: "Mon compte",
   },
 } as const;

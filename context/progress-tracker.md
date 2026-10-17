@@ -103,10 +103,16 @@ Mettre à jour ce fichier après chaque changement d'implémentation significati
   - Review du 17 octobre 2026, corrigé (/recover) : limite d'erreur autour des décors (la zone d'envoi ne tombe plus avec une animation), test Playwright de l'accueil avec un faux TMDB (`scripts/tmdb-mock.mjs`, `npm run build:e2e`), ISR qui garde la dernière page réussie si TMDB tombe (null seulement sans jeton), sections visibles sans JavaScript, observateur du défilement automatique limité aux changements d'état, `Origin` vérifié sur `POST /api/identify` (antérieur à U04), `aria-live` réduit au titre du genre.
   - Reste : Lighthouse mobile (poids des images de la vedette, JavaScript ajouté par Motion et Embla) ; essai sur un vrai Android ; « Les plus identifiés » (nos données) quand il y aura du trafic.
 
+- U17 — Historique (plan : `context/plans/U17.md`, validé le 17 octobre 2026).
+  - Fait : page `/historique` (comptes connectés ; visiteur → connexion puis retour), 50 dernières identifications au résultat affiché, titres et affiches relus via le catalogue (8 appels simultanés au plus, jamais copiés en base : conservation TMDB limitée à 6 mois), date en heure de Paris, confiance, lien vers la fiche, état vide ; lien « Historique » dans les menus ; purge RG11 `GET /api/cron/purge-identifications` (CRON_SECRET, Vercel Cron 03:30 UTC, lots de 5 000) ; aide `isAuthorizedCron` partagée avec la route d'erreur volontaire.
+  - Vérifié : `test:db` (chacun ne voit que les siennes, 50 au plus, ordre, échecs exclus, purge > 2 ans comptes et visiteurs), tests unitaires (catalogue en panne, concurrence, cron refusé sans secret, date Paris), Playwright (visiteur redirigé). Rendu contrôlé sur mobile et ordinateur avec de vrais titres.
+  - Tests navigateur locaux : 2 navigateurs en parallèle au plus (Docker + Next + extraction vidéo saturaient la machine).
+
 ## Next Up
 
-- U17 — Historique, puis U18 — Liste de suivi (comptes désormais disponibles).
+- U18 — Liste de suivi (bouton sur résultat et fiche, page liste, limite 100 en gratuit).
 - U05 — Profil (nom et photo).
+- `/audit` de U04 et U17 (non encore lancé).
 
 ## Open Questions
 

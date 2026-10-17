@@ -61,6 +61,26 @@ export const tmdbTvDetailsSchema = z.object({
   vote_average: z.number().catch(0),
 });
 
+/** Élément d'une liste TMDB (`trending`, `top_rated`) : film ou série, validé élément par élément. */
+export const tmdbListItemSchema = z.object({
+  id: z.number().int().positive(),
+  media_type: z.enum(["movie", "tv"]).optional(),
+  title: z.string().optional(),
+  name: z.string().optional(),
+  release_date: date,
+  first_air_date: date,
+  overview: z.string().catch(""),
+  poster_path: nullableText,
+  backdrop_path: nullableText,
+  vote_average: z.number().catch(0),
+  genre_ids: z.array(z.number()).catch([]),
+  adult: z.boolean().catch(false),
+});
+
+export const tmdbListSchema = z.object({ results: z.array(z.unknown()) });
+
+export const tmdbGenreListSchema = z.object({ genres: z.array(z.object({ id: z.number(), name: z.string() })) });
+
 export const tmdbConfigurationSchema = z.object({
   images: z.object({
     secure_base_url: z.url({ protocol: /^https$/ }),

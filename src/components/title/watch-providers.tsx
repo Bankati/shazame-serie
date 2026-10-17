@@ -121,7 +121,7 @@ export function WatchProviders({ mediaType, tmdbId }: { mediaType: "movie" | "tv
           href={availability.link}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex min-h-11 w-fit items-center gap-2 text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+          className="inline-flex min-h-11 w-fit items-center gap-2 text-sm font-medium text-link underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
         >
           {watch.offers}
           <ExternalLink className="size-4" aria-hidden="true" />

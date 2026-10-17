@@ -2,6 +2,8 @@
 
 Registre des motifs visuels réellement implémentés. Alimenté par `/imprint` après chaque composant. À consulter **avant** de créer un composant. Les classes reprennent le vocabulaire de `ui-context.md` (noms shadcn/ui + tokens du projet).
 
+> **16 octobre 2026 : thème sombre (AD-35).** Les noms de classes de la baseline restent valables (les jetons ont changé de valeur, pas de nom). Exception : un lien texte utilise désormais `text-link` (et non `text-primary`).
+
 ## Baseline — établie le 4 octobre 2026 (à partir de `ui-context.md`, avant tout code)
 
 | Propriété | Classe correcte |
@@ -456,3 +458,22 @@ Dernière mise à jour : 16 octobre 2026
 | Accent | « Choisir un autre clip » `variant="outline" h-11` ; « Voir la fiche » dans la carte |
 
 **Notes de pattern :** Dialog centré à partir de `md` (768 px), Sheet `side="bottom"` en dessous (`useSyncExternalStore` sur `matchMedia`). S'ouvre à chaque nouveau résultat ; fermé, il se rouvre par « Voir le résultat » dans le panneau. Les échecs (quota, pause IA, images inexploitables) restent affichés dans le panneau, sans fenêtre.
+
+### Accueil animé : FeaturedHero, PosterRow, PosterCard, GenreExplorer, StarRating, Reveal
+
+Fichiers : `src/components/showcase/*.tsx` (16 octobre 2026, AD-35, AD-36)
+Dernière mise à jour : 17 octobre 2026
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | vedette `bg-inverse` + image large TMDB, voiles `bg-linear-to-t from-background via-inverse/70 to-inverse/30` et (md) `bg-linear-to-r from-inverse via-inverse/60 to-transparent` ; affiche `bg-muted` avant chargement ; tuile de genre : image + voile `bg-inverse/70` (`/40` si choisie) |
+| Bordure | affiche `ring-1 ring-border`, survol `ring-2 ring-link` ; tuile de genre `ring-1 ring-border`, choisie `ring-2 ring-link` ; étiquette de type `border border-inverse-foreground/30` |
+| Radius | affiches et tuiles `rounded-lg` ; boutons ronds `rounded-full` ; étiquette `rounded-sm` |
+| Texte principal | titre vedette `font-display text-display-lg md:text-display-xl font-extrabold` ; titres de rangée `font-display text-display font-bold` ; titre d'affiche `text-sm font-semibold truncate` |
+| Texte secondaire | `text-sm text-muted-foreground` (année, notes) ; sur la vedette `text-inverse-muted` ; sur-titre `text-sm font-semibold uppercase tracking-wide` |
+| Espacement | rangées `gap-4`, affiches `w-32 md:w-40` ; entre rangées `gap-12 md:gap-16` ; vedette `pt-8 pb-12 md:pt-16 md:pb-20`, `md:min-h-[38rem]` |
+| Hover / focus | affiche : `whileHover` y −8 px, échelle 1,04 (ressort), image `group-hover:scale-105` ; focus `focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring` ; boutons ronds `Button variant="outline" size-11 rounded-full` |
+| Ombre | affiches `shadow-lg` (exception assumée : profondeur des rangées, maquette du fondateur) |
+| Accent | étoiles `fill-current text-warning` (vides `text-muted-foreground`), valeur en `sr-only` ; point actif de la vedette `bg-inverse-foreground` (largeur animée 8 → 28 px) |
+
+**Notes de pattern :** composants `m.*` uniquement (LazyMotion strict). Rangées : Embla `dragFree`, flèches à partir de `md`, apparition en cascade (`staggerChildren` 0,06 s). Vedette : Embla `Fade` + `Autoplay` (7 s, pause au survol, bouton pause, coupée si `prefers-reduced-motion` ou pendant l'analyse d'un clip), images montées au fur et à mesure (la première en `priority`), zoom lent `animate-ken-burns`, contrôles en `flex-wrap` (8 cibles de 44 px ne tiennent pas sur un téléphone). Zone d'envoi : `order-1` sur mobile (premier écran), à droite sur ordinateur, avec le `h1` « Quel est ce film ? ». Mention « Titres, affiches et notes fournis par TMDB » sous les rangées.

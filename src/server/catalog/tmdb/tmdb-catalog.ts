@@ -8,11 +8,13 @@ import { env } from "@/server/env";
 import {
   type CatalogCandidate,
   CatalogError,
+  type CatalogGenre,
   type CatalogImageConfig,
   type CatalogLanguage,
   type CatalogProvider,
   type CatalogTitleDetails,
   type MediaType,
+  type ShowcaseTitle,
   type TitlePage,
 } from "../catalog-provider";
 import { normalizeTitle } from "../matching";
@@ -20,6 +22,9 @@ import { buildSimilar, type SimilarCandidate } from "../similar";
 import { createTmdbClient, type TmdbGet } from "./client";
 import {
   tmdbConfigurationSchema,
+  tmdbGenreListSchema,
+  tmdbListItemSchema,
+  tmdbListSchema,
   tmdbMovieDetailsSchema,
   tmdbMovieResultSchema,
   tmdbMoviePageSchema,
@@ -64,6 +69,20 @@ const MAX_CAST = 10;
 const MAX_WRITERS = 3;
 const WRITING_JOBS = new Set(["Screenplay", "Writer", "Story", "Novel"]);
 const YOUTUBE_KEY = /^[\w-]{6,20}$/;
+
+const showcaseSchema = z.object({
+  tmdbId: z.number().int().positive(),
+  mediaType: z.enum(["movie", "tv"]),
+  title: z.string(),
+  year: z.number().int().nullable(),
+  overview: z.string(),
+  posterPath: z.string().nullable(),
+  backdropPath: z.string().nullable(),
+  voteAverage: z.number(),
+  genreIds: z.array(z.number()),
+});
+
+const genreSchema = z.object({ id: z.number(), name: z.string() });
 
 const titlePageSchema = z.object({
   tmdbId: z.number().int().positive(),
@@ -164,6 +183,27 @@ export class TmdbCatalog implements CatalogProvider {
     return this.cached("tmdb:configuration", imageConfigSchema, async () => {
       const { images } = await this.get({ path: "/configuration" }, tmdbConfigurationSchema);
       return { secureBaseUrl: images.secure_base_url, posterSizes: images.poster_sizes, backdropSizes: images.backdrop_sizes };
+    });
+  }
+
+  async getTrending(mediaType: MediaType): Promise<ShowcaseTitle[]> {
+    return this.cached(`tmdb:trending:${mediaType}`, z.array(showcaseSchema), async () => {
+      const page = await this.get({ path: `/trending/${mediaType}/week`, params: { language: "fr-FR" } }, tmdbListSchema);
+      return page.results.flatMap((item) => toShowcaseTitle(item, mediaType));
+    });
+  }
+
+  async getTopRatedMovies(): Promise<ShowcaseTitle[]> {
+    return this.cached("tmdb:top_rated:movie", z.array(showcaseSchema), async () => {
+      const page = await this.get({ path: "/movie/top_rated", params: { language: "fr-FR", region: "FR", page: 1 } }, tmdbListSchema);
+      return page.results.flatMap((item) => toShowcaseTitle(item, "movie"));
+    });
+  }
+
+  async getGenres(mediaType: MediaType): Promise<CatalogGenre[]> {
+    return this.cached(`tmdb:genres:${mediaType}`, z.array(genreSchema), async () => {
+      const { genres } = await this.get({ path: `/genre/${mediaType}/list`, params: { language: "fr-FR" } }, tmdbGenreListSchema);
+      return genres;
     });
   }
 
@@ -291,6 +331,32 @@ export class TmdbCatalog implements CatalogProvider {
       voteAverage: show.vote_average,
     };
   }
+}
+
+/** Élément d'une liste TMDB validé ; écarté s'il est invalide, réservé aux adultes ou sans titre. */
+export function toShowcaseTitle(item: unknown, fallbackType: MediaType): ShowcaseTitle[] {
+  const parsed = tmdbListItemSchema.safeParse(item);
+  if (!parsed.success || parsed.data.adult) {
+    return [];
+  }
+  const value = parsed.data;
+  const title = value.title ?? value.name;
+  if (!title) {
+    return [];
+  }
+  return [
+    {
+      tmdbId: value.id,
+      mediaType: value.media_type ?? fallbackType,
+      title,
+      year: yearOf(value.release_date ?? value.first_air_date),
+      overview: value.overview,
+      posterPath: value.poster_path ?? null,
+      backdropPath: value.backdrop_path ?? null,
+      voteAverage: value.vote_average,
+      genreIds: value.genre_ids,
+    },
+  ];
 }
 
 /** Un élément de `search/multi` validé, ou rien (personnes et éléments invalides sont écartés). */

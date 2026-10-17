@@ -6,10 +6,11 @@ export const LAYOUT_TEXT = {
   nav: {
     label: "Navigation principale",
     links: [
+      { href: "/#tendances", label: "Tendances" },
+      { href: "/#genres", label: "Genres" },
       { href: "/#comment-ca-marche", label: "Comment ça marche" },
-      { href: "/#fonctionnalites", label: "Fonctionnalités" },
       { href: "/#tarifs", label: "Tarifs" },
-      { href: "/#faq", label: "Questions fréquentes" },
+      { href: "/#faq", label: "FAQ" },
     ],
     cta: { href: "/#identifier", label: "Identifier un clip" },
     openMenu: "Ouvrir le menu",

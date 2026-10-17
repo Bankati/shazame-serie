@@ -36,7 +36,7 @@ export function AuthFooterLink({ prompt, href, label }: { prompt?: string; href:
       {prompt ? `${prompt} ` : null}
       <a
         href={href}
-        className="font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-ring"
+        className="font-medium text-link underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-ring"
       >
         {label}
       </a>

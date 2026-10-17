@@ -46,7 +46,7 @@ export function SignInForm({ action, next }: { action: FormAction; next?: string
       />
       <Link
         href="/mot-de-passe-oublie"
-        className="flex min-h-11 w-fit items-center text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-ring"
+        className="flex min-h-11 w-fit items-center text-sm font-medium text-link underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-ring"
       >
         {signIn.forgot}
       </Link>

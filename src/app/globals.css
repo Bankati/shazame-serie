@@ -3,9 +3,9 @@
 @import "shadcn/tailwind.css";
 
 /*
- * Thème clair uniquement en V1 (AD-08). La variante `dark` reste liée à une classe `.dark` jamais posée :
- * sans cette ligne, Tailwind 4 l'appliquerait selon le mode sombre du système et les classes `dark:`
- * des composants shadcn casseraient le thème clair.
+ * Thème sombre unique (AD-35, 16 octobre 2026, remplace AD-08) : la classe `.dark` est posée sur <html>
+ * (layout), ce qui active aussi les variantes `dark:` des composants shadcn, prévues pour un fond sombre.
+ * La variante reste liée à cette classe, jamais au réglage du système.
  */
 @custom-variant dark (&:is(.dark *));
 
@@ -40,6 +40,7 @@
   --color-brand-subtle-foreground: var(--brand-subtle-foreground);
   --color-warning: var(--warning);
   --color-success: var(--success);
+  --color-link: var(--link);
 
   --font-sans: var(--font-public-sans);
   --font-display: var(--font-archivo);
@@ -62,40 +63,60 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
   --radius-poster: 2px;
+
+  /* Zoom lent des images de la vedette (effet « Ken Burns »). */
+  --animate-ken-burns: ken-burns 12s ease-out both;
+
+  @keyframes ken-burns {
+    from {
+      transform: scale(1);
+    }
+    to {
+      transform: scale(1.1);
+    }
+  }
 }
 
 :root {
   --radius: 0.625rem;
-  --background: #f6f7f9;
-  --foreground: #1f2937;
-  --card: #ffffff;
-  --card-foreground: #1f2937;
-  --popover: #ffffff;
-  --popover-foreground: #1f2937;
-  --primary: #0052cc;
+  /* Palette sombre (AD-35). Contrastes mesurés sur --background #0B0F17 et --card #141A24. */
+  --background: #0b0f17;
+  --foreground: #f3f4f6;
+  --card: #141a24;
+  --card-foreground: #f3f4f6;
+  --popover: #182030;
+  --popover-foreground: #f3f4f6;
+  /* Boutons : texte blanc 5,2:1. Pour un lien sur fond sombre, utiliser --link (7,5:1). */
+  --primary: #2563eb;
   --primary-foreground: #ffffff;
-  --secondary: #eef1f5;
-  --secondary-foreground: #1f2937;
-  --muted: #eef1f5;
-  --muted-foreground: #4b5563;
-  --accent: #eef1f5;
-  --accent-foreground: #1f2937;
-  --destructive: #b91c1c;
-  --border: #e5e7eb;
+  --secondary: #1c2433;
+  --secondary-foreground: #f3f4f6;
+  --muted: #1c2433;
+  /* 7,5:1 sur le fond, 6,9:1 sur une carte */
+  --muted-foreground: #9ca3af;
+  --accent: #1c2433;
+  --accent-foreground: #f3f4f6;
+  /* Texte d'erreur 6,9:1 */
+  --destructive: #f87171;
+  --border: #263042;
+  /* Contour de champ 4:1 (WCAG 1.4.11 : 3:1 minimum) */
   --input: #6b7280;
-  --ring: #0052cc;
+  --ring: #60a5fa;
 
-  --primary-hover: #003d99;
-  --inverse: #1f2937;
+  --primary-hover: #1d4ed8;
+  --link: #60a5fa;
+  /* Surface plus profonde que le fond : hero, blocs de contraste, pied de page */
+  --inverse: #05080e;
   --inverse-foreground: #ffffff;
-  /* Texte secondaire sur surface inversée : 9,9:1 sur #1F2937 */
   --inverse-muted: #d1d5db;
   --brand: #10b981;
-  --brand-strong: #047857;
-  --brand-subtle: #ecfdf5;
-  --brand-subtle-foreground: #065f46;
-  --warning: #b45309;
-  --success: #047857;
+  /* Vert lisible sur fond sombre (texte, icônes) : 10:1 */
+  --brand-strong: #34d399;
+  --brand-subtle: #052e22;
+  --brand-subtle-foreground: #6ee7b7;
+  /* Avertissement 11:1 */
+  --warning: #fbbf24;
+  --success: #34d399;
 }
 
 @layer base {
@@ -112,6 +133,10 @@
   button:not(:disabled),
   [role="button"]:not(:disabled) {
     cursor: pointer;
+  }
+  /* Animations décoratives en pause pendant l'analyse d'un clip (attribut posé par IdentifyPanel). */
+  :root:has([data-pause-motion]) .animate-ken-burns {
+    animation-play-state: paused;
   }
   @media (prefers-reduced-motion: reduce) {
     html {

@@ -19,7 +19,7 @@ export function HowItWorks() {
             return (
               <li key={step.title} className="flex flex-col gap-4 rounded-xl border border-border bg-card p-6">
                 <div className="flex items-center justify-between">
-                  <span className="font-display text-display-lg font-extrabold text-primary" aria-hidden="true">
+                  <span className="font-display text-display-lg font-extrabold text-link" aria-hidden="true">
                     {String(index + 1).padStart(2, "0")}
                   </span>
                   <span className="flex size-11 items-center justify-center rounded-lg bg-muted">

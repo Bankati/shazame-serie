@@ -37,6 +37,9 @@ function setup(options: { vision?: VisionProvider["identify"]; cached?: CachedRe
     getTitleDetails: async () => DETAILS,
     getImageConfig: async () => ({ secureBaseUrl: "https://image.tmdb.org/t/p/", posterSizes: [], backdropSizes: [] }),
     getTitlePage: async () => null,
+    getTrending: async () => [],
+    getTopRatedMovies: async () => [],
+    getGenres: async () => [],
   };
   const deps: IdentifyDeps = {
     quota,

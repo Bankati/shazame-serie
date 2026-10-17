@@ -69,6 +69,21 @@ export type TitlePage = {
   similar: SimilarTitle[];
 };
 
+/** Titre d'une rangée de l'accueil (tendances, mieux notés). */
+export type ShowcaseTitle = {
+  tmdbId: number;
+  mediaType: MediaType;
+  title: string;
+  year: number | null;
+  overview: string;
+  posterPath: string | null;
+  backdropPath: string | null;
+  voteAverage: number;
+  genreIds: number[];
+};
+
+export type CatalogGenre = { id: number; name: string };
+
 export type CatalogImageConfig = {
   secureBaseUrl: string;
   posterSizes: string[];
@@ -80,6 +95,11 @@ export interface CatalogProvider {
   getTitleDetails(tmdbId: number, mediaType: MediaType): Promise<CatalogTitleDetails | null>;
   getImageConfig(): Promise<CatalogImageConfig>;
   getTitlePage(tmdbId: number, mediaType: MediaType): Promise<TitlePage | null>;
+  /** Tendances de la semaine (accueil). */
+  getTrending(mediaType: MediaType): Promise<ShowcaseTitle[]>;
+  /** Films les mieux notés (accueil). */
+  getTopRatedMovies(): Promise<ShowcaseTitle[]>;
+  getGenres(mediaType: MediaType): Promise<CatalogGenre[]>;
 }
 
 /** Échec du catalogue (indisponible, réponse invalide) : jamais le détail technique côté utilisateur. */

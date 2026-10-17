@@ -3,6 +3,7 @@ import { Archivo, Public_Sans } from "next/font/google";
 
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
+import { MotionProvider } from "@/components/showcase/motion-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { APP_TEXT } from "@/content/fr/app";
 import { LAYOUT_TEXT } from "@/content/fr/layout";
@@ -24,7 +25,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="fr" className={cn(archivo.variable, publicSans.variable)}>
+    <html lang="fr" className={cn("dark", archivo.variable, publicSans.variable)}>
       <body className="flex min-h-dvh flex-col">
         <a
           href="#contenu"
@@ -32,13 +33,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         >
           {LAYOUT_TEXT.skipToContent}
         </a>
-        <SiteHeader />
-        <main id="contenu" className="flex-1">
-          {children}
-        </main>
-        <SiteFooter />
-        {/* Thème clair imposé (AD-08) : le Toaster shadcn suivrait sinon le thème du système. */}
-        <Toaster theme="light" />
+        <MotionProvider>
+          <SiteHeader />
+          <main id="contenu" className="flex-1">
+            {children}
+          </main>
+          <SiteFooter />
+        </MotionProvider>
+        {/* Thème sombre imposé (AD-35) : le Toaster shadcn suivrait sinon le thème du système. */}
+        <Toaster theme="dark" />
       </body>
     </html>
   );

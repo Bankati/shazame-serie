@@ -68,6 +68,13 @@ Plans d'hébergement : **Vercel Pro** obligatoire (le plan Hobby est réservé �
   - `next/image` avec les affiches TMDB : l'optimisation d'images Vercel est facturée à l'usage. Comme TMDB sert déjà des tailles prédéfinies (w185, w342, w500…), envisager `unoptimized` pour ces images et choisir la bonne taille TMDB. À trancher en U15.
   - CSP à nonce : suivre la page « Content Security Policy » de la doc de la version installée ; une CSP à nonce rend les pages dynamiques.
 
+## Motion et Embla (animations et carrousels, AD-36)
+
+- Installés le 16 octobre 2026 : `motion` **13.5.1** (la 14 venait de sortir : non retenue), `embla-carousel-react` / `-autoplay` / `-fade` **8.6.0**.
+- Motion : importer depuis `motion/react`. On utilise `LazyMotion features={domAnimation} strict` (dans `MotionProvider`) : seuls les composants `m.*` sont autorisés, `motion.*` lèverait une erreur. `MotionConfig reducedMotion="user"`. API vérifiées dans les types installés : `AnimatePresence`, `useReducedMotion`, `whileInView` + `viewport`, variantes, `layout`.
+- Embla : `useEmblaCarousel(options, plugins)` renvoie `[ref, api]` ; l'événement `init` est déjà passé quand `api` arrive (lire l'état à l'image suivante). Greffon `Autoplay` : ne jamais appeler `play()` / `stop()` avant que `api` existe (erreur « reading 'internalEngine' », rencontrée). `Fade()` pour la vedette ; les diapositives restent empilées, donc monter les images au fur et à mesure (sinon toutes se chargent).
+- Les composants clients peuvent importer des **types** depuis `src/server/**` (`import type`, effacé à la compilation), jamais des valeurs.
+
 ## React 19
 
 - Doc : https://react.dev
@@ -165,6 +172,7 @@ Plans d'hébergement : **Vercel Pro** obligatoire (le plan Hobby est réservé �
 - Doc : https://developer.themoviedb.org/docs — référence : https://developer.themoviedb.org/reference/intro/getting-started
 - Usage : `search/movie`, `search/tv`, `movie/{id}`, `tv/{id}` avec `append_to_response=credits,videos,similar,recommendations`, `configuration` pour les URL d'images. Toujours `language=fr-FR`, repli sur `en-US` si synopsis vide.
 - Où regarder : `movie/{id}/watch/providers` et `tv/{id}/watch/providers` (données fournies par JustWatch, **attribution JustWatch obligatoire**). Licence commerciale TMDB requise (D2).
+- Accueil (16 octobre 2026) : `trending/{movie|tv}/week`, `movie/top_rated` (`region=FR`), `genre/movie/list`, en `fr-FR`. Éléments validés un par un (`toShowcaseTitle`), contenus `adult` écartés. Page d'accueil en ISR 6 h via `getStaticPageCatalog()` (sans Redis). Images : affiches `w342`, images larges `w1280` (vedette) et `w780` (genres), servies sans l'optimiseur Vercel.
 - Installé en U16 (`src/server/catalog/watch/`) : une requête renvoie tous les pays (`results.{FR,BE,…}` avec `link`, `flatrate`, `free`, `ads`, `rent`, `buy`) ; **un seul lien par pays** (page récapitulative TMDB avec les liens JustWatch par service), pas de lien direct par service. 89 pays couverts pour *Matrix* ; **le Togo n'est pas couvert**. Cache Redis 12 h. Pays du visiteur : en-tête Vercel `x-vercel-ip-country`.
 - Mention obligatoire et logo : https://www.themoviedb.org/about/logos-attribution
 - Respecter les limites de débit et mettre en cache selon leurs conditions.

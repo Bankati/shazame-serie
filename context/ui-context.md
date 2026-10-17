@@ -2,7 +2,9 @@
 
 ## Theme
 
-Thème **clair uniquement en V1** (le thème sombre est une préférence prévue en V2 : les tokens sont structurés pour l'ajouter sans toucher aux composants). Le produit s'adresse à des cinéphiles : ce sont les **affiches** qui apportent la couleur. L'interface reste sobre, blanche et dense en information, pour que les visuels des films ressortent.
+**Mise à jour du 16 octobre 2026 (AD-35, maquette du fondateur de type plateforme de streaming) : thème sombre unique**, classe `.dark` posée sur `<html>`. Les valeurs à jour des jetons sont dans `src/app/globals.css` (contrastes mesurés en commentaire) ; le tableau « Colors » ci-dessous garde les noms et les usages, ses valeurs hexadécimales claires sont historiques. Nouveau jeton `--link` (`text-link`, `#60A5FA`) : tout lien texte l'utilise, `text-primary` (bleu des boutons, 3,7:1 sur le fond) n'est plus utilisé pour du texte. Le produit s'adresse à des cinéphiles : ce sont les **affiches** qui apportent la couleur.
+
+Texte d'origine (U02, remplacé) : thème clair uniquement en V1, interface sobre et blanche.
 
 Direction : une salle de projection en plein jour. Fond clair et neutre, typographie de générique de film (titres condensés, forts), et un seul élément mémorable : **la pellicule** — la bande d'images extraites du clip qui s'affiche pendant l'analyse, sur fond noir de marque, avec perforations, chaque image validée ou écartée sous les yeux de l'utilisateur. Toute l'audace visuelle est concentrée là ; le reste est calme et discipliné.
 
@@ -218,9 +220,10 @@ lucide-react, icônes au trait uniquement. Tailles : `size-4` en ligne, `size-5`
 
 ## Motion
 
-- Un seul moment orchestré : l'apparition des images dans la pellicule puis la révélation du résultat.
-- Ailleurs : transitions courtes (150 ms) en réponse à une action (ouverture de menu, ajout à la liste).
-- `prefers-reduced-motion` : toutes les animations sont remplacées par un affichage immédiat.
+- **Mise à jour du 16 octobre 2026 (AD-36, demande du fondateur : « beaucoup d'animations »)** : bibliothèque Motion (`motion/react`, composants `m.*` sous `LazyMotion` + `domAnimation`, `MotionProvider` dans le layout) et carrousels Embla. Accueil : vedette en fondu enchaîné avec zoom lent (`animate-ken-burns`), textes en cascade, rangées d'affiches qui apparaissent en cascade et se soulèvent au survol, genres avec recomposition animée, sections révélées au défilement (`Reveal`).
+- Règle de performance : toute animation décorative continue se met en pause pendant l'analyse d'un clip (`data-pause-motion` posé par `IdentifyPanel`), sinon l'extraction des images ralentit fortement.
+- Moment orchestré du produit : l'apparition des images dans la pellicule puis la révélation du résultat (fenêtre).
+- `prefers-reduced-motion` : toutes les animations sont remplacées par un affichage immédiat (`MotionConfig reducedMotion="user"`, règle CSS globale, carrousel de la vedette sans défilement automatique). Le défilement automatique a un bouton pause.
 
 ## Accessibility (WCAG 2.1 AA)
 

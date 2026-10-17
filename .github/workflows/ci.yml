@@ -59,9 +59,10 @@ jobs:
 
       - run: npm ci
 
-      # Build sans aucune variable : serveur, IA et TMDB sont simulés par les tests (aucun service réel appelé).
+      # Build avec le faux TMDB (scripts/tmdb-mock.mjs) : l'accueil est généré au build. IA et quota sont
+      # simulés par les tests ; aucun service réel appelé.
       - name: Build
-        run: npm run build
+        run: npm run build:e2e
 
       # Chrome est préinstallé sur les runners Ubuntu (channel « chrome » dans playwright.config.ts).
       - name: Playwright
@@ -113,11 +114,9 @@ jobs:
       - name: Migrations
         run: npm run db:migrate
 
-      # Les variables NEXT_PUBLIC_* sont figées au build : build avec la pile locale.
+      # Les variables NEXT_PUBLIC_* sont figées au build : build avec la pile locale (et le faux TMDB).
       - name: Build
-        run: npm run build
-        env:
-          NEXT_TELEMETRY_DISABLED: 1
+        run: npm run build:e2e
 
       - name: Playwright (compte)
         run: npx playwright test tests/e2e/auth.spec.ts

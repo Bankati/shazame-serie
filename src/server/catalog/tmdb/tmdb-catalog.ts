@@ -440,14 +440,19 @@ function token(): string {
   return env.TMDB_API_TOKEN;
 }
 
+/** TMDB est-il configuré (jeton présent) ? Absent en CI et en local sans clé. */
+export function isCatalogConfigured(): boolean {
+  return Boolean(env.TMDB_API_TOKEN);
+}
+
 /** Catalogue applicatif (cache Redis) ; lève si TMDB n'est pas configuré. */
 export function getCatalog(): TmdbCatalog {
-  catalog ??= new TmdbCatalog(createTmdbClient({ token: token() }));
+  catalog ??= new TmdbCatalog(createTmdbClient({ token: token(), baseUrl: env.TMDB_API_BASE_URL }));
   return catalog;
 }
 
 /** Catalogue des pages mises en cache par Next (fiches, sitemap) : sans Redis, Next met en cache lui-même. */
 export function getStaticPageCatalog(): TmdbCatalog {
-  staticCatalog ??= new TmdbCatalog(createTmdbClient({ token: token() }), { redisCache: false });
+  staticCatalog ??= new TmdbCatalog(createTmdbClient({ token: token(), baseUrl: env.TMDB_API_BASE_URL }), { redisCache: false });
   return staticCatalog;
 }

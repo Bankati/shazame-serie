@@ -23,6 +23,8 @@ const envSchema = z.object({
   DATABASE_URL: optional(z.url({ protocol: /^postgres(ql)?$/ })),
   // TMDB (U08) : jeton de lecture « API Read Access Token » (JWT), jamais la clé courte v3.
   TMDB_API_TOKEN: optional(z.string().regex(/^eyJ[\w-]+\.[\w-]+\.[\w-]+$/)),
+  // Tests navigateur uniquement : adresse du faux serveur TMDB (scripts/tmdb-mock.mjs). Jamais en production.
+  TMDB_API_BASE_URL: optional(z.url({ protocol: /^https?$/ })),
   // Upstash Redis (U08 cache TMDB, U11 quotas). Région eu-west-1, à côté de la base.
   UPSTASH_REDIS_REST_URL: optional(httpsUrl()),
   UPSTASH_REDIS_REST_TOKEN: optional(z.string().min(20)),
@@ -64,6 +66,10 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
   const missing = production ? REQUIRED_IN_PRODUCTION.filter((key) => parsed.data[key] === undefined) : [];
   if (missing.length > 0) {
     throw invalidEnv(missing);
+  }
+  // Le faux serveur TMDB ne doit jamais remplacer l'API réelle en production.
+  if (production && parsed.data.TMDB_API_BASE_URL !== undefined) {
+    throw invalidEnv(["TMDB_API_BASE_URL"]);
   }
 
   return parsed.data;

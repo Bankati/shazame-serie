@@ -33,6 +33,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         >
           {LAYOUT_TEXT.skipToContent}
         </a>
+        {/* Sans JavaScript, les sections révélées au défilement (Reveal) restent visibles. */}
+        <noscript>
+          <style>{"[data-reveal]{opacity:1!important;transform:none!important}"}</style>
+        </noscript>
         <MotionProvider>
           <SiteHeader />
           <main id="contenu" className="flex-1">

@@ -59,8 +59,18 @@ export function buildShowcase(sources: ShowcaseSources): HomeShowcase {
   return { featured, trendingMovies, trendingShows, topRated, genres, explore };
 }
 
-/** Contenu de l'accueil, ou null si TMDB est indisponible (l'accueil garde alors son hero simple). */
-export async function loadHomeShowcase(catalog: () => CatalogProvider): Promise<HomeShowcase | null> {
+/**
+ * Contenu de l'accueil. TMDB non configuré (CI, local sans jeton) : null, l'accueil garde son hero simple.
+ * TMDB configuré mais en panne : l'erreur remonte. Pendant une régénération ISR, Next conserve alors la
+ * dernière page réussie au lieu d'enregistrer une page sans vedette pour 6 heures.
+ */
+export async function loadHomeShowcase(
+  catalog: () => CatalogProvider,
+  options: { configured: boolean },
+): Promise<HomeShowcase | null> {
+  if (!options.configured) {
+    return null;
+  }
   try {
     const provider = catalog();
     const [trendingMovies, trendingShows, topRated, genres] = await Promise.all([
@@ -71,9 +81,9 @@ export async function loadHomeShowcase(catalog: () => CatalogProvider): Promise<
     ]);
     const showcase = buildShowcase({ trendingMovies, trendingShows, topRated, genres });
     return showcase.featured.length > 0 ? showcase : null;
-  } catch {
+  } catch (error) {
     log.warn("home.showcase_unavailable");
-    return null;
+    throw error;
   }
 }
 

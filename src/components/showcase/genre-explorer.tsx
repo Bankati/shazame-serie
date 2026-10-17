@@ -70,8 +70,11 @@ export function GenreExplorer({ genres, titles }: { genres: readonly GenreTile[]
         })}
       </ul>
 
-      <div aria-live="polite" className="flex flex-col gap-3">
-        <h3 className="text-lg font-semibold text-foreground">{text.results(current.name)}</h3>
+      <div className="flex flex-col gap-3">
+        {/* Seul le titre est annoncé au changement de genre, pas les douze affiches. */}
+        <h3 aria-live="polite" className="text-lg font-semibold text-foreground">
+          {text.results(current.name)}
+        </h3>
         <m.ul layout className="flex flex-wrap gap-4">
           <AnimatePresence mode="popLayout" initial={false}>
             {results.map((title) => (

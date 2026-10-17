@@ -35,6 +35,11 @@ describe("parseEnv", () => {
     );
   });
 
+  it("refuse le faux serveur TMDB en production", () => {
+    expect(() => parseEnv({ VERCEL_ENV: "production", ...COMPLETE, TMDB_API_BASE_URL: "http://127.0.0.1:3299/3" })).toThrow(/TMDB_API_BASE_URL/);
+    expect(parseEnv({ TMDB_API_BASE_URL: "http://127.0.0.1:3299/3" }).TMDB_API_BASE_URL).toBe("http://127.0.0.1:3299/3");
+  });
+
   it("exige les variables des services externes en production", () => {
     expect(() => parseEnv({ VERCEL_ENV: "production" })).toThrow(
       /NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN, CRON_SECRET, DATABASE_URL, TMDB_API_TOKEN, UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN, OPENAI_API_KEY, VISITOR_COOKIE_SECRET, NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY/,

@@ -68,13 +68,19 @@ export function FeaturedHero({ titles, children }: { titles: readonly ShowcaseTi
     const section = sectionRef.current;
     // Le greffon de lecture automatique n'existe qu'une fois Embla initialisé (api disponible).
     if (!section || !api || reduceMotion) return;
+    // On n'agit que quand l'état change : rappeler play() à chaque mutation relancerait le défilement
+    // pendant un survol (stopOnMouseEnter) et décalerait la minuterie.
+    let stopped: boolean | null = null;
     const sync = () => {
-      const busy = section.querySelector(`[${PAUSE_ATTRIBUTE}]`) !== null;
-      if (busy || paused) autoplay.stop();
+      const shouldStop = paused || section.querySelector(`[${PAUSE_ATTRIBUTE}]`) !== null;
+      if (shouldStop === stopped) return;
+      stopped = shouldStop;
+      if (shouldStop) autoplay.stop();
       else autoplay.play();
     };
     const observer = new MutationObserver(sync);
-    observer.observe(section, { subtree: true, attributes: true, attributeFilter: [PAUSE_ATTRIBUTE], childList: true });
+    // L'attribut apparaît ou disparaît sur le panneau d'identification : seuls les attributs sont observés.
+    observer.observe(section, { subtree: true, attributes: true, attributeFilter: [PAUSE_ATTRIBUTE] });
     sync();
     return () => observer.disconnect();
   }, [api, autoplay, paused, reduceMotion]);

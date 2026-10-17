@@ -10,6 +10,7 @@ import { getCatalog } from "@/server/catalog/tmdb/tmdb-catalog";
 import { getDb } from "@/server/db/client";
 import { jsonError, jsonOk } from "@/server/http/respond";
 import { checkIdentifyRateLimit, clientIp } from "@/server/http/rate-limit";
+import { isSameOrigin } from "@/server/http/same-origin";
 import { log } from "@/server/log";
 import { createQuotaService, type QuotaIdentity, type QuotaService } from "@/server/quota/quota";
 import { createMemoryQuotaStore, createRedisQuotaStore } from "@/server/quota/quota-store";
@@ -64,6 +65,11 @@ async function visitorIdentity(): Promise<QuotaIdentity> {
 }
 
 export async function handleIdentifyRequest(request: Request): Promise<Response> {
+  // Protection CSRF (code-standards.md) : seul le site lui-même peut envoyer des images à identifier.
+  if (!isSameOrigin(request)) {
+    return jsonError("FORBIDDEN");
+  }
+
   // 6. Limitation de débit par IP.
   const rate = await checkIdentifyRateLimit(clientIp(request.headers));
   if (!rate.ok) {

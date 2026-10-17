@@ -76,11 +76,19 @@ describe("toShowcaseTitle", () => {
 });
 
 describe("loadHomeShowcase", () => {
-  it("TMDB indisponible : null (l'accueil garde son hero simple)", async () => {
+  const down = async () => {
+    throw new Error("TMDB en panne");
+  };
+  const failing = (() => ({ getTrending: down, getTopRatedMovies: down, getGenres: down })) as unknown as () => CatalogProvider;
+
+  it("TMDB non configuré : null sans appel (l'accueil garde son hero simple)", async () => {
+    const catalog = vi.fn(failing);
+    expect(await loadHomeShowcase(catalog, { configured: false })).toBeNull();
+    expect(catalog).not.toHaveBeenCalled();
+  });
+
+  it("TMDB configuré mais en panne : l'erreur remonte (Next garde la dernière page réussie)", async () => {
     vi.spyOn(console, "warn").mockImplementation(() => {});
-    const failing = () => {
-      throw new Error("pas de jeton");
-    };
-    expect(await loadHomeShowcase(failing as () => CatalogProvider)).toBeNull();
+    await expect(loadHomeShowcase(failing, { configured: true })).rejects.toThrow("TMDB en panne");
   });
 });

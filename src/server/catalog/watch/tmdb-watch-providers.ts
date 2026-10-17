@@ -62,6 +62,6 @@ export function getWatchProvider(): TmdbWatchProviders {
   if (!env.TMDB_API_TOKEN) {
     throw new CatalogError("unavailable");
   }
-  provider ??= new TmdbWatchProviders(createTmdbClient({ token: env.TMDB_API_TOKEN }));
+  provider ??= new TmdbWatchProviders(createTmdbClient({ token: env.TMDB_API_TOKEN, baseUrl: env.TMDB_API_BASE_URL }));
   return provider;
 }

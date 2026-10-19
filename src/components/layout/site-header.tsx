@@ -1,25 +1,27 @@
 import { Button } from "@/components/ui/button";
 import { LAYOUT_TEXT } from "@/content/fr/layout";
 
+import { AccountMenu } from "./account-menu";
 import { Logo } from "./logo";
 import { MobileNav } from "./mobile-nav";
+import { QuotaCounter } from "./quota-counter";
 
-// Barre supérieure fine (ui-context.md) : logo et ancres de l'accueil. Le quota (U11),
-// les liens Liste / Historique (U18, U19) et le compte (U04) viendront s'ajouter ici.
+// Barre supérieure fine (ui-context.md) : logo, ancres de l'accueil et compteur de quota (U12).
+// Compte (U04) : chargé côté navigateur pour garder les pages statiques. Liste / Historique : U18, U19.
 export function SiteHeader() {
   const { nav } = LAYOUT_TEXT;
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-card">
+    <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
         <Logo />
-        <nav aria-label={nav.label} className="hidden lg:block">
+        <nav aria-label={nav.label} className="hidden xl:block">
           <ul className="flex items-center gap-1">
             {nav.links.map((link) => (
               <li key={link.href}>
                 <a
                   href={link.href}
-                  className="flex min-h-11 items-center rounded-md px-3 text-sm font-medium text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+                  className="flex min-h-11 items-center rounded-md px-3 text-sm font-medium whitespace-nowrap text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
                 >
                   {link.label}
                 </a>
@@ -27,10 +29,12 @@ export function SiteHeader() {
             ))}
           </ul>
         </nav>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          <QuotaCounter />
           <Button asChild className="hidden h-11 px-5 text-sm hover:bg-primary-hover lg:inline-flex">
             <a href={nav.cta.href}>{nav.cta.label}</a>
           </Button>
+          <AccountMenu />
           <MobileNav />
         </div>
       </div>

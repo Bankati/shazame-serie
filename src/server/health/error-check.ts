@@ -1,18 +1,11 @@
 import "server-only";
 
-import { createHash, timingSafeEqual } from "node:crypto";
+import { isAuthorizedCron } from "@/server/http/cron-auth";
 
-// Vérifie l'en-tête `Authorization: Bearer <CRON_SECRET>` en temps constant.
+// Vérifie l'en-tête `Authorization: Bearer <CRON_SECRET>` en temps constant (même règle que les crons).
 // Sans secret configuré, la route d'erreur volontaire reste fermée.
 export function isAuthorizedErrorCheck(authorization: string | null, secret: string | undefined): boolean {
-  if (!secret || !authorization) {
-    return false;
-  }
-  return timingSafeEqual(digest(authorization), digest(`Bearer ${secret}`));
-}
-
-function digest(value: string): Buffer {
-  return createHash("sha256").update(value).digest();
+  return isAuthorizedCron(authorization, secret);
 }
 
 export class ErrorCheckError extends Error {

@@ -39,7 +39,7 @@ export function Features() {
             <p>{features.watch.description}</p>
           </li>
           <li className="flex flex-col gap-3 rounded-xl border border-border bg-background p-6 md:p-8">
-            <Info className="size-6 text-primary" aria-hidden="true" />
+            <Info className="size-6 text-link" aria-hidden="true" />
             <h3 className="text-xl font-semibold">{features.confidence.title}</h3>
             <p className="text-muted-foreground">{features.confidence.description}</p>
             <span className="mt-auto inline-flex w-fit items-center gap-1.5 rounded-sm bg-brand-subtle px-2.5 py-1 text-sm font-medium text-brand-subtle-foreground">
@@ -49,7 +49,7 @@ export function Features() {
           </li>
           <li className="flex flex-col gap-6 rounded-xl border border-border bg-background p-6 md:col-span-2 md:flex-row md:items-center md:p-8">
             <div className="flex flex-1 flex-col gap-3">
-              <ListPlus className="size-6 text-primary" aria-hidden="true" />
+              <ListPlus className="size-6 text-link" aria-hidden="true" />
               <h3 className="text-xl font-semibold">{features.watchlist.title}</h3>
               <p className="text-muted-foreground">{features.watchlist.description}</p>
             </div>

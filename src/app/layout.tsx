@@ -3,9 +3,11 @@ import { Archivo, Public_Sans } from "next/font/google";
 
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
+import { MotionProvider } from "@/components/showcase/motion-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { APP_TEXT } from "@/content/fr/app";
 import { LAYOUT_TEXT } from "@/content/fr/layout";
+import { siteUrl } from "@/lib/site-url";
 import { cn } from "@/lib/utils";
 
 import "./globals.css";
@@ -15,13 +17,15 @@ const archivo = Archivo({ subsets: ["latin"], axes: ["wdth"], display: "swap", v
 const publicSans = Public_Sans({ subsets: ["latin"], display: "swap", variable: "--font-public-sans" });
 
 export const metadata: Metadata = {
-  title: APP_TEXT.name,
+  // Base des adresses relatives (URL canoniques, Open Graph des fiches).
+  metadataBase: new URL(siteUrl()),
+  title: { default: APP_TEXT.name, template: `%s | ${APP_TEXT.name}` },
   description: APP_TEXT.tagline,
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="fr" className={cn(archivo.variable, publicSans.variable)}>
+    <html lang="fr" className={cn("dark", archivo.variable, publicSans.variable)}>
       <body className="flex min-h-dvh flex-col">
         <a
           href="#contenu"
@@ -29,13 +33,19 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         >
           {LAYOUT_TEXT.skipToContent}
         </a>
-        <SiteHeader />
-        <main id="contenu" className="flex-1">
-          {children}
-        </main>
-        <SiteFooter />
-        {/* Thème clair imposé (AD-08) : le Toaster shadcn suivrait sinon le thème du système. */}
-        <Toaster theme="light" />
+        {/* Sans JavaScript, les sections révélées au défilement (Reveal) restent visibles. */}
+        <noscript>
+          <style>{"[data-reveal]{opacity:1!important;transform:none!important}"}</style>
+        </noscript>
+        <MotionProvider>
+          <SiteHeader />
+          <main id="contenu" className="flex-1">
+            {children}
+          </main>
+          <SiteFooter />
+        </MotionProvider>
+        {/* Thème sombre imposé (AD-35) : le Toaster shadcn suivrait sinon le thème du système. */}
+        <Toaster theme="dark" />
       </body>
     </html>
   );

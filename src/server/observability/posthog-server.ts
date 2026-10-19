@@ -54,3 +54,19 @@ export async function captureServerError(error: unknown, context: ServerErrorCon
     log.warn("observability.posthog_send_failed");
   }
 }
+
+/**
+ * Événement serveur sans personne (distinctId « system »), par exemple une alerte admin.
+ * Propriétés choisies par le code uniquement (invariant 9). Ne lève jamais.
+ */
+export async function captureSystemEvent(event: string, properties: Record<string, string | number | boolean>): Promise<void> {
+  const posthog = getClient();
+  if (!posthog) {
+    return;
+  }
+  try {
+    await posthog.captureImmediate({ distinctId: "system", event, properties: { ...properties, $process_person_profile: false } });
+  } catch {
+    log.warn("observability.posthog_send_failed");
+  }
+}

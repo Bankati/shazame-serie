@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { nextParisMidnight, parisDay } from "./paris-time";
+import { formatParisDateTime, nextParisMidnight, parisDay } from "./paris-time";
 
 describe("parisDay", () => {
   it.each([
@@ -44,5 +44,12 @@ describe("nextParisMidnight", () => {
       expect(parisDay(midnight)).not.toBe(parisDay(instant));
       expect(parisDay(new Date(midnight.getTime() - 1))).toBe(parisDay(instant));
     }
+  });
+});
+
+describe("formatParisDateTime", () => {
+  it("affiche l'heure de Paris (été +2 h, hiver +1 h), pas celle du serveur", () => {
+    expect(formatParisDateTime(new Date("2026-07-14T22:30:00Z"))).toBe("15 juillet 2026 à 00:30");
+    expect(formatParisDateTime(new Date("2026-12-31T23:15:00Z"))).toBe("1 janvier 2027 à 00:15");
   });
 });

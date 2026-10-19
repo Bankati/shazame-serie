@@ -22,7 +22,8 @@ import {
 // Les images partent en base64 et ne sont pas conservées par OpenAI (`store: false`, RG7).
 
 const ATTEMPT_TIMEOUT_MS = 12_000;
-const MAX_OUTPUT_TOKENS = 800;
+/** Plafond de jetons de sortie d'une tentative (sert aussi au coût maximal estimé, U14). */
+export const MAX_OUTPUT_TOKENS = 800;
 const PROVIDER = "openai";
 
 type ImageDetail = "low" | "high" | "auto" | "original";

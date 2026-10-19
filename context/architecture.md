@@ -9,7 +9,7 @@
 | --- | --- | --- |
 | Framework | Next.js 16 (App Router) + TypeScript strict, Node.js 24 LTS (AD-01, AD-02 : le CDC cite Next 14 et Node 20, hors support en octobre 2026) | Pages (SSR pour les fiches titres), routes API, une seule base de code |
 | UI | Tailwind CSS 4 + shadcn/ui + lucide-react | Composants accessibles, tokens de design en variables CSS |
-| Formulaires | react-hook-form + zod | Validation partagée client/serveur |
+| Formulaires | zod (schémas partagés) + contraintes HTML ; react-hook-form si un formulaire complexe l'exige (AD-34) | Validation partagée client/serveur |
 | Auth | Supabase Auth via `@supabase/ssr` (email + Google) | Sessions par cookies HttpOnly, confirmation d'email, reset |
 | Database | PostgreSQL 15+ géré (Supabase) + Drizzle ORM | Données applicatives, migrations versionnées |
 | Cache / quotas | Upstash Redis (REST) + `@upstash/ratelimit` | Compteurs de quota et de dépense IA, limitation de débit, raccourci du cache |
@@ -65,7 +65,7 @@ src/
 ├── lib/                      # Utilitaires purs (dates Europe/Paris, slugs, formatage)
 ├── instrumentation.ts        # charge env.ts (refus de démarrer si une variable manque) ; onRequestError → PostHog
 ├── instrumentation-client.ts # déclenche le chargement différé de PostHog (client/observability)
-└── proxy.ts                  # (ex-middleware, à vérifier selon la version) rafraîchissement de session
+└── proxy.ts                  # ex-middleware (Next 16) : rafraîchissement de la session Supabase (U04)
 eval/                         # Harnais du jeu de test : manifeste des 100 clips + script de mesure
 drizzle/                      # Migrations SQL générées — ne jamais éditer une migration appliquée
 context/plans/                # Plans validés par /architect, un fichier par unité (U01.md…)
@@ -100,6 +100,8 @@ Navigateur                                   Serveur (POST /api/identify)
 ```
 
 Choix assumés de ce flux **(proposé, AD-12 et AD-13)** :
+
+- Garde de dépense (U14, AD-32) : placée dans la couche IA (`SpendGuardedVisionProvider`), elle enveloppe le fournisseur de vision ; la réservation de quota (12) précède donc la garde (11), et un refus libère la réservation. Résultat identique à l'ordre ci-dessus, mais aucun appel au modèle ne peut contourner le plafond.
 
 - Les empreintes sont calculées **par le serveur** à partir des images reçues. Une empreinte fournie par le client pourrait empoisonner le cache (images du film A envoyées avec l'empreinte d'un clip viral B). Le navigateur calcule ses propres hash uniquement pour écarter les doublons avant l'envoi.
 - Un utilisateur dont le quota est épuisé reçoit `QUOTA_EXCEEDED` même si le clip est en cache : le paywall reste prévisible. Le cache continue de répondre quand l'IA est en pause (RG5).
@@ -142,7 +144,7 @@ Signalement : les images ne sont jamais écrites sur disque ou en stockage penda
 - Un compte dont l'email n'est pas confirmé est traité comme un visiteur pour le quota (proposé, Q14).
 - Visiteurs : cookie signé `visitor_id` (HttpOnly, 1 an) + adresse IP pour la limitation de débit. Sert uniquement au quota RG2.
 - Rôles : `user`, `admin` dans `profiles.role`, **toujours relu en base côté serveur**. Pas d'interface de promotion en V1 : un admin est désigné par migration de seed ou SQL manuel.
-- Propriété : chaque ressource utilisateur porte `user_id` ; toute requête filtre par l'utilisateur de la session vérifiée (`auth.getUser()`).
+- Propriété : chaque ressource utilisateur porte `user_id` ; toute requête filtre par l'utilisateur de la session vérifiée (`auth.getClaims()`, signature du jeton ; `auth.getUser()` pour les opérations sensibles, AD-34).
 - L'application accède à la base **uniquement côté serveur** via Drizzle. RLS activée sur toutes les tables, sans politique pour `anon` et `authenticated`, **et** aucun droit accordé à ces rôles sur le schéma `public`, y compris pour les tables futures (migration `0002`, AD-24) : la clé publique Supabase n'ouvre aucune table (testé par `npm run test:db`).
 - Schéma : `src/server/db/schema/` ; migrations : `drizzle/` (générées par `drizzle-kit`, plus des migrations SQL personnalisées pour les buckets, les réglages initiaux et les droits). Pile locale : Supabase CLI (`npm run db:start`), configurée dans `supabase/config.toml`.
 - Premium (`server/billing/getEntitlement()`) = `status = 'active'`, ou `status in ('past_due','canceled')` et `current_period_end > now()`. Jamais stocké en double, jamais lu depuis le client.
@@ -166,6 +168,7 @@ Chaque appel externe : délai maximal, journalisation sans donnée personnelle, 
 - `development` (local, Supabase dans Docker), `preview` (préproduction), `production`. **Un seul projet Supabase en ligne** (`shazam_serie`) sert à la préproduction et à la production (AD-27) : la préproduction travaille sur les données réelles, et seules les migrations fusionnées dans `main` y sont appliquées. Plan payant avant le lancement (le plan gratuit met les projets en pause après une période d'inactivité). Fonctions Vercel en région `dub1` (Dublin, `vercel.json`), à côté de la base Supabase `eu-west-1`. Chaque requête applicative passe par `withQueryTimeout` (délai de 5 s).
 - Variables serveur : `DATABASE_URL`, `SUPABASE_SECRET_KEY` (clé « secret » des nouvelles clés Supabase, remplace `service_role`), `OPENAI_API_KEY`, `OPENAI_VISION_MODEL`, `TMDB_API_TOKEN`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `BILLING_*`, `RESEND_API_KEY`, `CRON_SECRET`, `VISITOR_COOKIE_SECRET`, `ADMIN_ALERT_EMAIL`.
 - Variables publiques (`NEXT_PUBLIC_*`) : URL du site, `NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (clé « publishable », ex-« anon »), `NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN` (clé de projet PostHog, publique par nature) et `NEXT_PUBLIC_POSTHOG_HOST`. Rien d'autre.
+- Fiches titre : pages ISR (générées à la première visite, revalidées chaque jour), sans Redis (`getStaticPageCatalog`, voir `library-docs.md`). Adresse publique : `NEXT_PUBLIC_SITE_URL` (domaine définitif, D8), sinon l'adresse de production Vercel.
 - `src/server/env.ts` valide les variables au démarrage : l'application refuse de démarrer si l'une manque. Les variables sont ajoutées au fil des unités ; celles des services externes sont obligatoires quand `VERCEL_ENV` vaut `production`, facultatives en preview, en local et en CI (AD-28 ; chaque unité qui ajoute une variable précise si la preview l'exige). Liste à jour : `.env.example`.
 - Santé : `GET /api/health` (sonde et test de fumée), `GET /api/health/error-check` (erreur volontaire, `Authorization: Bearer <CRON_SECRET>`). Réglages Vercel/PostHog/GitHub : `docs/setup-deploiement.md`.
 

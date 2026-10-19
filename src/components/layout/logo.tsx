@@ -26,7 +26,7 @@ export function Logo({ tone = "default", className }: LogoProps) {
       </span>
       <span
         className={cn(
-          "font-display text-xl font-bold",
+          "font-display text-xl font-bold whitespace-nowrap",
           tone === "inverse" ? "text-inverse-foreground" : "text-foreground",
         )}
       >

@@ -30,6 +30,60 @@ export type CatalogTitleDetails = {
   voteAverage: number;
 };
 
+/** Raison affichée d'une suggestion (CDC 12.6, « explication de la suggestion »). */
+export type SimilarReason = { kind: "director"; name: string } | { kind: "genre"; name: string } | { kind: "related" };
+
+export type SimilarTitle = {
+  tmdbId: number;
+  mediaType: MediaType;
+  title: string;
+  year: number | null;
+  posterPath: string | null;
+  reason: SimilarReason;
+};
+
+export type CastMember = { id: number; name: string; character: string | null; profilePath: string | null };
+
+/** Tout ce qu'affiche la fiche titre (U15). */
+export type TitlePage = {
+  tmdbId: number;
+  mediaType: MediaType;
+  title: string;
+  originalTitle: string;
+  year: number | null;
+  tagline: string | null;
+  overview: string;
+  genres: string[];
+  runtimeMinutes: number | null;
+  seasons: number | null;
+  voteAverage: number;
+  voteCount: number;
+  posterPath: string | null;
+  backdropPath: string | null;
+  /** Réalisation (film) ou création (série). */
+  directors: string[];
+  writers: string[];
+  cast: CastMember[];
+  /** Identifiant YouTube de la bande-annonce, ou null. */
+  trailerKey: string | null;
+  similar: SimilarTitle[];
+};
+
+/** Titre d'une rangée de l'accueil (tendances, mieux notés). */
+export type ShowcaseTitle = {
+  tmdbId: number;
+  mediaType: MediaType;
+  title: string;
+  year: number | null;
+  overview: string;
+  posterPath: string | null;
+  backdropPath: string | null;
+  voteAverage: number;
+  genreIds: number[];
+};
+
+export type CatalogGenre = { id: number; name: string };
+
 export type CatalogImageConfig = {
   secureBaseUrl: string;
   posterSizes: string[];
@@ -40,6 +94,12 @@ export interface CatalogProvider {
   searchTitles(query: string, language: CatalogLanguage): Promise<CatalogCandidate[]>;
   getTitleDetails(tmdbId: number, mediaType: MediaType): Promise<CatalogTitleDetails | null>;
   getImageConfig(): Promise<CatalogImageConfig>;
+  getTitlePage(tmdbId: number, mediaType: MediaType): Promise<TitlePage | null>;
+  /** Tendances de la semaine (accueil). */
+  getTrending(mediaType: MediaType): Promise<ShowcaseTitle[]>;
+  /** Films les mieux notés (accueil). */
+  getTopRatedMovies(): Promise<ShowcaseTitle[]>;
+  getGenres(mediaType: MediaType): Promise<CatalogGenre[]>;
 }
 
 /** Échec du catalogue (indisponible, réponse invalide) : jamais le détail technique côté utilisateur. */

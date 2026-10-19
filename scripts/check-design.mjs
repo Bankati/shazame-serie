@@ -12,7 +12,8 @@ const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const SRC = join(ROOT, "src");
 const EXCLUDED_DIRS = [join(SRC, "components", "ui")];
 const EXTENSIONS = [".ts", ".tsx", ".css"];
-const ALLOWED_FILES = [join(SRC, "app", "globals.css")];
+// globals.css définit les jetons ; og-palette.ts les recopie pour les images d'aperçu (satori ne lit pas le CSS).
+const ALLOWED_FILES = [join(SRC, "app", "globals.css"), join(SRC, "server", "share", "og-palette.ts")];
 
 function* walk(dir) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {

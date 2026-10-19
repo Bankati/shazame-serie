@@ -534,3 +534,20 @@ Dernière mise à jour : 20 octobre 2026
 | Accent | photo en fondu à chaque changement (Motion) ; confirmations par `toast` |
 
 **Notes de pattern :** champ de fichier masqué (`sr-only`, hors tabulation) déclenché par le bouton « Choisir / Changer la photo » ; taille vérifiée dans le navigateur avant l'envoi (4 Mo). La même photo (lien signé 1 h) s'affiche dans l'en-tête (`AccountBadge`, `size-9 rounded-full object-cover`). Le formulaire du nom réutilise `FormField`, `FormMessage`, `SubmitButton` des pages de compte.
+
+### ShareButton et carte d'aperçu (partage)
+
+Fichiers : `src/components/share/share-button.tsx`, `src/server/share/title-card.tsx`, `src/app/titre/[kind]/[idSlug]/opengraph-image.tsx` (U19)
+Dernière mise à jour : 20 octobre 2026
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | bouton `Button variant="outline"` ; sur l'en-tête de fiche `bg-transparent` (`tone="inverse"`) |
+| Bordure | sur fond sombre `border-inverse-foreground/40` |
+| Radius | bouton `rounded-lg` (preset) |
+| Texte principal | `text-base`, icône `Share2` `size-5` |
+| Espacement | `h-11 gap-2 px-4` ; à côté de « Ajouter à ma liste » (`flex flex-wrap gap-2`) |
+| Ombre | none (carte d'aperçu : ombre de l'affiche, rendue par l'image) |
+| Accent | confirmation « Lien copié » par `toast.success` |
+
+**Notes de pattern :** carte d'aperçu 1200 × 630 : image large TMDB sous un voile (dégradé `inverse` → transparent), affiche 300 × 450 arrondie, marque, titre Archivo 800 (76 px, 60 px au-delà de 30 caractères), méta en vert `brandStrong`, synopsis coupé à 150 caractères, pied « Identifié avec SHAZAM SERIE · Données TMDB ». Couleurs : `src/server/share/og-palette.ts` (copie des jetons, à tenir à jour).

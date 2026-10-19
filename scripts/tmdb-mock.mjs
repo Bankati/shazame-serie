@@ -53,7 +53,28 @@ const GENRES = [
   { id: 53, name: "Thriller" },
 ];
 
+// Fiche complète d'un titre fictif (U19 : page publique et carte d'aperçu).
+const TITLE_PAGE = {
+  id: 9001,
+  title: "Orbite Silencieuse",
+  original_title: "Silent Orbit",
+  release_date: "2026-06-12",
+  overview: "Synopsis de test pour Orbite Silencieuse.",
+  genres: [{ id: 878, name: "Science-Fiction" }],
+  runtime: 118,
+  poster_path: "/affiche-9001.jpg",
+  backdrop_path: "/fond-9001.jpg",
+  vote_average: 7.8,
+  vote_count: 1200,
+  tagline: "Le silence a une adresse.",
+  credits: { cast: [], crew: [] },
+  videos: { results: [] },
+  recommendations: { results: [] },
+};
+
 const ROUTES = {
+  "/3/movie/9001": TITLE_PAGE,
+  "/3/movie/9001/watch/providers": { id: 9001, results: {} },
   "/health": { ok: true },
   "/3/trending/movie/week": { page: 1, results: MOVIES },
   "/3/trending/tv/week": { page: 1, results: SHOWS },

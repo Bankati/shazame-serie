@@ -1,0 +1,37 @@
+// Textes de la page « Mon compte » (U05). Vouvoiement.
+export const ACCOUNT_TEXT = {
+  metaTitle: "Mon compte",
+  title: "Mon compte",
+  description: "Votre nom et votre photo apparaissent dans votre compte. Ils ne sont jamais publics.",
+  memberSince: (date: string) => `Membre depuis le ${date}`,
+  email: "Adresse email",
+  avatar: {
+    title: "Photo de profil",
+    hint: "JPEG, PNG ou WebP, 4 Mo au maximum. Elle est recadrée en carré et ses informations cachées (position, appareil) sont supprimées.",
+    choose: "Choisir une photo",
+    change: "Changer la photo",
+    remove: "Retirer la photo",
+    uploading: "Envoi…",
+    alt: "Votre photo de profil",
+    saved: "Photo enregistrée.",
+    removed: "Photo retirée.",
+    errors: {
+      too_large: "Cette photo dépasse 4 Mo. Choisissez une image plus légère.",
+      unsupported: "Ce fichier n'est pas une image JPEG, PNG ou WebP lisible.",
+      failed: "La photo n'a pas pu être enregistrée. Réessayez dans un instant.",
+      suspended: "Votre compte est suspendu : le profil ne peut pas être modifié.",
+    },
+  },
+  name: {
+    title: "Nom affiché",
+    label: "Nom",
+    hint: "80 caractères au maximum.",
+    submit: "Enregistrer",
+    pending: "Enregistrement…",
+    saved: "Nom enregistré.",
+    invalid: "Saisissez un nom de 1 à 80 caractères.",
+    signedOut: "Votre session a expiré. Reconnectez-vous.",
+    suspended: "Votre compte est suspendu : le profil ne peut pas être modifié.",
+    failed: "Le nom n'a pas pu être enregistré. Réessayez dans un instant.",
+  },
+} as const;

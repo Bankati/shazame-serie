@@ -29,6 +29,13 @@
       "when": 1791478817203,
       "tag": "0003_profile_avatar_path_identification_owner",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792450638591,
+      "tag": "0004_avatars_bucket_webp",
+      "breakpoints": true
     }
   ]
 }

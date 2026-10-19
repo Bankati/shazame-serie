@@ -108,6 +108,7 @@ jobs:
             echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL"
             echo "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$PUBLISHABLE_KEY"
             echo "MAILPIT_URL=$MAILPIT_URL"
+            echo "SUPABASE_SECRET_KEY=$SECRET_KEY"
           } >> "$GITHUB_ENV"
           rm supabase.env
 

@@ -69,3 +69,10 @@ const PARIS_DATE_TIME = new Intl.DateTimeFormat("fr-FR", {
 export function formatParisDateTime(instant: Date): string {
   return PARIS_DATE_TIME.format(instant);
 }
+
+const PARIS_DATE = new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", day: "numeric", month: "long", year: "numeric" });
+
+/** Date à Paris pour l'affichage (« 17 octobre 2026 »). */
+export function formatParisDate(instant: Date): string {
+  return PARIS_DATE.format(instant);
+}

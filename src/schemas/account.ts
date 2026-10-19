@@ -6,6 +6,8 @@ export const accountSummarySchema = z.object({
     .object({
       displayName: z.string().nullable(),
       email: z.string().nullable(),
+      // Lien signé (1 h) vers la photo du bucket privé, ou null.
+      avatarUrl: z.string().nullable(),
     })
     .nullable(),
 });

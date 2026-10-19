@@ -515,3 +515,22 @@ Dernière mise à jour : 19 octobre 2026
 | Accent | icône Plus ↔ Check avec rotation et ressort (Motion) |
 
 **Notes de pattern :** état « dans ma liste » porté par `aria-pressed`, nom accessible = texte visible (WCAG 2.5.3). Optimiste : désactivé tant que l'état partagé n'est pas chargé et pendant la requête ; refus → retour en arrière et `toast.error` (texte de `WATCHLIST_TEXT.failures`). Visiteur : lien vers `/connexion?suite=<page>`. Requêtes `keepalive` (aboutissent même si l'on quitte la page). Grille : retrait animé (`AnimatePresence` + `layout`), bouton « Retirer » sous chaque affiche avec le titre en `sr-only`, état vide avec renvoi vers l'envoi d'un clip.
+
+### Mon compte : AvatarEditor, NameForm
+
+Fichiers : `src/components/account/avatar-editor.tsx`, `src/components/account/name-form.tsx`, page `src/app/compte/page.tsx` (U05)
+Dernière mise à jour : 20 octobre 2026
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | sections `bg-card` ; pastille sans photo `bg-brand` (initiale `text-inverse font-display`) |
+| Bordure | sections `border border-border` ; photo `ring-2 ring-border` ; séparateur email `border-t border-border` |
+| Radius | sections `rounded-lg` ; photo `rounded-full` |
+| Texte principal | titres de section `text-lg font-semibold text-foreground` |
+| Texte secondaire | aide, date d'inscription `text-sm text-muted-foreground` |
+| Espacement | colonne `max-w-2xl` ; sections `p-4 md:p-6 gap-4` ; photo `size-24` |
+| Hover / focus | boutons shadcn (`outline` pour changer, `ghost` pour retirer), `h-11` |
+| Ombre | none |
+| Accent | photo en fondu à chaque changement (Motion) ; confirmations par `toast` |
+
+**Notes de pattern :** champ de fichier masqué (`sr-only`, hors tabulation) déclenché par le bouton « Choisir / Changer la photo » ; taille vérifiée dans le navigateur avant l'envoi (4 Mo). La même photo (lien signé 1 h) s'affiche dans l'en-tête (`AccountBadge`, `size-9 rounded-full object-cover`). Le formulaire du nom réutilise `FormField`, `FormMessage`, `SubmitButton` des pages de compte.

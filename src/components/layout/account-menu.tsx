@@ -1,6 +1,6 @@
 "use client";
 
-import { History, ListVideo, LogOut } from "lucide-react";
+import { History, ListVideo, LogOut, UserRound } from "lucide-react";
 import Link from "next/link";
 
 import { accountInitial, useAccount } from "@/client/account/account";
@@ -19,6 +19,7 @@ import { AUTH_TEXT } from "@/content/fr/auth";
 export const SIGN_OUT_PATH = "/auth/deconnexion";
 export const HISTORY_PATH = "/historique";
 export const WATCHLIST_PATH = "/ma-liste";
+export const ACCOUNT_PATH = "/compte";
 
 // Compte dans l'en-tête (desktop) : « Se connecter », ou pastille + menu avec la déconnexion (U04).
 // Sur mobile, les mêmes entrées sont dans le menu (MobileNav).
@@ -43,7 +44,7 @@ export function AccountMenu() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="hidden h-11 gap-2 px-2 lg:inline-flex" aria-label={text.menuLabel(name)}>
-          <AccountBadge initial={accountInitial(account)} />
+          <AccountBadge initial={accountInitial(account)} avatarUrl={account.avatarUrl} />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64 shadow-lg">
@@ -52,6 +53,12 @@ export function AccountMenu() {
           <span className="truncate text-sm font-medium text-foreground">{account.email ?? name}</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        <DropdownMenuItem asChild className="min-h-11 gap-2 text-sm">
+          <Link href={ACCOUNT_PATH}>
+            <UserRound className="size-4" aria-hidden="true" />
+            {text.profile}
+          </Link>
+        </DropdownMenuItem>
         <DropdownMenuItem asChild className="min-h-11 gap-2 text-sm">
           <Link href={WATCHLIST_PATH}>
             <ListVideo className="size-4" aria-hidden="true" />
@@ -78,7 +85,12 @@ export function AccountMenu() {
   );
 }
 
-export function AccountBadge({ initial }: { initial: string }) {
+export function AccountBadge({ initial, avatarUrl }: { initial: string; avatarUrl?: string | null }) {
+  if (avatarUrl) {
+    // Photo du bucket privé (lien signé), déjà réduite à 256 px par le serveur : pas d'optimiseur.
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img src={avatarUrl} alt="" aria-hidden="true" className="size-9 rounded-full object-cover ring-1 ring-border" />;
+  }
   return (
     <span
       aria-hidden="true"

@@ -9,7 +9,7 @@ import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger 
 import { AUTH_TEXT } from "@/content/fr/auth";
 import { LAYOUT_TEXT } from "@/content/fr/layout";
 
-import { AccountBadge, HISTORY_PATH, SIGN_OUT_PATH, WATCHLIST_PATH } from "./account-menu";
+import { ACCOUNT_PATH, AccountBadge, HISTORY_PATH, SIGN_OUT_PATH, WATCHLIST_PATH } from "./account-menu";
 
 // Menu mobile : le Sheet se ferme après un choix pour laisser défiler la page vers l'ancre.
 export function MobileNav() {
@@ -50,7 +50,7 @@ export function MobileNav() {
           {account.status === "ready" && account.account ? (
             <>
               <div className="flex items-center gap-3">
-                <AccountBadge initial={accountInitial(account.account)} />
+                <AccountBadge initial={accountInitial(account.account)} avatarUrl={account.account.avatarUrl} />
                 <div className="flex min-w-0 flex-col">
                   <span className="text-sm text-muted-foreground">{text.signedInAs}</span>
                   <span className="truncate text-sm font-medium text-foreground">
@@ -59,6 +59,11 @@ export function MobileNav() {
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
+                <Button asChild variant="outline" className="col-span-2 h-11 text-base">
+                  <a href={ACCOUNT_PATH} onClick={() => setOpen(false)}>
+                    {text.profile}
+                  </a>
+                </Button>
                 <Button asChild variant="outline" className="h-11 text-base">
                   <a href={WATCHLIST_PATH} onClick={() => setOpen(false)}>
                     {text.watchlist}

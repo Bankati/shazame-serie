@@ -37,6 +37,8 @@ const envSchema = z.object({
   // toute l'authentification passe par le serveur). En local : http://127.0.0.1:54321.
   NEXT_PUBLIC_SUPABASE_URL: optional(z.url({ protocol: /^https?$/ })),
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: optional(z.string().min(20)),
+  // Clé secrète Supabase (U05, stockage des photos de profil) : contourne la RLS, uniquement côté serveur.
+  SUPABASE_SECRET_KEY: optional(z.string().min(20)),
   // Signature du cookie visiteur (U11, RG2). Différent par environnement.
   VISITOR_COOKIE_SECRET: optional(z.string().min(32)),
 });
@@ -52,6 +54,7 @@ const REQUIRED_IN_PRODUCTION = [
   "VISITOR_COOKIE_SECRET",
   "NEXT_PUBLIC_SUPABASE_URL",
   "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
+  "SUPABASE_SECRET_KEY",
 ] as const;
 
 export type Env = z.infer<typeof envSchema>;

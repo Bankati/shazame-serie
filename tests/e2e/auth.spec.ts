@@ -147,6 +147,17 @@ test("inscription → confirmation → déconnexion → connexion, puis lien de 
   await expect(page.getByText("1 / 100 titres")).toBeVisible(SERVER);
   await page.getByRole("button", { name: /Retirer/ }).click();
   await expect(page.getByRole("heading", { name: "Votre liste est vide" })).toBeVisible(SERVER);
+
+  // Profil (U05) : nom affiché et photo (réencodée par le serveur, stockée dans le bucket privé).
+  await page.goto("/compte");
+  await page.getByLabel("Nom", { exact: true }).fill("Ana Testeuse");
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(page.getByRole("status")).toContainText("Nom enregistré", SERVER);
+  await page.locator('input[type="file"]').setInputFiles(path.join(__dirname, "fixtures", "poster.jpg"));
+  await expect(page.getByRole("img", { name: "Votre photo de profil" })).toBeVisible(SERVER);
+  await page.reload();
+  await expect(page.getByLabel("Nom", { exact: true })).toHaveValue("Ana Testeuse");
+  await expect(page.getByRole("img", { name: "Votre photo de profil" })).toBeVisible(SERVER);
 });
 
 test("une redirection après connexion ne peut pas sortir du site", async ({ page }) => {

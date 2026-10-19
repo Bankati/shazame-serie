@@ -1,6 +1,6 @@
 "use client";
 
-import { History, LogOut } from "lucide-react";
+import { History, ListVideo, LogOut } from "lucide-react";
 import Link from "next/link";
 
 import { accountInitial, useAccount } from "@/client/account/account";
@@ -18,6 +18,7 @@ import { AUTH_TEXT } from "@/content/fr/auth";
 /** Déconnexion : formulaire HTML vers POST /auth/deconnexion, puis rechargement complet de l'accueil. */
 export const SIGN_OUT_PATH = "/auth/deconnexion";
 export const HISTORY_PATH = "/historique";
+export const WATCHLIST_PATH = "/ma-liste";
 
 // Compte dans l'en-tête (desktop) : « Se connecter », ou pastille + menu avec la déconnexion (U04).
 // Sur mobile, les mêmes entrées sont dans le menu (MobileNav).
@@ -51,6 +52,12 @@ export function AccountMenu() {
           <span className="truncate text-sm font-medium text-foreground">{account.email ?? name}</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        <DropdownMenuItem asChild className="min-h-11 gap-2 text-sm">
+          <Link href={WATCHLIST_PATH}>
+            <ListVideo className="size-4" aria-hidden="true" />
+            {text.watchlist}
+          </Link>
+        </DropdownMenuItem>
         <DropdownMenuItem asChild className="min-h-11 gap-2 text-sm">
           <Link href={HISTORY_PATH}>
             <History className="size-4" aria-hidden="true" />

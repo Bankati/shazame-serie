@@ -1,5 +1,6 @@
 import { TitlePoster } from "@/components/identify/title-poster";
 import { Badge } from "@/components/ui/badge";
+import { WatchlistButton } from "@/components/watchlist/watchlist-button";
 import { TITLE_TEXT } from "@/content/fr/title";
 import type { TitlePage } from "@/server/catalog/catalog-provider";
 
@@ -37,6 +38,7 @@ export function TitleHeader({ page }: { page: TitlePage }) {
           ) : null}
           {page.voteCount > 0 ? <p className="text-sm text-inverse-muted">{text.rating(page.voteAverage, page.voteCount)}</p> : null}
           {page.tagline ? <p className="max-w-prose text-lg text-inverse-foreground">«&nbsp;{page.tagline}&nbsp;»</p> : null}
+          <WatchlistButton item={{ tmdbId: page.tmdbId, mediaType: page.mediaType }} tone="inverse" className="w-fit" />
           <dl className="flex flex-col gap-1 text-sm">
             {page.directors.length > 0 ? (
               <div className="flex gap-2">

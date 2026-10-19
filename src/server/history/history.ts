@@ -5,6 +5,7 @@ import { and, desc, eq, isNotNull, sql } from "drizzle-orm";
 import type { CatalogProvider, MediaType } from "@/server/catalog/catalog-provider";
 import { type Database, withQueryTimeout } from "@/server/db/client";
 import { identifications } from "@/server/db/schema";
+import { CATALOG_BUDGET_MS, lookupTitleDetails } from "@/server/catalog/title-lookup";
 import { log } from "@/server/log";
 
 // Historique (U17, RG11, CDC 12.5) : les 50 dernières identifications d'un compte dont un titre a été
@@ -12,14 +13,7 @@ import { log } from "@/server/log";
 // TMDB limitent la conservation à 6 mois, l'historique est gardé 2 ans).
 
 export const HISTORY_LIMIT = 50;
-/** Appels simultanés au catalogue au plus (50 fiches à la première visite, en cache ensuite). */
-export const CATALOG_CONCURRENCY = 8;
-/**
- * Temps maximal accordé au catalogue pour toute la page (audit du 19 octobre 2026) : sans lui, TMDB lent
- * pouvait bloquer l'historique plus d'une minute (50 fiches, délai de 5 s et une nouvelle tentative chacune).
- * Au-delà, les lignes restantes s'affichent sans titre.
- */
-export const CATALOG_BUDGET_MS = 4_000;
+
 /** RG11 : identifications conservées 2 ans. */
 export const RETENTION_INTERVAL = "2 years";
 const PURGE_BATCH = 5_000;
@@ -81,21 +75,7 @@ export async function enrichHistory(
   catalog: CatalogProvider | null,
   budgetMs: number = CATALOG_BUDGET_MS,
 ): Promise<HistoryEntry[]> {
-  let expired = false;
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  const deadline = new Promise<null>((resolve) => {
-    timer = setTimeout(() => {
-      expired = true;
-      resolve(null);
-    }, budgetMs);
-  });
-  const details = await mapWithConcurrency(rows, CATALOG_CONCURRENCY, async (row) => {
-    // Budget épuisé : on n'appelle plus le catalogue pour les lignes restantes.
-    if (!catalog || expired) return null;
-    const lookup = catalog.getTitleDetails(row.tmdbId, row.mediaType).catch(() => null);
-    return Promise.race([lookup, deadline]);
-  });
-  clearTimeout(timer);
+  const details = await lookupTitleDetails(rows, catalog, budgetMs);
   const missing = details.filter((detail) => detail === null).length;
   if (missing > 0) {
     log.warn("history.titles_unavailable", { missing });
@@ -113,20 +93,6 @@ export async function enrichHistory(
       posterPath: detail?.posterPath ?? null,
     };
   });
-}
-
-/** Applique `work` à chaque élément, `limit` à la fois au plus, résultats dans l'ordre d'entrée. */
-export async function mapWithConcurrency<T, R>(items: readonly T[], limit: number, work: (item: T) => Promise<R>): Promise<R[]> {
-  const results = new Array<R>(items.length);
-  let next = 0;
-  const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
-    while (next < items.length) {
-      const index = next++;
-      results[index] = await work(items[index] as T);
-    }
-  });
-  await Promise.all(workers);
-  return results;
 }
 
 /**

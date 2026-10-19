@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
+
 import { expect, type Page, test } from "@playwright/test";
 
 // Critère de fin de U04 : inscription → confirmation → connexion → déconnexion ; lien de réinitialisation
@@ -12,6 +15,18 @@ const PASSWORD = "motdepasse-e2e";
 // quand les autres tests (pages animées) tournent en parallèle sur le même serveur.
 const SERVER = { timeout: 30_000 };
 const NEW_PASSWORD = "nouveau-motdepasse-e2e";
+const CLIP = path.join(__dirname, "fixtures", "clip.mp4");
+const POSTER = readFileSync(path.join(__dirname, "fixtures", "poster.jpg"));
+const IDENTIFY_RESULT = {
+  ok: true,
+  data: {
+    decision: "show",
+    source: "ai",
+    main: { tmdbId: 9001, mediaType: "movie", title: "Orbite Silencieuse", year: 2026, posterPath: "/affiche-9001.jpg", confidence: 92 },
+    alternatives: [],
+    quota: { limit: 15, remaining: 14, resetAt: "2026-10-20T22:00:00.000Z" },
+  },
+};
 
 type MailpitSearch = { messages: { ID: string; Subject: string }[] };
 type MailpitMessage = { HTML: string };
@@ -117,6 +132,21 @@ test("inscription → confirmation → déconnexion → connexion, puis lien de 
   await page.getByLabel("Mot de passe", { exact: true }).fill(NEW_PASSWORD);
   await page.getByRole("button", { name: "Se connecter", exact: true }).click();
   await expect(page).toHaveURL(/\/$/, SERVER);
+
+  // Liste de suivi (U18) : ajout depuis le résultat (IA simulée), page « Ma liste », retrait.
+  await page.route("**/api/identify", (route) => route.fulfill({ json: IDENTIFY_RESULT }));
+  await page.route("https://image.tmdb.org/**", (route) => route.fulfill({ body: POSTER, contentType: "image/jpeg" }));
+  await page.locator('input[type="file"]').setInputFiles(CLIP);
+  const add = page.getByRole("button", { name: "Ajouter à ma liste" });
+  await add.click({ timeout: 30_000 });
+  const added = page.getByRole("button", { name: "Dans ma liste" });
+  await expect(added).toHaveAttribute("aria-pressed", "true", SERVER);
+  // Réactivé quand le serveur a confirmé l'ajout.
+  await expect(added).toBeEnabled(SERVER);
+  await page.goto("/ma-liste");
+  await expect(page.getByText("1 / 100 titres")).toBeVisible(SERVER);
+  await page.getByRole("button", { name: /Retirer/ }).click();
+  await expect(page.getByRole("heading", { name: "Votre liste est vide" })).toBeVisible(SERVER);
 });
 
 test("une redirection après connexion ne peut pas sortir du site", async ({ page }) => {

@@ -108,9 +108,13 @@ Mettre à jour ce fichier après chaque changement d'implémentation significati
   - Vérifié : `test:db` (chacun ne voit que les siennes, 50 au plus, ordre, échecs exclus, purge > 2 ans comptes et visiteurs), tests unitaires (catalogue en panne, concurrence, cron refusé sans secret, date Paris), Playwright (visiteur redirigé). Rendu contrôlé sur mobile et ordinateur avec de vrais titres.
   - Tests navigateur locaux : 2 navigateurs en parallèle au plus (Docker + Next + extraction vidéo saturaient la machine).
 
+- U18 — Liste de suivi (plan : `context/plans/U18.md`, 19 octobre 2026).
+  - Fait : `GET/POST/DELETE /api/watchlist` (zod, `Origin`, session, suspendu en lecture seule), limite 100 en gratuit vérifiée sous verrou consultatif dans la transaction, `getEntitlement()` (gratuit jusqu'à U22), bouton optimiste sur la fenêtre de résultat et la fiche (visiteur → connexion avec retour), page `/ma-liste` (affiches, retrait animé, compteur, état vide, chargement), lien « Ma liste » dans les menus, liste rechargée à chaque changement de session ; lecture des titres factorisée (`src/server/catalog/title-lookup.ts`, budget 4 s) avec l'historique.
+  - Vérifié : `test:db` (101e refusé, deux ajouts simultanés à 99 → un seul passe, Premium au-delà de 100, idempotence, propriété), tests unitaires de l'API (origine, validation, visiteur, suspendu, Premium simulé), Playwright (visiteur → connexion ; compte : ajout depuis le résultat, page liste, retrait). Rendu contrôlé avec de vrais titres.
+  - Corrigé en route : requête annulée si l'on quittait la page juste après le clic (→ `keepalive`) ; « Retirer » actif avant le chargement de l'état (→ désactivé).
+
 ## Next Up
 
-- U18 — Liste de suivi (bouton sur résultat et fiche, page liste, limite 100 en gratuit).
 - U05 — Profil (nom et photo).
 - Audit U04 + U17 (19 octobre 2026) : corrigé côté code (délai global de 4 s et squelette de chargement pour l'historique, code `ACCOUNT_SUSPENDED` distinct de `FORBIDDEN`, panne de session signalée à PostHog, avis « session déjà ouverte » sur `/connexion`). Restent des actions du fondateur : variables Supabase dans Vercel, réglages Supabase Auth en ligne, client OAuth Google, vérification de la CI sur GitHub, Resend + domaine (Q11).
 

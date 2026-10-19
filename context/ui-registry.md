@@ -496,3 +496,22 @@ Dernière mise à jour : 17 octobre 2026
 | Accent | `ConfidenceBadge` (sous la date sur mobile, à droite à partir de `sm`) |
 
 **Notes de pattern :** chaque ligne est un lien vers la fiche (titre inconnu : slug « titre », corrigé par la redirection 308 de la fiche). Lignes en cascade (`staggerChildren` 0,04 s, glissement depuis la gauche). Date déjà formatée côté serveur en heure de Paris (`formatParisDateTime`). Titre indisponible : « Titre indisponible » avec l'affiche de remplacement.
+
+### WatchlistButton et WatchlistGrid (liste de suivi)
+
+Fichiers : `src/components/watchlist/watchlist-button.tsx`, `src/components/watchlist/watchlist-grid.tsx`, page `src/app/ma-liste/page.tsx` (U18)
+Dernière mise à jour : 19 octobre 2026
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | bouton `Button variant="outline"` ; sur l'en-tête de fiche (`tone="inverse"`) `bg-transparent` ; grille : affiche `bg-muted` avant chargement |
+| Bordure | dans la liste : `border-brand-strong text-brand-strong` ; affiche `ring-1 ring-border`, survol `ring-2 ring-link` ; sur fond sombre `border-inverse-foreground/40` |
+| Radius | bouton `rounded-lg` (preset) ; affiche `rounded-lg` |
+| Texte principal | bouton `text-base` ; titre sous l'affiche `text-sm font-semibold truncate` |
+| Texte secondaire | année, compteur « n / 100 titres » `text-sm text-muted-foreground` |
+| Espacement | bouton `h-11 gap-2 px-4` ; grille `grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4` ; colonne de page `max-w-4xl` |
+| Hover / focus | focus `focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring` |
+| Ombre | none |
+| Accent | icône Plus ↔ Check avec rotation et ressort (Motion) |
+
+**Notes de pattern :** état « dans ma liste » porté par `aria-pressed`, nom accessible = texte visible (WCAG 2.5.3). Optimiste : désactivé tant que l'état partagé n'est pas chargé et pendant la requête ; refus → retour en arrière et `toast.error` (texte de `WATCHLIST_TEXT.failures`). Visiteur : lien vers `/connexion?suite=<page>`. Requêtes `keepalive` (aboutissent même si l'on quitte la page). Grille : retrait animé (`AnimatePresence` + `layout`), bouton « Retirer » sous chaque affiche avec le titre en `sr-only`, état vide avec renvoi vers l'envoi d'un clip.

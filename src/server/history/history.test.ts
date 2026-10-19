@@ -2,7 +2,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { CatalogProvider } from "@/server/catalog/catalog-provider";
 
-import { enrichHistory, type HistoryRow, mapWithConcurrency } from "./history";
+import { mapWithConcurrency } from "@/server/catalog/title-lookup";
+
+import { enrichHistory, type HistoryRow } from "./history";
 import { handlePurgeRequest } from "./purge-request";
 
 const ROWS: HistoryRow[] = [

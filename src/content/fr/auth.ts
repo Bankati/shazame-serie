@@ -114,6 +114,7 @@ export const AUTH_TEXT = {
     signedInAs: "Connecté en tant que",
     signOut: "Se déconnecter",
     history: "Historique",
+    watchlist: "Ma liste",
     fallbackName: "Mon compte",
   },
 } as const;

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { WatchlistButton } from "@/components/watchlist/watchlist-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { IDENTIFY_TEXT } from "@/content/fr/identify";
 import { titlePath } from "@/lib/title-url";
@@ -55,10 +56,13 @@ function MainTitle({ title }: { title: IdentifiedTitle }) {
         <p className="text-sm text-muted-foreground">{card.meta(title.year, card.kind[title.mediaType])}</p>
         <ConfidenceBadge confidence={title.confidence} />
         <p className="sr-only">{result.title(title.title, title.year)}</p>
-        {/* Zone d'actions : « Ajouter à ma liste » (U18) et « Ce n'est pas le bon titre » (U20) viendront ici. */}
-        <Button asChild className="mt-1 h-11 w-fit px-5 text-base hover:bg-primary-hover">
-          <Link href={titlePath(title.mediaType, title.tmdbId, title.title)}>{card.viewTitle}</Link>
-        </Button>
+        {/* Zone d'actions : « Voir la fiche », « Ajouter à ma liste » (U18) ; « Ce n'est pas le bon titre » en U20. */}
+        <div className="mt-1 flex flex-wrap gap-2">
+          <Button asChild className="h-11 w-fit px-5 text-base hover:bg-primary-hover">
+            <Link href={titlePath(title.mediaType, title.tmdbId, title.title)}>{card.viewTitle}</Link>
+          </Button>
+          <WatchlistButton item={{ tmdbId: title.tmdbId, mediaType: title.mediaType }} />
+        </div>
       </div>
     </article>
   );

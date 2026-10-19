@@ -93,6 +93,8 @@ export const AUTH_TEXT = {
     lien: "Ce lien n'est plus valable : il a expiré ou a déjà été utilisé. Connectez-vous ou demandez un nouveau lien.",
     google: "La connexion avec Google a échoué. Réessayez ou utilisez votre adresse email.",
     session: "Connectez-vous pour continuer.",
+    alreadySignedIn: "Votre session est déjà ouverte sur ce compte.",
+    goHome: "Retour à l'accueil",
   },
   welcome: {
     metaTitle: "Bienvenue",

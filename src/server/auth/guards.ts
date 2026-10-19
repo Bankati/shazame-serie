@@ -4,6 +4,7 @@ import { cache } from "react";
 
 import { getDb } from "@/server/db/client";
 import { log } from "@/server/log";
+import { captureSystemEvent } from "@/server/observability/posthog-server";
 
 import { loadProfile, type ProfileRow } from "./profile";
 import { createSupabaseServerClient, isAuthConfigured } from "./supabase";
@@ -37,8 +38,10 @@ export const getCurrentAccount = cache(async (): Promise<Account | null> => {
     const profile = await loadProfile(getDb(), userId);
     return toAccount(userId, typeof data.claims.email === "string" ? data.claims.email : null, profile);
   } catch {
-    // Auth ou base injoignable : traité comme un visiteur plutôt que de faire échouer la page.
+    // Auth ou base injoignable : traité comme un visiteur plutôt que de faire échouer la page. Signalé à
+    // PostHog (sans personne) pour qu'une panne prolongée se voie.
     log.warn("auth.session_unavailable");
+    await captureSystemEvent("auth_session_unavailable", {});
     return null;
   }
 });

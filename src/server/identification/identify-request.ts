@@ -97,7 +97,7 @@ export async function handleIdentifyRequest(request: Request): Promise<Response>
   // Session et statut : un compte suspendu ne peut pas identifier (architecture.md).
   const { identity, suspended } = await currentRequester();
   if (suspended) {
-    return jsonError("FORBIDDEN");
+    return jsonError("ACCOUNT_SUSPENDED");
   }
 
   const db = getDb();

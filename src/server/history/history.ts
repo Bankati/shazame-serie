@@ -14,6 +14,12 @@ import { log } from "@/server/log";
 export const HISTORY_LIMIT = 50;
 /** Appels simultanés au catalogue au plus (50 fiches à la première visite, en cache ensuite). */
 export const CATALOG_CONCURRENCY = 8;
+/**
+ * Temps maximal accordé au catalogue pour toute la page (audit du 19 octobre 2026) : sans lui, TMDB lent
+ * pouvait bloquer l'historique plus d'une minute (50 fiches, délai de 5 s et une nouvelle tentative chacune).
+ * Au-delà, les lignes restantes s'affichent sans titre.
+ */
+export const CATALOG_BUDGET_MS = 4_000;
 /** RG11 : identifications conservées 2 ans. */
 export const RETENTION_INTERVAL = "2 years";
 const PURGE_BATCH = 5_000;
@@ -69,16 +75,27 @@ export async function listHistoryRows(db: Database, userId: string, limit = HIST
   );
 }
 
-/** Ajoute titre, année et affiche à chaque ligne ; une panne du catalogue n'efface aucune ligne. */
-export async function enrichHistory(rows: readonly HistoryRow[], catalog: CatalogProvider | null): Promise<HistoryEntry[]> {
-  const details = await mapWithConcurrency(rows, CATALOG_CONCURRENCY, async (row) => {
-    if (!catalog) return null;
-    try {
-      return await catalog.getTitleDetails(row.tmdbId, row.mediaType);
-    } catch {
-      return null;
-    }
+/** Ajoute titre, année et affiche à chaque ligne ; une panne ou une lenteur du catalogue n'efface aucune ligne. */
+export async function enrichHistory(
+  rows: readonly HistoryRow[],
+  catalog: CatalogProvider | null,
+  budgetMs: number = CATALOG_BUDGET_MS,
+): Promise<HistoryEntry[]> {
+  let expired = false;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const deadline = new Promise<null>((resolve) => {
+    timer = setTimeout(() => {
+      expired = true;
+      resolve(null);
+    }, budgetMs);
   });
+  const details = await mapWithConcurrency(rows, CATALOG_CONCURRENCY, async (row) => {
+    // Budget épuisé : on n'appelle plus le catalogue pour les lignes restantes.
+    if (!catalog || expired) return null;
+    const lookup = catalog.getTitleDetails(row.tmdbId, row.mediaType).catch(() => null);
+    return Promise.race([lookup, deadline]);
+  });
+  clearTimeout(timer);
   const missing = details.filter((detail) => detail === null).length;
   if (missing > 0) {
     log.warn("history.titles_unavailable", { missing });

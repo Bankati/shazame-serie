@@ -51,7 +51,7 @@ export async function sendFrames(frames: readonly Blob[], signal?: AbortSignal):
       return { ok: false, failure: { kind: "rate_limited" } };
     case "AI_PAUSED":
       return { ok: false, failure: { kind: "paused" } };
-    case "FORBIDDEN":
+    case "ACCOUNT_SUSPENDED":
       return { ok: false, failure: { kind: "suspended" } };
     case "FRAMES_UNUSABLE":
     case "VALIDATION_ERROR":

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { handleIdentifyRequest } from "./identify-request";
 
 // Protection CSRF de POST /api/identify : refus avant toute autre étape (limitation, images, quota, IA).
+// Code FORBIDDEN, distinct d'ACCOUNT_SUSPENDED (compte suspendu), pour que le message affiché soit juste.
 describe("handleIdentifyRequest — origine", () => {
   it.each([
     ["autre site", { origin: "https://evil.example", host: "site.example" }],

@@ -112,7 +112,7 @@ Mettre à jour ce fichier après chaque changement d'implémentation significati
 
 - U18 — Liste de suivi (bouton sur résultat et fiche, page liste, limite 100 en gratuit).
 - U05 — Profil (nom et photo).
-- `/audit` de U04 et U17 (non encore lancé).
+- Audit U04 + U17 (19 octobre 2026) : corrigé côté code (délai global de 4 s et squelette de chargement pour l'historique, code `ACCOUNT_SUSPENDED` distinct de `FORBIDDEN`, panne de session signalée à PostHog, avis « session déjà ouverte » sur `/connexion`). Restent des actions du fondateur : variables Supabase dans Vercel, réglages Supabase Auth en ligne, client OAuth Google, vérification de la CI sur GitHub, Resend + domaine (Q11).
 
 ## Open Questions
 

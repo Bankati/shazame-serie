@@ -63,6 +63,33 @@ describe("enrichHistory", () => {
   });
 });
 
+describe("enrichHistory — budget de temps", () => {
+  it("catalogue trop lent : la page n'attend pas au-delà du budget, les lignes restent sans titre", async () => {
+    const slow = catalog(() => new Promise(() => {})); // ne répond jamais
+    const started = Date.now();
+    const entries = await enrichHistory(ROWS, slow, 50);
+    expect(Date.now() - started).toBeLessThan(1_000);
+    expect(entries.map((entry) => [entry.id, entry.title])).toEqual([
+      ["a", null],
+      ["b", null],
+    ]);
+  });
+
+  it("budget épuisé : plus aucun appel au catalogue pour les lignes suivantes", async () => {
+    const many: HistoryRow[] = Array.from({ length: 30 }, (_, index) => ({
+      id: `r${index}`,
+      tmdbId: index + 1,
+      mediaType: "movie" as const,
+      confidence: 90,
+      createdAt: new Date("2026-10-17T12:00:00Z"),
+    }));
+    const calls = vi.fn(() => new Promise<null>(() => {}));
+    await enrichHistory(many, catalog(calls), 30);
+    // Seule la première vague (8 appels simultanés) est partie avant l'échéance.
+    expect(calls).toHaveBeenCalledTimes(8);
+  });
+});
+
 describe("mapWithConcurrency", () => {
   it("garde l'ordre et ne dépasse jamais la limite d'appels simultanés", async () => {
     let running = 0;

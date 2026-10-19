@@ -23,6 +23,8 @@ const envSchema = z.object({
   DATABASE_URL: optional(z.url({ protocol: /^postgres(ql)?$/ })),
   // TMDB (U08) : jeton de lecture « API Read Access Token » (JWT), jamais la clé courte v3.
   TMDB_API_TOKEN: optional(z.string().regex(/^eyJ[\w-]+\.[\w-]+\.[\w-]+$/)),
+  // Tests navigateur uniquement : adresse du faux serveur TMDB (scripts/tmdb-mock.mjs). Jamais en production.
+  TMDB_API_BASE_URL: optional(z.url({ protocol: /^https?$/ })),
   // Upstash Redis (U08 cache TMDB, U11 quotas). Région eu-west-1, à côté de la base.
   UPSTASH_REDIS_REST_URL: optional(httpsUrl()),
   UPSTASH_REDIS_REST_TOKEN: optional(z.string().min(20)),
@@ -31,6 +33,10 @@ const envSchema = z.object({
   OPENAI_VISION_MODEL: z.preprocess(emptyToUndefined, z.string().min(1).default("gpt-6.1-sol")),
   OPENAI_IMAGE_DETAIL: z.preprocess(emptyToUndefined, z.enum(["low", "high", "auto", "original"]).default("auto")),
   OPENAI_REASONING_EFFORT: optional(z.enum(["none", "minimal", "low", "medium", "high"])),
+  // Supabase Auth (U04) : URL du projet et clé publique « sb_publishable_… » (le navigateur ne s'en sert pas :
+  // toute l'authentification passe par le serveur). En local : http://127.0.0.1:54321.
+  NEXT_PUBLIC_SUPABASE_URL: optional(z.url({ protocol: /^https?$/ })),
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: optional(z.string().min(20)),
   // Signature du cookie visiteur (U11, RG2). Différent par environnement.
   VISITOR_COOKIE_SECRET: optional(z.string().min(32)),
 });
@@ -44,6 +50,8 @@ const REQUIRED_IN_PRODUCTION = [
   "UPSTASH_REDIS_REST_TOKEN",
   "OPENAI_API_KEY",
   "VISITOR_COOKIE_SECRET",
+  "NEXT_PUBLIC_SUPABASE_URL",
+  "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
 ] as const;
 
 export type Env = z.infer<typeof envSchema>;
@@ -58,6 +66,10 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
   const missing = production ? REQUIRED_IN_PRODUCTION.filter((key) => parsed.data[key] === undefined) : [];
   if (missing.length > 0) {
     throw invalidEnv(missing);
+  }
+  // Le faux serveur TMDB ne doit jamais remplacer l'API réelle en production.
+  if (production && parsed.data.TMDB_API_BASE_URL !== undefined) {
+    throw invalidEnv(["TMDB_API_BASE_URL"]);
   }
 
   return parsed.data;

@@ -2,13 +2,15 @@ import "server-only";
 
 import { cookies } from "next/headers";
 
-import { getOpenAIVisionProviderOrNull } from "@/server/ai/vision";
+import { getGuardedVisionProviderOrNull } from "@/server/ai/vision";
+import { getCurrentAccount } from "@/server/auth/guards";
 import { newVisitorId, signVisitorId, VISITOR_COOKIE, VISITOR_COOKIE_OPTIONS, verifyVisitorCookie } from "@/server/auth/visitor";
 import { getRedis } from "@/server/cache/redis";
 import { getCatalog } from "@/server/catalog/tmdb/tmdb-catalog";
 import { getDb } from "@/server/db/client";
 import { jsonError, jsonOk } from "@/server/http/respond";
 import { checkIdentifyRateLimit, clientIp } from "@/server/http/rate-limit";
+import { isSameOrigin } from "@/server/http/same-origin";
 import { log } from "@/server/log";
 import { createQuotaService, type QuotaIdentity, type QuotaService } from "@/server/quota/quota";
 import { createMemoryQuotaStore, createRedisQuotaStore } from "@/server/quota/quota-store";
@@ -37,8 +39,21 @@ function getQuotaService(): QuotaService {
   return quotaService;
 }
 
-/** Visiteur du cookie signé, créé s'il est absent ou invalide. En U04, un compte connecté passera avant. */
-async function currentIdentity(): Promise<QuotaIdentity> {
+type Requester = { identity: QuotaIdentity; suspended: boolean };
+
+/**
+ * Compte connecté (quota gratuit ; Premium en U22), sinon visiteur du cookie signé, créé s'il est absent ou
+ * invalide. Un email non confirmé n'ouvre pas de session : il reste visiteur (Q14).
+ */
+async function currentRequester(): Promise<Requester> {
+  const account = await getCurrentAccount();
+  if (account) {
+    return { identity: { kind: "user", id: account.id, plan: "free" }, suspended: account.status === "suspended" };
+  }
+  return { identity: await visitorIdentity(), suspended: false };
+}
+
+async function visitorIdentity(): Promise<QuotaIdentity> {
   const jar = await cookies();
   const existing = verifyVisitorCookie(jar.get(VISITOR_COOKIE)?.value);
   if (existing) {
@@ -50,6 +65,11 @@ async function currentIdentity(): Promise<QuotaIdentity> {
 }
 
 export async function handleIdentifyRequest(request: Request): Promise<Response> {
+  // Protection CSRF (code-standards.md) : seul le site lui-même peut envoyer des images à identifier.
+  if (!isSameOrigin(request)) {
+    return jsonError("FORBIDDEN");
+  }
+
   // 6. Limitation de débit par IP.
   const rate = await checkIdentifyRateLimit(clientIp(request.headers));
   if (!rate.ok) {
@@ -68,14 +88,19 @@ export async function handleIdentifyRequest(request: Request): Promise<Response>
     return frames.reason === "count" ? jsonError("FRAMES_UNUSABLE") : jsonError("VALIDATION_ERROR");
   }
 
-  const vision = getOpenAIVisionProviderOrNull();
+  const vision = getGuardedVisionProviderOrNull();
   if (!vision) {
     log.error("identify.vision_not_configured");
     return jsonError("UPSTREAM_ERROR");
   }
 
+  // Session et statut : un compte suspendu ne peut pas identifier (architecture.md).
+  const { identity, suspended } = await currentRequester();
+  if (suspended) {
+    return jsonError("ACCOUNT_SUSPENDED");
+  }
+
   const db = getDb();
-  const identity = await currentIdentity();
   const outcome = await identifyClip(
     {
       quota: getQuotaService(),
@@ -102,11 +127,21 @@ export async function handleIdentifyRequest(request: Request): Promise<Response>
   if (outcome.code === "QUOTA_EXCEEDED") {
     return jsonError("QUOTA_EXCEEDED", undefined, undefined, { quota: outcome.quota });
   }
+  if (outcome.code === "AI_PAUSED") {
+    return jsonError("AI_PAUSED");
+  }
   return jsonError("UPSTREAM_ERROR");
 }
 
 export async function handleQuotaRequest(): Promise<Response> {
-  const status = await getQuotaService().status(await currentIdentity());
+  let status: Awaited<ReturnType<QuotaService["status"]>>;
+  try {
+    status = await getQuotaService().status((await currentRequester()).identity);
+  } catch {
+    // Redis lent ou injoignable : le compteur n'est pas affiché, l'identification reste contrôlée par le serveur.
+    log.warn("quota.status_unavailable");
+    return jsonError("UPSTREAM_ERROR", undefined, { headers: { "Cache-Control": "no-store" } });
+  }
   const quota: QuotaInfo = { limit: status.limit, remaining: status.remaining, resetAt: status.resetAt.toISOString() };
   return jsonOk(quota, { headers: { "Cache-Control": "no-store" } });
 }

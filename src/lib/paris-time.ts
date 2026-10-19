@@ -55,3 +55,17 @@ export function nextParisMidnight(instant: Date = new Date()): Date {
   const tomorrow = new Date(Date.UTC(year, month - 1, day + 1));
   return parisMidnight(tomorrow.getUTCFullYear(), tomorrow.getUTCMonth() + 1, tomorrow.getUTCDate());
 }
+
+const PARIS_DATE_TIME = new Intl.DateTimeFormat("fr-FR", {
+  timeZone: "Europe/Paris",
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+});
+
+/** Date et heure à Paris pour l'affichage (« 17 octobre 2026 à 14:32 »), quel que soit le fuseau du serveur. */
+export function formatParisDateTime(instant: Date): string {
+  return PARIS_DATE_TIME.format(instant);
+}

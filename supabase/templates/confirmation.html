@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="fr">
+  <body style="margin:0;padding:24px;background:#f9fafb;font-family:Arial,Helvetica,sans-serif;color:#111827">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:8px">
+      <tr>
+        <td style="padding:24px">
+          <p style="margin:0 0 16px;font-size:14px;font-weight:bold;letter-spacing:0.04em">SHAZAM SERIE</p>
+          <h1 style="margin:0 0 16px;font-size:22px">Confirmez votre adresse email</h1>
+          <p style="margin:0 0 24px;font-size:16px;line-height:1.5">Merci pour votre inscription. Cliquez sur le bouton ci-dessous pour confirmer votre adresse et activer votre compte.</p>
+          <p style="margin:0 0 24px">
+            <a href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&amp;type=email" style="display:inline-block;padding:12px 20px;background:#111827;color:#ffffff;text-decoration:none;border-radius:8px;font-size:16px">Confirmer mon adresse</a>
+          </p>
+          <p style="margin:0 0 8px;font-size:14px;line-height:1.5;color:#4b5563">Ce lien est valable 24 heures. Si vous n'êtes pas à l'origine de cette inscription, ignorez cet email.</p>
+          <p style="margin:0;font-size:12px;line-height:1.5;color:#4b5563;word-break:break-all">Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur : {{ .RedirectTo }}?token_hash={{ .TokenHash }}&amp;type=email</p>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

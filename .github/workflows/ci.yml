@@ -45,6 +45,90 @@ jobs:
         env:
           NEXT_TELEMETRY_DISABLED: 1
 
+  e2e:
+    name: Parcours navigateur (Playwright)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      # Build avec le faux TMDB (scripts/tmdb-mock.mjs) : l'accueil est généré au build. IA et quota sont
+      # simulés par les tests ; aucun service réel appelé.
+      - name: Build
+        run: npm run build:e2e
+
+      # Chrome est préinstallé sur les runners Ubuntu (channel « chrome » dans playwright.config.ts).
+      - name: Playwright
+        run: npm run test:e2e
+
+      - name: Traces en cas d'échec
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-traces
+          path: test-results/
+          retention-days: 7
+
+  auth-e2e:
+    name: Parcours compte (Playwright + Supabase local)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.120.0
+
+      # Auth + Mailpit (emails de confirmation et de réinitialisation lus par le test), sans le reste.
+      # Même incident possible que le job « Base de données » (ECR) : relancer le job.
+      - name: Démarrer Supabase
+        run: supabase start -x realtime,imgproxy,studio,edge-runtime,logflare,vector,supavisor
+
+      - name: Exporter les variables de la pile locale
+        run: |
+          supabase status -o env > supabase.env
+          set -a; . ./supabase.env; set +a
+          {
+            echo "DATABASE_URL=$DB_URL"
+            echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL"
+            echo "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$PUBLISHABLE_KEY"
+            echo "MAILPIT_URL=$MAILPIT_URL"
+          } >> "$GITHUB_ENV"
+          rm supabase.env
+
+      - name: Migrations
+        run: npm run db:migrate
+
+      # Les variables NEXT_PUBLIC_* sont figées au build : build avec la pile locale (et le faux TMDB).
+      - name: Build
+        run: npm run build:e2e
+
+      - name: Playwright (compte)
+        run: npx playwright test tests/e2e/auth.spec.ts
+
+      - name: Traces en cas d'échec
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-traces-compte
+          path: test-results/
+          retention-days: 7
+
   audit:
     name: Audit des dépendances de production
     runs-on: ubuntu-latest

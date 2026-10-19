@@ -58,7 +58,7 @@ export function ClipDropzone({ onFile, problem, focusOnMount = false }: ClipDrop
       )}
     >
       <span className="flex size-14 items-center justify-center rounded-full bg-muted">
-        <Upload className="size-6 text-primary" aria-hidden="true" />
+        <Upload className="size-6 text-link" aria-hidden="true" />
       </span>
       <div className="flex flex-col gap-1">
         <p className="font-display text-2xl font-bold">{dragging ? dropzone.dropActive : dropzone.title}</p>

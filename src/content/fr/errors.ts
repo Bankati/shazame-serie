@@ -5,6 +5,7 @@ export const ERROR_MESSAGES: Record<ErrorCode, string> = {
   VALIDATION_ERROR: "La requête est invalide.",
   UNAUTHENTICATED: "Accès refusé.",
   FORBIDDEN: "Vous n'avez pas accès à cette ressource.",
+  ACCOUNT_SUSPENDED: "Votre compte est suspendu.",
   NOT_FOUND: "Ressource introuvable.",
   QUOTA_EXCEEDED: "Vous avez atteint votre limite d'identifications pour aujourd'hui.",
   RATE_LIMITED: "Trop de requêtes. Réessayez dans quelques instants.",

@@ -72,7 +72,8 @@ export type VisionResult = {
   costMicroEur: number;
 };
 
-export type VisionErrorReason = "unavailable" | "refused" | "invalid_response" | "unpriced_model";
+/** `paused` : plafond de dépense du jour atteint (RG5), aucun appel n'a été fait. */
+export type VisionErrorReason = "unavailable" | "refused" | "invalid_response" | "unpriced_model" | "paused";
 
 /** Échec d'identification. `costMicroEur` : ce qui a déjà été facturé (à compter dans le plafond RG5). */
 export class VisionError extends Error {

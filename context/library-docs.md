@@ -68,6 +68,13 @@ Plans d'hébergement : **Vercel Pro** obligatoire (le plan Hobby est réservé �
   - `next/image` avec les affiches TMDB : l'optimisation d'images Vercel est facturée à l'usage. Comme TMDB sert déjà des tailles prédéfinies (w185, w342, w500…), envisager `unoptimized` pour ces images et choisir la bonne taille TMDB. À trancher en U15.
   - CSP à nonce : suivre la page « Content Security Policy » de la doc de la version installée ; une CSP à nonce rend les pages dynamiques.
 
+## Motion et Embla (animations et carrousels, AD-36)
+
+- Installés le 16 octobre 2026 : `motion` **13.5.1** (la 14 venait de sortir : non retenue), `embla-carousel-react` / `-autoplay` / `-fade` **8.6.0**.
+- Motion : importer depuis `motion/react`. On utilise `LazyMotion features={domAnimation} strict` (dans `MotionProvider`) : seuls les composants `m.*` sont autorisés, `motion.*` lèverait une erreur. `MotionConfig reducedMotion="user"`. API vérifiées dans les types installés : `AnimatePresence`, `useReducedMotion`, `whileInView` + `viewport`, variantes, `layout`.
+- Embla : `useEmblaCarousel(options, plugins)` renvoie `[ref, api]` ; l'événement `init` est déjà passé quand `api` arrive (lire l'état à l'image suivante). Greffon `Autoplay` : ne jamais appeler `play()` / `stop()` avant que `api` existe (erreur « reading 'internalEngine' », rencontrée). `Fade()` pour la vedette ; les diapositives restent empilées, donc monter les images au fur et à mesure (sinon toutes se chargent).
+- Les composants clients peuvent importer des **types** depuis `src/server/**` (`import type`, effacé à la compilation), jamais des valeurs.
+
 ## React 19
 
 - Doc : https://react.dev
@@ -131,7 +138,13 @@ Plans d'hébergement : **Vercel Pro** obligatoire (le plan Hobby est réservé �
 - Google : https://supabase.com/docs/guides/auth/social-login/auth-google
 - Storage : https://supabase.com/docs/guides/storage — URL signées : https://supabase.com/docs/reference/javascript/storage-from-createsignedurl
 - Pièges :
-  - Côté serveur, valider l'utilisateur avec `auth.getUser()` (appel vérifié), pas avec la session lue dans le cookie.
+  - Côté serveur, valider l'utilisateur avec `auth.getClaims()` (signature vérifiée) ou `auth.getUser()` (appel à Supabase), jamais avec `getSession()` (AD-34).
+  - Installé en U04 : `@supabase/ssr` 0.12.7. `createServerClient(url, clé publique, { cookieOptions, cookies: { getAll, setAll(cookies, headers) } })` ; dans le proxy, recopier aussi les en-têtes `headers` passés à `setAll` (Cache-Control privé : une réponse portant un jeton ne doit jamais être mise en cache). Options de cookie par défaut `httpOnly: false` : on force `httpOnly: true` (aucun client navigateur). Cookie `sb-<ref>-auth-token` (découpé en `.0`, `.1` si long).
+  - Liens d'email : gabarits `{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=email|recovery` → `/auth/confirm` → `verifyOtp({ token_hash, type })` (usage unique, fonctionne sur un autre appareil, contrairement au code PKCE). Si `redirectTo` n'est pas dans la liste « Redirect URLs », Supabase met l'adresse du site à la place : le lien ne mène alors nulle part.
+  - `signUp` avec une adresse déjà inscrite : pas d'erreur, utilisateur factice sans `identities` (ne pas créer de profil).
+  - Next 16 : une Server Action re-rend la page courante ; une redirection serveur à ce moment (ex. « déjà connecté ») empêche le code client de s'exécuter. Une redirection interne par `window.location.assign` devient une navigation sans rechargement : recharger soi-même les états client liés à la session.
+  - Route handlers : `redirect()` de `next/navigation` joint à la réponse les cookies écrits via `cookies()`.
+  - Mailpit (pile locale) : `GET /api/v1/search?query=to:"adresse"` puis `GET /api/v1/message/{ID}` (champ `HTML`). Sans SMTP personnalisé, Supabase en ligne n'écrit qu'aux membres de l'organisation (erreur `email_address_not_authorized`).
   - La clé `service_role` contourne la RLS : uniquement dans `src/server/`, jamais dans une variable `NEXT_PUBLIC_*`.
   - Emails d'auth : configurer le SMTP personnalisé (Resend) et traduire les gabarits en français dans le tableau de bord Supabase.
   - RG9 (30 jours d'inactivité) : réglage « inactivity timeout » des sessions Supabase, **à vérifier** selon le plan (cette option n'est pas disponible sur tous les plans). Sinon, mettre en œuvre la règle côté application (date de dernière activité).
@@ -159,6 +172,9 @@ Plans d'hébergement : **Vercel Pro** obligatoire (le plan Hobby est réservé �
 - Doc : https://developer.themoviedb.org/docs — référence : https://developer.themoviedb.org/reference/intro/getting-started
 - Usage : `search/movie`, `search/tv`, `movie/{id}`, `tv/{id}` avec `append_to_response=credits,videos,similar,recommendations`, `configuration` pour les URL d'images. Toujours `language=fr-FR`, repli sur `en-US` si synopsis vide.
 - Où regarder : `movie/{id}/watch/providers` et `tv/{id}/watch/providers` (données fournies par JustWatch, **attribution JustWatch obligatoire**). Licence commerciale TMDB requise (D2).
+- Tests navigateur : `TMDB_API_BASE_URL` vise le faux serveur `scripts/tmdb-mock.mjs` (titres fictifs) ; `npm run build:e2e` le lance pendant `next build`, car l'accueil est généré au build (ISR). Variable refusée en production.
+- Accueil (16 octobre 2026) : `trending/{movie|tv}/week`, `movie/top_rated` (`region=FR`), `genre/movie/list`, en `fr-FR`. Éléments validés un par un (`toShowcaseTitle`), contenus `adult` écartés. Page d'accueil en ISR 6 h via `getStaticPageCatalog()` (sans Redis). Images : affiches `w342`, images larges `w1280` (vedette) et `w780` (genres), servies sans l'optimiseur Vercel.
+- Installé en U16 (`src/server/catalog/watch/`) : une requête renvoie tous les pays (`results.{FR,BE,…}` avec `link`, `flatrate`, `free`, `ads`, `rent`, `buy`) ; **un seul lien par pays** (page récapitulative TMDB avec les liens JustWatch par service), pas de lien direct par service. 89 pays couverts pour *Matrix* ; **le Togo n'est pas couvert**. Cache Redis 12 h. Pays du visiteur : en-tête Vercel `x-vercel-ip-country`.
 - Mention obligatoire et logo : https://www.themoviedb.org/about/logos-attribution
 - Respecter les limites de débit et mettre en cache selon leurs conditions.
 - **Conditions (vérifiées le 15 octobre 2026)** : cache de 6 mois au maximum (section 1.C) ; logo TMDB et mention « uses TMDB and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB » (section 3) ; **tout usage payant exige un accord écrit** (section 2.A, D2). Pas de réponse TMDB stockée dans le dépôt (pas de fixtures).
@@ -229,7 +245,16 @@ Plans d'hébergement : **Vercel Pro** obligatoire (le plan Hobby est réservé �
 - Installé en U10 : `sharp` 0.35.5 (libvips 8.18). dHash : `sharp(buf).greyscale().resize(9, 8, { fit: "fill" }).raw().toBuffer({ resolveWithObject: true })`, puis lire un octet sur `info.channels` (un canal alpha peut subsister) et appliquer `dHash` de `src/shared/frames/analysis.ts` (`src/server/identification/frame-hashes.ts`).
 - dHash stocké en `bigint` PostgreSQL signé : `BigInt.asIntN(64, h)` ; la distance se calcule en SQL par `bit_count((a # b)::bit(64))` (PostgreSQL 14+).
 
+## Next.js : pages mises en cache (ISR) et appels réseau
+
+- Fiche titre (U15) : `export const revalidate = 86400` + `generateStaticParams()` qui renvoie `[]` : chaque fiche est générée à la première visite, servie depuis le cache (`x-nextjs-cache: HIT`, p95 mesuré 23 ms), revalidée chaque jour (modèle sans Cache Components, `cacheComponents` non activé).
+- **Piège (vérifié le 16 octobre 2026)** : le client Upstash appelle `fetch` en `cache: "no-store"`. Dans une page ISR, Next répond alors 500 (« Page changed from static to dynamic at runtime »). Les pages ISR et le sitemap utilisent donc `getStaticPageCatalog()` (catalogue TMDB sans Redis) ; Next met lui-même en cache la page et les réponses TMDB. Ne jamais appeler Redis depuis une page ISR.
+- Ne jamais absorber les erreurs internes de Next dans un `catch` (digest `DYNAMIC_SERVER_USAGE` ou `NEXT_…`) : les relancer (voir `sitemap-titles.ts`).
+- `permanentRedirect` renvoie 308 ; `PageProps<"/titre/[kind]/[idSlug]">` est généré par `next typegen`.
+
 ## Vitest et Playwright
+
+- Installé en U12 : `@playwright/test` 1.64.1, `playwright.config.ts` (projet `mobile-chrome` = Pixel 7 + `channel: "chrome"`, Chrome préinstallé localement et sur les runners Ubuntu, aucun navigateur à télécharger ; `webServer` = `next start` sur le build). Serveur simulé par `page.route` (`/api/identify`, `/api/quota`, `image.tmdb.org`, PostHog bloqué). Vidéo de test : fractale générée (`tests/e2e/fixtures/clip.mp4`). Lancer `npm run build` avant `npm run test:e2e`.
 
 - https://vitest.dev — https://playwright.dev
 - Vitest 5.0.3 installé (4 octobre 2026) pour la CI. Exige `@types/node` ^22 ou ≥ 24 (d'où l'alignement sur 24.19.1) et Node ^22.12 ou ^24. Configuration : `vitest.config.mts` (extension `.mts` pour éviter l'avertissement « ESM syntax in a file loaded as CommonJS » de Vite ; alias `@` → `src`, environnement `node`). `--passWithNoTests` retiré en U01.

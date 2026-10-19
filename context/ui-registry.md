@@ -2,6 +2,8 @@
 
 Registre des motifs visuels réellement implémentés. Alimenté par `/imprint` après chaque composant. À consulter **avant** de créer un composant. Les classes reprennent le vocabulaire de `ui-context.md` (noms shadcn/ui + tokens du projet).
 
+> **16 octobre 2026 : thème sombre (AD-35).** Les noms de classes de la baseline restent valables (les jetons ont changé de valeur, pas de nom). Exception : un lien texte utilise désormais `text-link` (et non `text-primary`).
+
 ## Baseline — établie le 4 octobre 2026 (à partir de `ui-context.md`, avant tout code)
 
 | Propriété | Classe correcte |
@@ -51,7 +53,7 @@ Fichiers : `src/components/layout/site-header.tsx`, `src/components/layout/mobil
 | Ombre | none (Sheet : `shadow-lg` généré) |
 | Accent | bouton « Identifier un clip » `h-11 px-5 hover:bg-primary-hover` |
 
-**Notes de pattern :** navigation complète et bouton d'action à partir de `lg` (1 024 px) ; menu mobile en dessous (`lg:hidden`) — à `md`, les libellés passaient sur deux lignes. Le bouton de fermeture généré du Sheet (libellé anglais) est masqué (`showCloseButton={false}`) et remplacé par un bouton `size-11` avec `aria-label` français. Le Sheet se ferme au clic sur un lien.
+**Notes de pattern :** mis à jour le 16 octobre 2026 (U04) : liens d'ancre à partir de `xl` (1 280 px), menu mobile en dessous (`xl:hidden`) ; bouton d'action et compte (`AccountMenu`) à partir de `lg`. Libellés et logo en `whitespace-nowrap` : avec le nom « SHAZAM SERIE » et le lien « Se connecter », l'en-tête passait sur deux lignes à 1 280 px. Le menu mobile porte aussi le compte (pastille + email + « Se déconnecter », ou « Se connecter » / « Créer un compte » en `variant="outline"` sur deux colonnes). Le bouton de fermeture généré du Sheet (libellé anglais) est masqué (`showCloseButton={false}`) et remplacé par un bouton `size-11` avec `aria-label` français. Le Sheet se ferme au clic sur un lien.
 
 ### Logo
 
@@ -96,7 +98,7 @@ Dernière mise à jour : 14 octobre 2026 (U06, remplace `ClipDropzonePreview`)
 
 | Propriété | Classe |
 | --- | --- |
-| Arrière-plan | section `bg-inverse` + `PosterWall` ; carte `bg-card text-card-foreground` |
+| Arrière-plan | section `bg-inverse` + `CurvedFilmBand` sous un voile `bg-linear-to-b from-inverse/50 via-inverse/70 to-inverse` (16 octobre 2026) ; carte `bg-card text-card-foreground` |
 | Bordure | pastille `border border-inverse-foreground/20 bg-inverse-foreground/5 rounded-full` |
 | Radius | carte `rounded-xl` |
 | Texte principal | titre `font-display text-display-lg md:text-display-xl font-extrabold` ; état `text-sm font-medium text-foreground` |
@@ -106,7 +108,7 @@ Dernière mise à jour : 14 octobre 2026 (U06, remplace `ClipDropzonePreview`)
 | Ombre | `shadow-lg` (carte posée sur le hero sombre, exception documentée) |
 | Accent | cadenas `text-brand-strong` |
 
-**Notes de pattern :** la carte porte `min-w-0` (élément de grille : elle ne doit pas s'élargir pour contenir la pellicule, débordement constaté à 412 px). L'état du parcours est annoncé par un `<p aria-live="polite">`. La carte affiche `ClipDropzone` (repos, refus) ou `FilmStrip` + état + bouton (extraction, prêt, insuffisant).
+**Notes de pattern :** depuis U12, le résultat est rendu par `IdentificationResult` (squelette pendant l'analyse). La carte porte `min-w-0` (élément de grille : elle ne doit pas s'élargir pour contenir la pellicule, débordement constaté à 412 px). L'état du parcours est annoncé par un `<p aria-live="polite">`. La carte affiche `ClipDropzone` (repos, refus) ou `FilmStrip` + état + bouton (extraction, prêt, insuffisant).
 
 ### ClipDropzone
 
@@ -145,6 +147,139 @@ Dernière mise à jour : 14 octobre 2026 (U06)
 | Accent | coche « Retenue » `text-brand` (fond sombre uniquement) ; image écartée `opacity-40` |
 
 **Notes de pattern :** `<figure>` + `<figcaption className="sr-only">` + liste ordonnée de 5 cases. Chaque état est écrit (« Retenue », « Trop sombre », « Floue », « Doublon », « En attente ») : jamais la couleur seule. Apparition des images `motion-safe:animate-in motion-safe:fade-in motion-safe:duration-300` (le seul moment orchestré, coupé avec `prefers-reduced-motion`). Aperçus en `<img>` (URL `blob:` locale), pas `next/image`. Perforations réutilisées depuis `film-strip-decor.tsx` avec `overflow-hidden`.
+
+### IdentificationResult (carte de résultat)
+
+Fichier : `src/components/identify/identification-result.tsx`
+Dernière mise à jour : 16 octobre 2026 (U12)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | hérité de la carte `IdentifyPanel` (`bg-card`) ; squelette `bg-muted` (`Skeleton`) |
+| Bordure | none |
+| Radius | affiche `rounded-poster` ; squelette d'affiche `rounded-poster` |
+| Texte principal | titre `font-display text-2xl leading-tight font-bold` |
+| Texte secondaire | année et type `text-sm text-muted-foreground` ; « non reconnu » `text-sm text-foreground` |
+| Espacement | carte `flex flex-col gap-4` ; bloc titre `flex gap-4`, colonne `gap-2` |
+| Hover / focus | aucun sur la carte ; voir `AlternativeList` |
+| Ombre | none |
+| Accent | `ConfidenceBadge` |
+
+**Notes de pattern :** affiche principale 96 px de large (w342 TMDB), à gauche aussi sur mobile. Sans résultat principal (`ask_another_clip`) : message puis « Pistes possibles ». Un clic sur une piste l'affiche en principal, la précédente rejoint la liste. Squelette `IdentificationResultSkeleton` aux dimensions finales (affiche `h-36 w-24`). Zone d'actions sous le badge : « Voir la fiche » (bouton principal `h-11 px-5 text-base hover:bg-primary-hover`, U15) ; « Ajouter à ma liste » (U18) et « Ce n'est pas le bon titre » (U20) à ajouter quand l'action existe.
+
+### ConfidenceBadge
+
+Fichier : `src/components/identify/confidence-badge.tsx`
+Dernière mise à jour : 16 octobre 2026 (U12)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | ≥ 80 % `bg-brand-subtle` ; sinon aucun |
+| Bordure | none |
+| Radius | `rounded-sm` (≥ 80 %) |
+| Texte principal | ≥ 80 % `text-sm font-medium text-brand-subtle-foreground` ; 50-79 % `text-warning` ; < 50 % `text-muted-foreground` |
+| Texte secondaire | none |
+| Espacement | `px-2 py-1 gap-1` (≥ 80 %), `gap-1` sinon |
+| Hover / focus | none (non interactif) |
+| Ombre | none |
+| Accent | icônes `Check` (≥ 80), `Info` (50-79), `CircleHelp` (< 50), `size-4` |
+
+**Notes de pattern :** toujours un libellé et un pourcentage (« Très probable, 94 % », « Probable, 65 % », « Piste possible, 40 % ») : jamais la couleur seule. Seuils 80 et 50 identiques à `scoring.ts` (U09).
+
+### AlternativeList
+
+Fichier : `src/components/identify/alternative-list.tsx`
+Dernière mise à jour : 16 octobre 2026 (U12)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | ligne transparente, `hover:bg-muted` |
+| Bordure | none |
+| Radius | ligne `rounded-md` ; miniature `rounded-poster` |
+| Texte principal | titre `text-sm font-medium text-foreground` (tronqué) |
+| Texte secondaire | intitulé de section et pourcentage `text-sm text-muted-foreground` |
+| Espacement | section `gap-2`, liste `gap-1`, ligne `min-h-11 px-2 py-1 gap-3` |
+| Hover / focus | `hover:bg-muted`, `focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring` |
+| Ombre | none |
+| Accent | none |
+
+**Notes de pattern :** chaque piste est un `<button>` (clavier) avec `aria-label` « Afficher {titre} ({année}) comme résultat ». Miniature 32 px (w92 TMDB).
+
+### TitlePoster
+
+Fichier : `src/components/identify/title-poster.tsx`
+Dernière mise à jour : 16 octobre 2026 (U12)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | `bg-muted` (pendant le chargement et sans affiche) |
+| Bordure | none |
+| Radius | `rounded-poster` |
+| Texte principal | none |
+| Texte secondaire | none |
+| Espacement | none |
+| Hover / focus | none |
+| Ombre | none |
+| Accent | sans affiche : icône `Film` `size-6 text-muted-foreground` |
+
+**Notes de pattern :** ratio 2:3 calculé depuis la largeur. `next/image` avec `unoptimized` (TMDB sert déjà la taille, l'optimiseur Vercel est facturé). Texte alternatif « Affiche de {titre} ({année}) » (ui-context.md) ; sans affiche, `role="img"` et « Affiche indisponible ». Réutilisable par `PosterCard` (U15).
+
+### QuotaCounter
+
+Fichier : `src/components/layout/quota-counter.tsx` (dans `SiteHeader`)
+Dernière mise à jour : 16 octobre 2026 (U12)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | none (sur `bg-card` de l'en-tête) |
+| Bordure | none |
+| Radius | none |
+| Texte principal | `text-sm font-medium text-muted-foreground` ; ≤ 3 restantes `text-warning` |
+| Texte secondaire | none |
+| Espacement | `gap-1.5` ; dans l'en-tête `gap-3` avec le menu |
+| Hover / focus | none (non interactif) |
+| Ombre | none |
+| Accent | icône `Clapperboard` `size-4` |
+
+**Notes de pattern :** texte court (« 2 restantes ») jusqu'à `2xl`, complet au-delà (« 2 identifications restantes aujourd'hui ») : place libérée pour le compte dans l'en-tête (U04). Rechargé après une connexion ou une déconnexion (`reloadQuota`). Région `aria-live="polite"`. Alimenté par `useQuota()` (`GET /api/quota`, puis chaque réponse d'identification). Rien n'est affiché tant que le quota n'est pas connu (pas de saut de mise en page notable dans l'en-tête).
+
+### Fiche titre : TitleHeader, TrailerPlayer, CastRow, SimilarTitles (PosterCard), SourceAttribution
+
+Fichiers : `src/components/title/` (`title-view.tsx` assemble les blocs)
+Dernière mise à jour : 16 octobre 2026 (U15)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | en-tête `bg-inverse text-inverse-foreground` (comme le hero) ; lecteur `bg-inverse rounded-lg` ; sources `bg-card border border-border rounded-lg p-4` |
+| Bordure | sources `border-border` |
+| Radius | affiches et photos `rounded-poster` ; lecteur et encadré des sources `rounded-lg` ; cartes cliquables `rounded-md` (focus) |
+| Texte principal | titre `font-display text-display-lg md:text-display-xl font-extrabold` ; titres de section `font-display text-display font-bold` ; noms `text-sm font-medium text-foreground` |
+| Texte secondaire | en-tête `text-inverse-muted` ; rôle, motif, mentions `text-sm text-muted-foreground` |
+| Espacement | en-tête `px-4 py-8 md:py-12 gap-6`, contenu `py-10 md:py-14 gap-10`, section `gap-4`, grille des similaires `gap-4` (2 / 3 / 5 colonnes) |
+| Hover / focus | carte similaire `group-hover:underline`, `focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring` ; lecteur `hover:bg-inverse/90` + même focus |
+| Ombre | none |
+| Accent | bouton de lecture `bg-brand text-inverse rounded-full size-14` (fond sombre) ; genres `Badge variant="secondary"` |
+
+**Notes de pattern :** ordre fixe des sections (ui-context.md) : Où regarder (U16, en premier) → Bande-annonce → Synopsis → Distribution → Titres similaires → Sources. La bande-annonce n'appelle YouTube qu'au clic (`youtube-nocookie.com`). Accroche entre guillemets français avec espaces insécables. Distribution : défilement horizontal (`overflow-x-auto`, marges négatives `-mx-4` compensées sur mobile). Logo TMDB `public/brand/tmdb-logo.svg` + mention des conditions TMDB (invariant 12). `TitlePoster` accepte `alt` pour les photos (« Photo de {nom} »).
+
+### WatchProviders (Où regarder)
+
+Fichier : `src/components/title/watch-providers.tsx`
+Dernière mise à jour : 16 octobre 2026 (U16)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | service `bg-card` ; sélecteur `bg-card` |
+| Bordure | service `border border-border` ; sélecteur (champ) `border border-input` |
+| Radius | service et sélecteur `rounded-md` ; logo `rounded-sm` |
+| Texte principal | nom du service `text-sm text-foreground` ; message « aucun service » `text-base text-foreground` |
+| Texte secondaire | type d'accès, invitation, attribution `text-sm text-muted-foreground` |
+| Espacement | bloc `gap-4`, groupe `gap-2`, services `gap-3`, service `px-2 py-1.5 gap-2` |
+| Hover / focus | lien `text-primary hover:underline underline-offset-4` ; sélecteur et lien `focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring` |
+| Ombre | none |
+| Accent | icône `ExternalLink` `size-4` sur le lien |
+
+**Notes de pattern :** premier bloc de la fiche. Chargé côté navigateur (pays du visiteur) : squelette pendant le chargement, `aria-live="polite"`. Sélecteur natif `<select>` `h-11` avec libellé « Pays » (noms de pays par `Intl.DisplayNames` en français). Logos TMDB w92 affichés en 28 px, non optimisés par Vercel. Mention « Disponibilités fournies par JustWatch. » toujours visible (invariant 12).
 
 ### HowItWorks (carte d'étape)
 
@@ -222,7 +357,7 @@ Fichiers : `src/components/home/final-cta.tsx`, `src/components/layout/error-scr
 
 **Notes de pattern :** `global-error.tsx` reprend ces classes en HTML brut (il remplace le layout et ne peut pas utiliser les composants de la coquille).
 
-### PosterWall et FilmStripDecor (décors)
+### FilmStripDecor (décor) — `PosterWall` retiré le 16 octobre 2026, remplacé par `CurvedFilmBand`
 
 Fichiers : `src/components/decor/poster-wall.tsx`, `src/components/decor/film-strip-decor.tsx`
 
@@ -233,3 +368,150 @@ Fichiers : `src/components/decor/poster-wall.tsx`, `src/components/decor/film-st
 | Radius | affiches `rounded-poster` ; images de pellicule `rounded-none` ; perforations `rounded-sm size-3 bg-inverse-foreground/25` |
 
 **Notes de pattern :** toujours `aria-hidden`. Pas d'affiches réelles tant que la licence TMDB n'est pas obtenue (Q2). `Perforations` (exporté, prop `count`, `className`) est partagé avec `FilmStrip` (U06).
+
+### Pages de compte : AuthCard, FormField, PasswordField, SubmitButton, FormMessage, GoogleButton
+
+Fichiers : `src/components/auth/*.tsx` (U04)
+Dernière mise à jour : 16 octobre 2026
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | carte `bg-card` sur `bg-background` |
+| Bordure | carte `border border-border` ; champs `border-input` (composant `Input`) |
+| Radius | carte `rounded-lg` ; champs et messages `rounded-md` |
+| Texte principal | titre `font-display text-display font-bold` ; libellés `text-sm font-medium text-foreground` |
+| Texte secondaire | `text-sm text-muted-foreground` (aide, mention Google, bas de carte) |
+| Espacement | colonne `max-w-md px-4 sm:px-6 py-10 md:py-16 gap-6` ; carte `p-4 md:p-6 gap-6` ; formulaire `gap-4` ; champ `gap-2` |
+| Hover / focus | liens `text-primary underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-ring` ; case à cocher `size-5 accent-primary` + contour de focus |
+| Ombre | none |
+| Accent | bouton principal `h-11 w-full text-base hover:bg-primary-hover` ; Google `variant="outline" h-11 w-full gap-3` |
+
+**Notes de pattern :** champs `h-11 rounded-md px-3 text-base` (16 px : pas de zoom iOS) ; erreur de champ `text-sm text-destructive` reliée par `aria-describedby` + `aria-invalid`. Message global : erreur `role="alert" border border-destructive bg-destructive/10 text-destructive`, confirmation `role="status" bg-brand-subtle text-brand-subtle-foreground`, avis après redirection (`AuthNotice`) `bg-muted border border-border`. Bouton afficher / masquer le mot de passe : `Button variant="ghost" size-11` posé dans le champ (`pr-12`), `aria-pressed`. Séparateur « ou » : deux traits `h-px bg-border`. Logo Google : fichier statique `public/brand/google-g.svg` (couleurs imposées par la charte Google, hors vocabulaire du projet).
+
+### AccountMenu (en-tête)
+
+Fichier : `src/components/layout/account-menu.tsx` (U04)
+Dernière mise à jour : 16 octobre 2026
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | pastille `bg-brand text-inverse` (17 octobre 2026 : `bg-inverse` était invisible sur le thème sombre) ; menu `bg-popover` (DropdownMenu shadcn) |
+| Bordure | none |
+| Radius | pastille `rounded-full` (cercle) ; menu `rounded-lg` (généré) |
+| Texte principal | pastille `text-sm font-bold` (initiale) ; email `text-sm font-medium text-foreground truncate` |
+| Texte secondaire | « Connecté en tant que » `text-sm text-muted-foreground` |
+| Espacement | déclencheur `h-11 px-2` ; pastille `size-9` ; entrée `min-h-11 gap-2` ; menu `w-64` |
+| Hover / focus | générés par shadcn (`focus:bg-accent`) |
+| Ombre | menu `shadow-lg` (menus seulement, baseline) |
+| Accent | visiteur : `Button variant="ghost" h-11 px-3 text-sm` « Se connecter » |
+
+**Notes de pattern :** chargé côté navigateur (`useAccount`, `GET /api/account`) pour garder les pages statiques ; rien n'est affiché pendant le chargement. Déconnexion : formulaire HTML `POST /auth/deconnexion` (rechargement complet). Libellé accessible du déclencheur : « Compte de … ».
+
+### LegalPage (textes provisoires)
+
+Fichier : `src/components/legal/legal-page.tsx` (U04)
+Dernière mise à jour : 16 octobre 2026
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | `bg-background` ; avis de version `bg-muted` |
+| Bordure | avis `border border-border` |
+| Radius | avis `rounded-md` |
+| Texte principal | titre `font-display text-display font-bold` ; liste `text-base text-foreground list-disc pl-5 gap-3` |
+| Espacement | colonne `max-w-2xl px-4 sm:px-6 py-10 md:py-16 gap-6` |
+| Ombre | none |
+
+**Notes de pattern :** même colonne que l'écran de bienvenue (`/bienvenue` : liste à coches `text-brand-strong` dans une carte `rounded-lg border border-border bg-card p-4 md:p-6`).
+
+### CurvedFilmBand (fond du hero)
+
+Fichier : `src/components/decor/curved-film-band.tsx` (16 octobre 2026, adapté du composant « TiltedGridHero » fourni par le fondateur)
+Dernière mise à jour : 16 octobre 2026
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | bandes `bg-inverse-foreground/10` (avant chargement des images) |
+| Bordure | none |
+| Radius | extrémités des tuiles `rounded-l-lg` / `rounded-r-lg` |
+| Texte | none (décoratif, `aria-hidden`) |
+| Espacement | calculé (tuiles en unités `cqh` / `cqw`, styles en ligne) |
+| Ombre | none |
+| Accent | photos d'ambiance, fondu aux extrémités (masque) |
+
+**Notes de pattern :** pas dans `src/components/ui/` (réservé aux composants générés par la CLI shadcn). Monté après `load` + temps calme du navigateur, jamais si `saveData` ; en pause si `prefers-reduced-motion` **ou** si un élément porte `data-pause-motion` (`IdentifyPanel` pendant l'analyse : l'animation 3D ralentissait l'extraction des images au point de faire échouer les tests). Images : `public/hero/*.webp` (640 × 360, ≈ 30 Ko chacune, 300 Ko au total), photos Unsplash (licence Unsplash) : 1478720568477-152d9b164e26, 1513106580091-1d82408b8cd6, 1485846234645-a62644f84728, 1489599849927-2ee91cede3ba, 1440404653325-ab127d49abc1, 1585647347384-2593bc35786b, 1524985069026-dd778a71c7b4, 1536440136628-849c177e76a1, 1574267432553-4b4628081c31, 1595769816263-9b910be24d5f. Écartées : marques (Netflix, Hollywood, Moulin Rouge), affiches réelles, personnage protégé. Masque en `black` (seule l'opacité compte). Sur mobile, le bandeau est surtout visible entre le texte et la carte d'envoi.
+
+### ResultDialog (résultat d'identification)
+
+Fichier : `src/components/identify/result-dialog.tsx` (16 octobre 2026, demande du fondateur)
+Dernière mise à jour : 16 octobre 2026
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | `bg-popover` (Dialog / Sheet shadcn), fond assombri et flouté (généré) |
+| Bordure | séparateur des actions `border-t border-border` |
+| Radius | Dialog `rounded-xl` (généré) ; Sheet `rounded-t-xl` |
+| Texte principal | titre `font-display text-xl font-bold text-foreground` |
+| Texte secondaire | quota restant `text-sm text-muted-foreground` (description accessible) |
+| Espacement | Dialog `p-6 gap-4 sm:max-w-xl` ; Sheet `p-4 gap-4` ; `max-h-[90dvh] overflow-y-auto` |
+| Hover / focus | bouton fermer `Button variant="ghost" size-11` avec `aria-label` français (bouton généré « Close » masqué) |
+| Ombre | `shadow-lg` (modale, baseline) |
+| Accent | « Choisir un autre clip » `variant="outline" h-11` ; « Voir la fiche » dans la carte |
+
+**Notes de pattern :** Dialog centré à partir de `md` (768 px), Sheet `side="bottom"` en dessous (`useSyncExternalStore` sur `matchMedia`). S'ouvre à chaque nouveau résultat ; fermé, il se rouvre par « Voir le résultat » dans le panneau. Les échecs (quota, pause IA, images inexploitables) restent affichés dans le panneau, sans fenêtre.
+
+### Accueil animé : FeaturedHero, PosterRow, PosterCard, GenreExplorer, StarRating, Reveal
+
+Fichiers : `src/components/showcase/*.tsx` (16 octobre 2026, AD-35, AD-36)
+Dernière mise à jour : 17 octobre 2026
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | vedette `bg-inverse` + image large TMDB, voiles `bg-linear-to-t from-background via-inverse/70 to-inverse/30` et (md) `bg-linear-to-r from-inverse via-inverse/60 to-transparent` ; affiche `bg-muted` avant chargement ; tuile de genre : image + voile `bg-inverse/70` (`/40` si choisie) |
+| Bordure | affiche `ring-1 ring-border`, survol `ring-2 ring-link` ; tuile de genre `ring-1 ring-border`, choisie `ring-2 ring-link` ; étiquette de type `border border-inverse-foreground/30` |
+| Radius | affiches et tuiles `rounded-lg` ; boutons ronds `rounded-full` ; étiquette `rounded-sm` |
+| Texte principal | titre vedette `font-display text-display-lg md:text-display-xl font-extrabold` ; titres de rangée `font-display text-display font-bold` ; titre d'affiche `text-sm font-semibold truncate` |
+| Texte secondaire | `text-sm text-muted-foreground` (année, notes) ; sur la vedette `text-inverse-muted` ; sur-titre `text-sm font-semibold uppercase tracking-wide` |
+| Espacement | rangées `gap-4`, affiches `w-32 md:w-40` ; entre rangées `gap-12 md:gap-16` ; vedette `pt-8 pb-12 md:pt-16 md:pb-20`, `md:min-h-[38rem]` |
+| Hover / focus | affiche : `whileHover` y −8 px, échelle 1,04 (ressort), image `group-hover:scale-105` ; focus `focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring` ; boutons ronds `Button variant="outline" size-11 rounded-full` |
+| Ombre | affiches `shadow-lg` (exception assumée : profondeur des rangées, maquette du fondateur) |
+| Accent | étoiles `fill-current text-warning` (vides `text-muted-foreground`), valeur en `sr-only` ; point actif de la vedette `bg-inverse-foreground` (largeur animée 8 → 28 px) |
+
+**Notes de pattern :** composants `m.*` uniquement (LazyMotion strict). Rangées : Embla `dragFree`, flèches à partir de `md`, apparition en cascade (`staggerChildren` 0,06 s). Vedette : Embla `Fade` + `Autoplay` (7 s, pause au survol, bouton pause, coupée si `prefers-reduced-motion` ou pendant l'analyse d'un clip), images montées au fur et à mesure (la première en `priority`), zoom lent `animate-ken-burns`, contrôles en `flex-wrap` (8 cibles de 44 px ne tiennent pas sur un téléphone). Zone d'envoi : `order-1` sur mobile (premier écran), à droite sur ordinateur, avec le `h1` « Quel est ce film ? ». Mention « Titres, affiches et notes fournis par TMDB » sous les rangées.
+
+### HistoryList (historique)
+
+Fichier : `src/components/history/history-list.tsx`, page `src/app/historique/page.tsx` (U17)
+Dernière mise à jour : 17 octobre 2026
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | ligne `bg-card`, survol `hover:bg-accent` ; état vide : carte `bg-card` |
+| Bordure | `border border-border` |
+| Radius | `rounded-lg` ; affiche `rounded-poster` (TitlePoster w92, 56 px) |
+| Texte principal | titre `font-display text-lg font-bold text-foreground`, survol `group-hover:text-link`, tronqué |
+| Texte secondaire | type, année, date `text-sm text-muted-foreground` |
+| Espacement | liste `gap-3` ; ligne `p-3 md:p-4 gap-4` ; colonne de page `max-w-2xl px-4 sm:px-6 py-10 md:py-16 gap-6` |
+| Hover / focus | `focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring` |
+| Ombre | none |
+| Accent | `ConfidenceBadge` (sous la date sur mobile, à droite à partir de `sm`) |
+
+**Notes de pattern :** chaque ligne est un lien vers la fiche (titre inconnu : slug « titre », corrigé par la redirection 308 de la fiche). Lignes en cascade (`staggerChildren` 0,04 s, glissement depuis la gauche). Date déjà formatée côté serveur en heure de Paris (`formatParisDateTime`). Titre indisponible : « Titre indisponible » avec l'affiche de remplacement.
+
+### WatchlistButton et WatchlistGrid (liste de suivi)
+
+Fichiers : `src/components/watchlist/watchlist-button.tsx`, `src/components/watchlist/watchlist-grid.tsx`, page `src/app/ma-liste/page.tsx` (U18)
+Dernière mise à jour : 19 octobre 2026
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | bouton `Button variant="outline"` ; sur l'en-tête de fiche (`tone="inverse"`) `bg-transparent` ; grille : affiche `bg-muted` avant chargement |
+| Bordure | dans la liste : `border-brand-strong text-brand-strong` ; affiche `ring-1 ring-border`, survol `ring-2 ring-link` ; sur fond sombre `border-inverse-foreground/40` |
+| Radius | bouton `rounded-lg` (preset) ; affiche `rounded-lg` |
+| Texte principal | bouton `text-base` ; titre sous l'affiche `text-sm font-semibold truncate` |
+| Texte secondaire | année, compteur « n / 100 titres » `text-sm text-muted-foreground` |
+| Espacement | bouton `h-11 gap-2 px-4` ; grille `grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4` ; colonne de page `max-w-4xl` |
+| Hover / focus | focus `focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring` |
+| Ombre | none |
+| Accent | icône Plus ↔ Check avec rotation et ressort (Motion) |
+
+**Notes de pattern :** état « dans ma liste » porté par `aria-pressed`, nom accessible = texte visible (WCAG 2.5.3). Optimiste : désactivé tant que l'état partagé n'est pas chargé et pendant la requête ; refus → retour en arrière et `toast.error` (texte de `WATCHLIST_TEXT.failures`). Visiteur : lien vers `/connexion?suite=<page>`. Requêtes `keepalive` (aboutissent même si l'on quitte la page). Grille : retrait animé (`AnimatePresence` + `layout`), bouton « Retirer » sous chaque affiche avec le titre en `sr-only`, état vide avec renvoi vers l'envoi d'un clip.

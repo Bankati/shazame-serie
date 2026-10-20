@@ -179,7 +179,7 @@ Chaque appel externe : délai maximal, journalisation sans donnée personnelle, 
 
 ## Invariants
 
-1. Le serveur ne reçoit jamais de vidéo : 2 à 5 images JPEG, 1,5 Mo au total, type réel vérifié.
+1. Le serveur ne reçoit jamais de vidéo : 2 à 5 images JPEG, 1,5 Mo au total, type réel vérifié (mode image, U34 : 1 à 5 images, mêmes limites — AD-38 ; modes description et lien, U35-U36 : aucun fichier — AD-39, AD-37).
 2. Aucun module hors `src/server/ai/` n'importe le SDK OpenAI ; tout appel IA passe par la garde de dépense (RG5) et enregistre son coût.
 3. Une identification n'est décomptée que par `quota.commit()` après un résultat ≥ 50 % issu d'un appel IA ; toute réservation est confirmée ou libérée ; le cache et les échecs ne décomptent rien (RG3, RG6, RG16).
 4. Les empreintes du cache sont calculées par le serveur ; une donnée de cache n'est jamais écrite à partir d'une valeur fournie par le client.

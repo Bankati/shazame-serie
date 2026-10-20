@@ -1,0 +1,2 @@
+CREATE TYPE "public"."identification_input_kind" AS ENUM('clip', 'images', 'description', 'link');--> statement-breakpoint
+ALTER TABLE "identifications" ADD COLUMN "input_kind" "identification_input_kind" DEFAULT 'clip' NOT NULL;

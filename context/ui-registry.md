@@ -127,7 +127,64 @@ Dernière mise à jour : 14 octobre 2026 (U06)
 | Ombre | none |
 | Accent | icône d'envoi `text-primary` |
 
-**Notes de pattern :** le champ fichier est `sr-only`, `tabIndex={-1}`, `aria-hidden` : l'accès clavier et mobile passe par le bouton, qui pointe vers les contraintes (et l'erreur) par `aria-describedby`. La valeur du champ est vidée après chaque choix pour pouvoir reprendre le même fichier. L'indice « ou glissez-le ici » n'apparaît qu'à partir de `md`.
+**Notes de pattern :** depuis U34, sélection multiple (`multiple`, `accept` vidéos + images) : une vidéo lance le clip, 1 à 5 images le mode captures (tri par `classifySelection`, erreurs dans la même zone `role="alert"`) ; titre « Choisir un clip ou des captures », libellé du bouton inchangé. `accept="video/*,.mp4,.mov,…"` depuis U33 (les galeries des téléphones proposent toutes les vidéos ; le contrôle trie ensuite). Le champ fichier est `sr-only`, `tabIndex={-1}`, `aria-hidden` : l'accès clavier et mobile passe par le bouton, qui pointe vers les contraintes (et l'erreur) par `aria-describedby`. La valeur du champ est vidée après chaque choix pour pouvoir reprendre le même fichier. L'indice « ou glissez-le ici » n'apparaît qu'à partir de `md`.
+
+### IdentifyTabs (mode d'identification)
+
+Fichier : `src/components/identify/identify-tabs.tsx`
+Dernière mise à jour : 20 octobre 2026 (U35)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | conteneur `bg-muted` ; onglet choisi `bg-background` |
+| Bordure | none |
+| Radius | conteneur `rounded-lg`, onglets `rounded-md` |
+| Texte principal | onglet choisi `text-sm font-medium text-foreground` |
+| Texte secondaire | onglet non choisi `text-muted-foreground` |
+| Espacement | conteneur `gap-1 p-1`, onglet `h-11 px-3`, largeur égale (`flex-1`) |
+| Hover / focus | `hover:text-foreground` ; `focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring` |
+| Ombre | none |
+| Accent | none |
+
+**Notes de pattern :** contrôle segmenté sans dépendance (pas de composant `ui` tabs) : `role="tablist"` + `role="tab"` (`aria-selected`, `aria-controls`, `tabIndex` 0 sur l'onglet choisi seulement), flèches gauche/droite, Début, Fin ; le panneau a `role="tabpanel"` et `aria-labelledby`. Le changement d'onglet laisse le focus sur l'onglet (modèle WAI-ARIA) ; Tab mène au contenu. U36 ajoutera « Lien » dans `IDENTIFY_TABS`.
+
+### DescriptionForm (identification par description)
+
+Fichier : `src/components/identify/description-form.tsx`
+Dernière mise à jour : 20 octobre 2026 (U35)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | champ `bg-transparent` (`dark:bg-input/30`) |
+| Bordure | champ `border border-input`, au focus `border-ring` + `ring-3 ring-ring/50` |
+| Radius | champ `rounded-md`, bouton `rounded-md` (shadcn) |
+| Texte principal | libellé `font-display text-2xl font-bold` (comme le titre de `ClipDropzone`) ; saisie `text-base` |
+| Texte secondaire | aide et compteur `text-sm text-muted-foreground` ; indication `placeholder:text-muted-foreground` |
+| Espacement | `gap-3` ; champ `px-3 py-2 min-h-28`, redimensionnable verticalement |
+| Hover / focus | bouton `h-11 hover:bg-primary-hover`, désactivé hors 10 à 500 caractères |
+| Ombre | none |
+| Accent | none |
+
+**Notes de pattern :** `<textarea>` natif aux classes du champ shadcn (pas de composant `ui` textarea), `maxLength` 500, décrit par l'aide et le compteur (`aria-describedby`, compteur non annoncé à chaque frappe). Bornes partagées avec le serveur (`src/schemas/describe.ts`). Les erreurs d'envoi s'affichent sous le formulaire (`role="alert"`), le texte reste dans le champ.
+
+### ExcerptPicker (choix du passage d'une vidéo longue)
+
+Fichier : `src/components/identify/excerpt-picker.tsx`
+Dernière mise à jour : 20 octobre 2026 (U33)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | hérité de la carte `IdentifyPanel` (`bg-card`) ; aperçu vidéo `bg-muted` |
+| Bordure | none |
+| Radius | aperçu `rounded-lg` ; boutons shadcn `rounded-md` |
+| Texte principal | titre `font-display text-xl font-bold` ; libellé `text-sm font-medium text-foreground` |
+| Texte secondaire | `text-sm text-muted-foreground` (explication, « De 0:45 à 1:45 ») |
+| Espacement | `gap-4` entre blocs, `gap-2` libellé-curseur, `gap-1` titre-explication, boutons `gap-3` |
+| Hover / focus | bouton principal `hover:bg-primary-hover`, secondaire `variant="outline"` ; curseur natif, focus du navigateur |
+| Ombre | none |
+| Accent | curseur `accent-primary` |
+
+**Notes de pattern :** affiché seulement pour une vidéo de plus de 60 s, avant tout envoi (aucune identification décomptée). Le focus passe au curseur à l'apparition (le bouton d'envoi vient de disparaître), décrit par l'explication et le passage. Pendant la lecture (`reading`, `preparing`, `extracting`), `IdentifyPanel` affiche un bouton `variant="outline"` « Annuler » (`h-11 w-full sm:w-fit`) qui ramène à la zone d'envoi, focus compris. Curseur `<input type="range">` natif (pas de composant `ui` slider) : `h-11` pour la zone tactile, `aria-valuetext` et texte visible « De … à … » (la position n'est pas donnée par la seule couleur). Aperçu `aspect-video object-contain`, seulement en lecture native. Mêmes boutons `h-11 w-full sm:w-fit` que la fin de parcours d'`IdentifyPanel`.
 
 ### FilmStrip (élément signature)
 
@@ -551,3 +608,22 @@ Dernière mise à jour : 20 octobre 2026
 | Accent | confirmation « Lien copié » par `toast.success` |
 
 **Notes de pattern :** carte d'aperçu 1200 × 630 : image large TMDB sous un voile (dégradé `inverse` → transparent), affiche 300 × 450 arrondie, marque, titre Archivo 800 (76 px, 60 px au-delà de 30 caractères), méta en vert `brandStrong`, synopsis coupé à 150 caractères, pied « Identifié avec SHAZAM SERIE · Données TMDB ». Couleurs : `src/server/share/og-palette.ts` (copie des jetons, à tenir à jour).
+
+### ReportForm (signalement d'erreur)
+
+Fichier : `src/components/identify/report-form.tsx` (dans `ResultDialog`, U20)
+Dernière mise à jour : 20 octobre 2026
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | résultats de recherche `bg-card`, survol `hover:bg-accent` |
+| Bordure | résultat `border border-border`, choisi `border-brand-strong` ; champ `Input` (`border-input`) |
+| Radius | champ et résultats `rounded-md` |
+| Texte principal | titre `font-display text-xl font-bold` ; libellés `text-sm font-medium text-foreground` |
+| Texte secondaire | aide, états de recherche `text-sm text-muted-foreground` |
+| Espacement | formulaire `gap-4` ; résultat `p-2 gap-3` ; liste `max-h-64 overflow-y-auto` |
+| Hover / focus | `focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring` |
+| Ombre | none |
+| Accent | coche `text-brand-strong` sur le titre choisi |
+
+**Notes de pattern :** lien d'entrée discret sous le résultat (`text-sm text-muted-foreground underline`, `min-h-11`). Résultat choisi porté par `aria-pressed` ; recherche après 350 ms, annonces dans une région `aria-live`. Case de consentement non cochée par défaut avec son explication (`aria-describedby`), affichée seulement si des images sont encore en mémoire. Confirmation par `toast.success`, puis retour au résultat sans le lien (un seul signalement).

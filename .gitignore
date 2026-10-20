@@ -44,3 +44,10 @@ next-env.d.ts
 # Playwright
 /test-results/
 /playwright-report/
+
+# vidéos d'essai générées (U33)
+/tests/e2e/fixtures/videos/
+# ffmpeg.wasm copié depuis node_modules (U33)
+/public/ffmpeg/
+# rapports d'eval locaux (U35)
+/eval-results/

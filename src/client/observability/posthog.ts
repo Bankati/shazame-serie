@@ -1,5 +1,7 @@
 import type { PostHog } from "posthog-js";
 
+import type { ClipFailureReport } from "@/client/frames/clip-failure";
+
 import {
   POSTHOG_DEFAULT_HOST,
   scrubEvent,
@@ -37,6 +39,11 @@ export function loadPostHog(): Promise<PostHog | null> {
     return posthog;
   });
   return loading;
+}
+
+/** Vidéo illisible (U33) ; le signalement ne contient aucune donnée personnelle (voir clip-failure.ts). */
+export function reportClipFailure(report: ClipFailureReport): void {
+  void loadPostHog().then((posthog) => posthog?.capture("clip_read_failed", report));
 }
 
 /**

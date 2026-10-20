@@ -157,7 +157,7 @@ Composants métier attendus en V1 :
 
 | Composant | Rôle |
 | --- | --- |
-| `ClipDropzone` | Zone d'envoi (glisser, sélectionner), contraintes visibles : formats, 60 s, 50 Mo |
+| `ClipDropzone` | Zone d'envoi (glisser, sélectionner), contraintes visibles : formats, 500 Mo (U33) |
 | `FilmStrip` | **Élément signature.** Bande noire à perforations, images extraites qui apparaissent une à une, marquées retenue / écartée |
 | `QuotaCounter` | « 12 identifications restantes aujourd'hui » toujours visible, passe en avertissement à ≤ 3 |
 | `IdentificationResult` | Titre, affiche, année, confiance, alternatives, bouton de signalement |
@@ -188,7 +188,7 @@ Composants métier attendus en V1 :
 │ Quel est ce film ?           │
 │ ┌──────────────────────────┐ │
 │ │  Choisir un clip         │ │
-│ │  MP4, MOV, WebM · 60 s   │ │
+│ │  MP4, MOV, MKV… · 500 Mo │ │
 │ └──────────────────────────┘ │
 │ ▓▓ pellicule (pendant l'analyse) ▓▓ │
 │ Résultat                     │
@@ -205,7 +205,7 @@ Composants métier attendus en V1 :
 
 - **Chargement** : squelettes en `bg-muted` aux dimensions finales (pas de saut de mise en page). Pendant l'identification, la pellicule fait office d'indicateur de progression avec étapes textuelles : « Extraction des images », « Analyse », « Recherche de la fiche ».
 - **Vide** : une phrase qui dit quoi faire + un bouton. Ex. liste vide : « Votre liste est vide. Ajoutez un titre depuis une fiche. »
-- **Erreur** : dire ce qui s'est passé et comment corriger, sans s'excuser. Ex. « Ce clip dure plus de 60 secondes. Coupez-le ou choisissez un autre extrait. »
+- **Erreur** : dire ce qui s'est passé et comment corriger, sans s'excuser. Ex. « Cette vidéo dépasse 500 Mo. Coupez-la ou choisissez un autre extrait. »
 
 ## Writing
 

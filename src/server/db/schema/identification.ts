@@ -15,7 +15,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { profiles } from "./accounts";
-import { identificationOutcome, identificationSource, mediaType, reportStatus } from "./enums";
+import { identificationInputKind, identificationOutcome, identificationSource, mediaType, reportStatus } from "./enums";
 
 const createdAt = () => timestamp("created_at", { withTimezone: true }).notNull().defaultNow();
 
@@ -39,6 +39,7 @@ export const identifications = pgTable(
     counted: boolean("counted").notNull().default(false),
     source: identificationSource("source").notNull(),
     outcome: identificationOutcome("outcome").notNull(),
+    inputKind: identificationInputKind("input_kind").notNull().default("clip"),
     promptVersion: text("prompt_version"),
     provider: text("provider"),
     model: text("model"),

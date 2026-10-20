@@ -7,7 +7,7 @@ import { MAX_OUTPUT_TOKENS } from "./openai-vision-provider";
 import { MODEL_PRICES_USD_PER_MILLION, USD_TO_EUR } from "./pricing";
 import { MAX_ATTEMPTS } from "./retry";
 import type { SpendStore } from "./spend-store";
-import { VisionError, type VisionProvider, type VisionResult } from "./vision-provider";
+import { type VisionContext, VisionError, type VisionProvider, type VisionResult } from "./vision-provider";
 
 // Garde de dépense (RG5, invariant 2) : enveloppe le fournisseur de vision, de sorte qu'aucun appel au modèle
 // ne puisse contourner le plafond quotidien. Le coût maximal est réservé avant l'appel, puis ajusté au coût réel.
@@ -51,14 +51,24 @@ export type SpendGuardOptions = {
 export class SpendGuardedVisionProvider implements VisionProvider {
   constructor(private readonly options: SpendGuardOptions) {}
 
-  async identify(images: readonly Buffer[], context?: { signal?: AbortSignal }): Promise<VisionResult> {
-    const { inner, model, store, now = () => new Date() } = this.options;
+  identify(images: readonly Buffer[], context?: VisionContext): Promise<VisionResult> {
+    const estimate = estimateMaxCostMicroEur(this.options.model, images.length);
+    return this.guarded(estimate, () => this.options.inner.identify(images, context));
+  }
+
+  /** Description (U35) : aucune image ; la consigne et 500 caractères tiennent dans l'estimation de la consigne. */
+  identifyFromText(text: string, context?: { signal?: AbortSignal }): Promise<VisionResult> {
+    const estimate = estimateMaxCostMicroEur(this.options.model, 0);
+    return this.guarded(estimate, () => this.options.inner.identifyFromText(text, context));
+  }
+
+  private async guarded(estimate: number, call: () => Promise<VisionResult>): Promise<VisionResult> {
+    const { store, now = () => new Date() } = this.options;
     const instant = now();
     const day = parisDay(instant);
     const key = spendKey(day);
     const expiresAtMs = nextParisMidnight(instant).getTime() + KEY_EXPIRY_MARGIN_MS;
 
-    const estimate = estimateMaxCostMicroEur(model, images.length);
     const cap = await this.options.dailyCapMicroEur();
     const reservation = await store.reserve(key, estimate, cap, expiresAtMs);
     if (!reservation.reserved) {
@@ -68,7 +78,7 @@ export class SpendGuardedVisionProvider implements VisionProvider {
 
     let actual = 0;
     try {
-      const result = await inner.identify(images, context);
+      const result = await call();
       actual = result.costMicroEur;
       return result;
     } catch (error) {

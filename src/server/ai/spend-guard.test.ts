@@ -24,7 +24,7 @@ function result(costMicroEur: number): VisionResult {
 
 function setup(cap: number, identify: VisionProvider["identify"] = async () => result(1_800)) {
   const store = createMemorySpendStore(() => NOW.getTime());
-  const inner = { identify: vi.fn(identify) };
+  const inner = { identify: vi.fn(identify), identifyFromText: vi.fn(async () => result(300)) };
   const recordSpend = vi.fn(async () => {});
   const onCapReached = vi.fn(async () => {});
   const guard = new SpendGuardedVisionProvider({
@@ -59,6 +59,18 @@ describe("SpendGuardedVisionProvider", () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+  });
+
+  it("description (U35) : même plafond ; estimation sans image ; coût réel enregistré", async () => {
+    const paused = setup(0);
+    await expect(paused.guard.identifyFromText("un homme revit la même journée")).rejects.toMatchObject({ reason: "paused" });
+    expect(paused.inner.identifyFromText).not.toHaveBeenCalled();
+
+    const { guard, inner, recordSpend } = setup(1_000_000);
+    await guard.identifyFromText("un homme revit la même journée");
+    expect(inner.identifyFromText).toHaveBeenCalledWith("un homme revit la même journée", undefined);
+    expect(recordSpend).toHaveBeenCalledWith(DAY, 300);
+    expect(estimateMaxCostMicroEur(MODEL, 0)).toBeLessThan(estimateMaxCostMicroEur(MODEL, 1));
   });
 
   it("plafond à 0 : aucun appel au modèle, pause, alerte envoyée une seule fois", async () => {

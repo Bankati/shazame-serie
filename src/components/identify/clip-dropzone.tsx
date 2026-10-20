@@ -3,20 +3,22 @@
 import { Upload } from "lucide-react";
 import { type DragEvent, useEffect, useId, useRef, useState } from "react";
 
-import { CLIP_ACCEPT, type ClipProblem } from "@/client/frames/validate-clip";
+import { SELECTION_ACCEPT } from "@/client/frames/select-files";
+import type { ClipProblem } from "@/client/frames/validate-clip";
 import { Button } from "@/components/ui/button";
 import { IDENTIFY_TEXT } from "@/content/fr/identify";
 import { cn } from "@/lib/utils";
 
 type ClipDropzoneProps = {
-  onFile: (file: File) => void;
+  /** Une vidéo, ou 1 à 5 images (U34) : le tri est fait par `classifySelection`. */
+  onFiles: (files: File[]) => void;
   problem?: ClipProblem;
   /** Place le focus sur le bouton à l'affichage (retour depuis « Choisir un autre clip »). */
   focusOnMount?: boolean;
 };
 
-// Zone d'envoi : bouton (clavier, mobile) + glisser-déposer (ordinateur). Le fichier reste dans le navigateur.
-export function ClipDropzone({ onFile, problem, focusOnMount = false }: ClipDropzoneProps) {
+// Zone d'envoi : bouton (clavier, mobile) + glisser-déposer (ordinateur). Les fichiers restent dans le navigateur.
+export function ClipDropzone({ onFiles, problem, focusOnMount = false }: ClipDropzoneProps) {
   const { dropzone, problems } = IDENTIFY_TEXT;
   const input = useRef<HTMLInputElement>(null);
   const button = useRef<HTMLButtonElement>(null);
@@ -33,9 +35,9 @@ export function ClipDropzone({ onFile, problem, focusOnMount = false }: ClipDrop
   function onDrop(event: DragEvent<HTMLDivElement>) {
     event.preventDefault();
     setDragging(false);
-    const file = event.dataTransfer.files[0];
-    if (file) {
-      onFile(file);
+    const files = [...event.dataTransfer.files];
+    if (files.length > 0) {
+      onFiles(files);
     }
   }
 
@@ -79,16 +81,17 @@ export function ClipDropzone({ onFile, problem, focusOnMount = false }: ClipDrop
       <input
         ref={input}
         type="file"
-        accept={CLIP_ACCEPT}
+        accept={SELECTION_ACCEPT}
+        multiple
         className="sr-only"
         tabIndex={-1}
         aria-hidden="true"
         onChange={(event) => {
-          const file = event.target.files?.[0];
-          // Permet de choisir à nouveau le même fichier.
+          const files = [...(event.target.files ?? [])];
+          // Permet de choisir à nouveau les mêmes fichiers.
           event.target.value = "";
-          if (file) {
-            onFile(file);
+          if (files.length > 0) {
+            onFiles(files);
           }
         }}
       />

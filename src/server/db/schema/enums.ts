@@ -10,6 +10,8 @@ export const mediaType = pgEnum("media_type", ["movie", "tv"]);
 
 export const identificationSource = pgEnum("identification_source", ["ai", "cache"]);
 export const identificationOutcome = pgEnum("identification_outcome", ["shown", "low_confidence", "failed"]);
+// Mode d'identification (AD-42) : clip vidéo, images (U34) ; description (U35) et lien (U36) réservés.
+export const identificationInputKind = pgEnum("identification_input_kind", ["clip", "images", "description", "link"]);
 
 export const reportStatus = pgEnum("report_status", ["open", "reviewed", "added_to_eval", "rejected"]);
 

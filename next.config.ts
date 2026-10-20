@@ -11,6 +11,15 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/titre/**/opengraph-image": ["./src/server/share/fonts/*.ttf"],
   },
+  // Lecture de secours des vidéos (U33) : fichiers versionnés par leur chemin, mis en cache une fois pour toutes.
+  async headers() {
+    return [
+      {
+        source: "/ffmpeg/:dir/:file",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      },
+    ];
+  },
 };
 
 export default nextConfig;

@@ -1,3 +1,6 @@
+import { mkdirSync, writeFileSync } from "node:fs";
+import path from "node:path";
+
 import { afterAll, describe, expect, it } from "vitest";
 
 import { getVisionProvider } from "@/server/ai/openai-vision-provider";
@@ -37,6 +40,7 @@ const RESULTS: { case: Case; top1: boolean; top3: boolean; confidence: number; c
 // Seuils de départ (à revoir avec l'eval complète, U13) : la description est plus vague qu'un extrait.
 const MIN_TOP1 = 0.7;
 const MIN_TOP3 = 0.85;
+const REPORT_DIR = path.join(process.cwd(), "eval-results");
 
 describe("eval description (20 cas, IA et TMDB réels)", () => {
   it.each(CASES)("$description", async (evalCase) => {
@@ -64,10 +68,16 @@ describe("eval description (20 cas, IA et TMDB réels)", () => {
     const top1 = RESULTS.filter((entry) => entry.top1).length / total;
     const top3 = RESULTS.filter((entry) => entry.top3).length / total;
     const costEur = RESULTS.reduce((sum, entry) => sum + entry.cost, 0) / 1_000_000;
-    console.info(`describe.v1 : top-1 ${(top1 * 100).toFixed(0)} %, top-3 ${(top3 * 100).toFixed(0)} %, coût ${costEur.toFixed(4)} €`);
-    for (const entry of RESULTS.filter((item) => !item.top1)) {
-      console.info(`  manqué (top-1) : ${entry.case.description.slice(0, 60)}… — confiance ${entry.confidence}`);
-    }
+    const lines = [
+      `describe.v1 : top-1 ${(top1 * 100).toFixed(0)} %, top-3 ${(top3 * 100).toFixed(0)} %, coût ${costEur.toFixed(4)} €`,
+      ...RESULTS.filter((item) => !item.top1).map(
+        (entry) => `  manqué (top-1) : ${entry.case.description.slice(0, 60)}… — confiance ${entry.confidence}`,
+      ),
+    ];
+    // Vitest peut avaler la console d'un afterAll : le récapitulatif est aussi écrit dans un fichier (ignoré par git).
+    mkdirSync(REPORT_DIR, { recursive: true });
+    writeFileSync(path.join(REPORT_DIR, `describe-${new Date().toISOString().slice(0, 10)}.txt`), `${lines.join("\n")}\n`);
+    process.stdout.write(`${lines.join("\n")}\n`);
     expect(top1).toBeGreaterThanOrEqual(MIN_TOP1);
     expect(top3).toBeGreaterThanOrEqual(MIN_TOP3);
   });

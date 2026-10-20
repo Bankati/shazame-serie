@@ -146,7 +146,8 @@ Mettre à jour ce fichier après chaque changement d'implémentation significati
 
 - U35 — Identification par description (plan validé le 20 octobre 2026 : `context/plans/U35.md`).
   - Fait (20 octobre 2026) : onglets « Vidéo ou captures » / « Description », formulaire 10 à 500 caractères, `POST /api/identify/description`, étape d'analyse commune `analyzeWithAi`, `identifyFromText` + `describe.v1`, garde de dépense, empreinte seule en base ; tests Vitest (fournisseur simulé) et Playwright `tests/e2e/describe.spec.ts`.
-  - Reste : `npm run eval:describe` (IA et TMDB réels, quelques centimes) à lancer avec l'accord du fondateur ; essai sur téléphone.
+  - Eval (20 octobre 2026, accord du fondateur) : `npm run eval:describe` réussi, 20 cas, seuils top-1 ≥ 70 % et top-3 ≥ 85 % atteints (voir Eval History).
+  - Reste : essai sur téléphone (fondateur). U36 attend la clé YouTube Data API (D10, `YOUTUBE_API_KEY` dans `.env.local` et Vercel).
 
 ## Next Up
 
@@ -229,7 +230,7 @@ Mettre à jour ce fichier après chaque changement d'implémentation significati
 
 | Date | Consigne | Modèle | Précision | Latence médiane / p95 | Coût moyen |
 | --- | --- | --- | --- | --- | --- |
-| — | — | — | — | — | — |
+| 20 octobre 2026 | describe.v1 (20 descriptions, `npm run eval:describe`) | `OPENAI_VISION_MODEL` de `.env.local` | Seuils atteints : top-1 ≥ 70 %, top-3 ≥ 85 % (chiffres exacts non capturés : récapitulatif avalé par Vitest, écrit dans `eval-results/` depuis) | non mesurée | quelques centimes au total |
 
 ## Session Notes
 

@@ -113,10 +113,20 @@ Mettre à jour ce fichier après chaque changement d'implémentation significati
   - Vérifié : `test:db` (101e refusé, deux ajouts simultanés à 99 → un seul passe, Premium au-delà de 100, idempotence, propriété), tests unitaires de l'API (origine, validation, visiteur, suspendu, Premium simulé), Playwright (visiteur → connexion ; compte : ajout depuis le résultat, page liste, retrait). Rendu contrôlé avec de vrais titres.
   - Corrigé en route : requête annulée si l'on quittait la page juste après le clic (→ `keepalive`) ; « Retirer » actif avant le chargement de l'état (→ désactivé).
 
+- U05 — Profil (plan : `context/plans/U05.md`, 20 octobre 2026).
+  - Fait : page `/compte` (photo, nom, email, date d'inscription), `POST/DELETE /api/account/avatar` (origine, taille annoncée, type réel par sharp, réencodage WebP 256 × 256 qui supprime l'EXIF et la position GPS), stockage dans le bucket privé `avatars` sous `<user_id>/`, ancienne photo supprimée, lien signé 1 h ; migration `0004` (bucket : WebP, 512 Ko) ; nom par Server Action ; photo dans l'en-tête ; lien « Mon compte » dans les menus ; `SUPABASE_SECRET_KEY` (serveur seulement) obligatoire en production.
+  - Vérifié : `test:db` (nom modifié pour le seul compte concerné, envoi réel, remplacement et retrait, bucket configuré, la clé publique ne peut ni envoyer ni lire : critère de fin), unitaires (images JPEG/PNG/WebP, EXIF supprimé, GIF et faux fichiers refusés, règles de route, nom), Playwright (nom et photo). Rendu contrôlé sur mobile.
+  - **Action fondateur** : ajouter `SUPABASE_SECRET_KEY` (Supabase → Project Settings → API Keys → clé secrète `sb_secret_…`) dans Vercel, Production et Preview, sinon le prochain build de production échoue. Appliquer la migration `0004` en production (workflow db-migrate, avec approbation).
+
+- U19 — Partage (plan : `context/plans/U19.md`, 20 octobre 2026).
+  - Fait : bouton « Partager » (résultat et fiche) avec feuille de partage native du téléphone et repli par copie du lien ; carte d'aperçu Open Graph 1200 × 630 générée pour chaque fiche (police Archivo embarquée, couleurs des jetons), métadonnées X en grande image ; faux TMDB étendu d'une fiche complète.
+  - Vérifié : unitaires (natif, annulation, copie, échec), Playwright (fiche ouverte sans compte avec carte PNG 1200 × 630 : critère de fin ; copie du lien), cartes contrôlées visuellement (film, série). 399 tests unitaires, 9 parcours navigateur.
+
 ## Next Up
 
-- U05 — Profil (nom et photo).
-- Audit U04 + U17 (19 octobre 2026) : corrigé côté code (délai global de 4 s et squelette de chargement pour l'historique, code `ACCOUNT_SUSPENDED` distinct de `FORBIDDEN`, panne de session signalée à PostHog, avis « session déjà ouverte » sur `/connexion`). Restent des actions du fondateur : variables Supabase dans Vercel, réglages Supabase Auth en ligne, client OAuth Google, vérification de la CI sur GitHub, Resend + domaine (Q11).
+- **Tests avant déploiement** (demandés par le fondateur le 20 octobre 2026) : `SUPABASE_SECRET_KEY` dans Vercel, CI verte sur GitHub, PR `dev` → `staging` → `main`, migration `0004`, essais en production (inscription email, Google, liste, profil, partage).
+- U20 — Signalement d'erreur ; U22 — Premium (décision D1 : prestataire de paiement) ; U13 — Eval (D5 : clips de test).
+- Audit U04 + U17 (19 octobre 2026) : corrigé côté code. Restent des actions du fondateur : réglages Supabase Auth en ligne, vérification de la CI, Resend + domaine (Q11).
 
 ## Open Questions
 

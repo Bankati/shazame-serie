@@ -146,6 +146,8 @@ Plans d'hébergement : **Vercel Pro** obligatoire (le plan Hobby est réservé �
   - Route handlers : `redirect()` de `next/navigation` joint à la réponse les cookies écrits via `cookies()`.
   - Mailpit (pile locale) : `GET /api/v1/search?query=to:"adresse"` puis `GET /api/v1/message/{ID}` (champ `HTML`). Sans SMTP personnalisé, Supabase en ligne n'écrit qu'aux membres de l'organisation (erreur `email_address_not_authorized`).
   - La clé `service_role` contourne la RLS : uniquement dans `src/server/`, jamais dans une variable `NEXT_PUBLIC_*`.
+  - Stockage (U05) : client à clé secrète `getStorageAdmin()` (`src/server/storage/admin-client.ts`). `storage.from(bucket).upload(path, Buffer, { contentType, upsert: false })`, `remove([paths])`, `createSignedUrl(path, secondes)`, `list(dossier)`. `storage.buckets.file_size_limit` est un `bigint` (renvoyé en texte par postgres.js). Les limites du bucket (taille, types) sont appliquées par Supabase en plus de nos contrôles.
+  - sharp (U05) : `sharp(buffer, { limitInputPixels, failOn: "error" })`, `.rotate()` sans argument redresse selon l'EXIF, `.webp()` sans `withMetadata()` supprime toutes les métadonnées.
   - Emails d'auth : configurer le SMTP personnalisé (Resend) et traduire les gabarits en français dans le tableau de bord Supabase.
   - RG9 (30 jours d'inactivité) : réglage « inactivity timeout » des sessions Supabase, **à vérifier** selon le plan (cette option n'est pas disponible sur tous les plans). Sinon, mettre en œuvre la règle côté application (date de dernière activité).
   - RG10 (lien valable 24 h) : réglage de l'expiration des liens / OTP email (exprimé en secondes, 86 400).

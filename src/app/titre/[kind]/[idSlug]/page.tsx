@@ -3,7 +3,6 @@ import { notFound, permanentRedirect } from "next/navigation";
 
 import { TitleView } from "@/components/title/title-view";
 import { TITLE_TEXT } from "@/content/fr/title";
-import { posterUrl } from "@/lib/tmdb-image";
 import { loadTitleRoute } from "@/server/catalog/title-route";
 
 // Fiche titre (U15, AD-09). Générée à la première visite puis servie depuis le cache et revalidée chaque
@@ -23,7 +22,7 @@ export async function generateMetadata({ params }: PageProps<"/titre/[kind]/[idS
   const { page } = route;
   const title = TITLE_TEXT.metadata.title(page.title, page.year);
   const description = TITLE_TEXT.metadata.description(page.overview, page.title);
-  const poster = posterUrl(page.posterPath, "w500");
+  // Image d'aperçu : carte 1200 × 630 générée par opengraph-image.tsx (U19), ajoutée automatiquement par Next.
   return {
     title,
     description,
@@ -33,9 +32,9 @@ export async function generateMetadata({ params }: PageProps<"/titre/[kind]/[idS
       description,
       url: route.path,
       type: page.mediaType === "movie" ? "video.movie" : "video.tv_show",
-      images: poster ? [{ url: poster, width: 500, height: 750, alt: title }] : [],
     },
-    twitter: { card: poster ? "summary_large_image" : "summary", title, description, images: poster ? [poster] : [] },
+    // X reprend l'image Open Graph quand aucune image propre n'est déclarée.
+    twitter: { card: "summary_large_image", title, description },
   };
 }
 

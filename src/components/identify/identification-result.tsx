@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { ShareButton } from "@/components/share/share-button";
 import { WatchlistButton } from "@/components/watchlist/watchlist-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { IDENTIFY_TEXT } from "@/content/fr/identify";
@@ -62,6 +63,7 @@ function MainTitle({ title }: { title: IdentifiedTitle }) {
             <Link href={titlePath(title.mediaType, title.tmdbId, title.title)}>{card.viewTitle}</Link>
           </Button>
           <WatchlistButton item={{ tmdbId: title.tmdbId, mediaType: title.mediaType }} />
+          <ShareButton path={titlePath(title.mediaType, title.tmdbId, title.title)} title={title.title} />
         </div>
       </div>
     </article>

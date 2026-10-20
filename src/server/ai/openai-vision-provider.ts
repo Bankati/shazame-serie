@@ -7,6 +7,12 @@ import { env } from "@/server/env";
 import { log } from "@/server/log";
 
 import { costMicroEur, isPricedModel } from "./pricing";
+import {
+  DESCRIBE_INSTRUCTIONS,
+  DESCRIBE_MAX_ALTERNATIVES,
+  DESCRIBE_PROMPT_VERSION,
+  describeUserText,
+} from "./prompts/describe.v1";
 import { IDENTIFY_INSTRUCTIONS, IDENTIFY_PROMPT_VERSION, identifyUserText } from "./prompts/identify.v1";
 import {
   IDENTIFY_IMAGES_INSTRUCTIONS,
@@ -35,6 +41,11 @@ const PROVIDER = "openai";
 type ImageDetail = "low" | "high" | "auto" | "original";
 type ReasoningEffort = "none" | "minimal" | "low" | "medium" | "high";
 
+type UserContent = (
+  | { type: "input_text"; text: string }
+  | { type: "input_image"; image_url: string; detail: ImageDetail }
+)[];
+
 /** Sous-ensemble du client OpenAI utilisé : permet de le simuler dans les tests. */
 export type ResponsesClient = Pick<OpenAI["responses"], "parse">;
 
@@ -50,9 +61,33 @@ export type OpenAIVisionOptions = {
 export class OpenAIVisionProvider implements VisionProvider {
   constructor(private readonly options: OpenAIVisionOptions) {}
 
-  async identify(images: readonly Buffer[], context: VisionContext = {}): Promise<VisionResult> {
-    const { client, model, detail, reasoningEffort, sleep, now = Date.now } = this.options;
+  identify(images: readonly Buffer[], context: VisionContext = {}): Promise<VisionResult> {
     const prompt = promptFor(context.mode ?? "clip");
+    const content: UserContent = [
+      { type: "input_text", text: prompt.userText(images.length) },
+      ...images.map((image) => ({
+        type: "input_image" as const,
+        image_url: `data:image/jpeg;base64,${image.toString("base64")}`,
+        detail: this.options.detail,
+      })),
+    ];
+    return this.run(prompt.version, prompt.instructions, content, context.signal);
+  }
+
+  /** Description (U35) : texte seul, placé entre balises pour que le modèle le traite comme une donnée. */
+  async identifyFromText(text: string, context: { signal?: AbortSignal } = {}): Promise<VisionResult> {
+    const result = await this.run(
+      DESCRIBE_PROMPT_VERSION,
+      DESCRIBE_INSTRUCTIONS,
+      [{ type: "input_text", text: describeUserText(text) }],
+      context.signal,
+    );
+    // 3 propositions au plus (U35) : le titre principal et 2 alternatives.
+    return { ...result, answer: { ...result.answer, alternatives: result.answer.alternatives.slice(0, DESCRIBE_MAX_ALTERNATIVES) } };
+  }
+
+  private async run(promptVersion: string, instructions: string, content: UserContent, signal?: AbortSignal): Promise<VisionResult> {
+    const { client, model, reasoningEffort, sleep, now = Date.now } = this.options;
     // Sans tarif, impossible de compter la dépense (RG5) : on n'appelle pas le modèle.
     if (!isPricedModel(model)) {
       throw new VisionError("unpriced_model");
@@ -63,15 +98,6 @@ export class OpenAIVisionProvider implements VisionProvider {
     let attempts = 0;
     const startedAt = now();
 
-    const content = [
-      { type: "input_text" as const, text: prompt.userText(images.length) },
-      ...images.map((image) => ({
-        type: "input_image" as const,
-        image_url: `data:image/jpeg;base64,${image.toString("base64")}`,
-        detail,
-      })),
-    ];
-
     try {
       const answer = await withRetries(
         async () => {
@@ -79,14 +105,14 @@ export class OpenAIVisionProvider implements VisionProvider {
           const response = await client.parse(
             {
               model,
-              instructions: prompt.instructions,
+              instructions,
               input: [{ role: "user", content }],
               text: { format: zodTextFormat(modelAnswerSchema, "identification") },
               max_output_tokens: MAX_OUTPUT_TOKENS,
               store: false,
               ...(reasoningEffort ? { reasoning: { effort: reasoningEffort } } : {}),
             },
-            { timeout: ATTEMPT_TIMEOUT_MS, maxRetries: 0, signal: context.signal },
+            { timeout: ATTEMPT_TIMEOUT_MS, maxRetries: 0, signal },
           );
 
           // Toute réponse reçue est facturée, même refusée ou incomplète.
@@ -111,14 +137,14 @@ export class OpenAIVisionProvider implements VisionProvider {
           }
           return normalizeAnswer(parsed.data);
         },
-        { isRetryable: isTransient, sleep, signal: context.signal },
+        { isRetryable: isTransient, sleep, signal },
       );
 
       return {
         answer,
         provider: PROVIDER,
         model,
-        promptVersion: prompt.version,
+        promptVersion,
         attempts,
         latencyMs: now() - startedAt,
         usage,

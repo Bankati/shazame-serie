@@ -16,9 +16,10 @@ import { errorCode } from "@/server/log-error";
 import { createQuotaService, type QuotaIdentity, type QuotaService } from "@/server/quota/quota";
 import { createMemoryQuotaStore, createRedisQuotaStore } from "@/server/quota/quota-store";
 import { loadQuotaLimits } from "@/server/quota/settings";
+import { describeRequestSchema } from "@/schemas/describe";
 import { frameModeSchema, type QuotaInfo } from "@/schemas/identify";
 
-import { identifyClip } from "./identify";
+import { identifyClip, identifyDescription, type IdentifyOutcome } from "./identify";
 import { persistIdentification } from "./persist";
 import { findCachedResult, prepareCacheLookup, recordCacheHit, storeCachedResult } from "./result-cache";
 import { minFrames, validateFrames } from "./validate-frames";
@@ -127,6 +128,52 @@ export async function handleIdentifyRequest(request: Request): Promise<Response>
     { identity, images: frames.images, mode: mode.data },
   );
 
+  return outcomeResponse(outcome);
+}
+
+/**
+ * POST /api/identify/description (U35) : même ordre que les images (origine, débit, validation, IA configurée,
+ * compte suspendu), puis quota et décompte communs. Le texte n'est jamais journalisé (invariant 9).
+ */
+export async function handleDescribeRequest(request: Request): Promise<Response> {
+  if (!isSameOrigin(request)) {
+    return jsonError("FORBIDDEN");
+  }
+  const rate = await checkIdentifyRateLimit(clientIp(request.headers));
+  if (!rate.ok) {
+    return jsonError("RATE_LIMITED", undefined, { headers: { "Retry-After": retryAfterSeconds(rate.retryAt) } });
+  }
+
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return jsonError("VALIDATION_ERROR");
+  }
+  const parsed = describeRequestSchema.safeParse(body);
+  if (!parsed.success) {
+    return jsonError("VALIDATION_ERROR");
+  }
+
+  const vision = getGuardedVisionProviderOrNull();
+  if (!vision) {
+    log.error("identify.vision_not_configured");
+    return jsonError("UPSTREAM_ERROR");
+  }
+  const { identity, suspended } = await currentRequester();
+  if (suspended) {
+    return jsonError("ACCOUNT_SUSPENDED");
+  }
+
+  const db = getDb();
+  const outcome = await identifyDescription(
+    { quota: getQuotaService(), vision, catalog: getCatalog(), persist: (record) => persistIdentification(db, record) },
+    { identity, text: parsed.data.text },
+  );
+  return outcomeResponse(outcome);
+}
+
+function outcomeResponse(outcome: IdentifyOutcome): Response {
   if (outcome.ok) {
     return jsonOk(outcome.response);
   }

@@ -1,5 +1,7 @@
 import "server-only";
 
+import { createHash } from "node:crypto";
+
 import { type VisionAnswer, VisionError, type VisionProvider, type VisionResult } from "@/server/ai/vision-provider";
 import type { CatalogProvider, MediaType } from "@/server/catalog/catalog-provider";
 import { matchProposedTitle } from "@/server/catalog/match-title";
@@ -58,6 +60,57 @@ export async function identifyClip(
     }
   }
 
+  return analyzeWithAi(deps, {
+    identity,
+    inputKind: mode,
+    fingerprint: lookup.fingerprint,
+    callAi: () => deps.vision.identify(images, { mode }),
+    // 17. Mise en cache (le seuil de confiance est appliqué par le cache lui-même).
+    onShown: (result) => deps.cache.store(lookup, result),
+  });
+}
+
+/**
+ * Identification par description (U35, AD-43) : même quota, même décompte et même enregistrement que les images,
+ * sans cache (deux descriptions sont presque toujours différentes). Le texte n'est ni journalisé ni enregistré :
+ * seule son empreinte, calculée ici, est conservée (invariant 9).
+ */
+export async function identifyDescription(
+  deps: Pick<IdentifyDeps, "quota" | "vision" | "catalog" | "persist">,
+  input: { identity: QuotaIdentity; text: string },
+): Promise<IdentifyOutcome> {
+  const { identity, text } = input;
+  const before = await deps.quota.status(identity);
+  if (before.remaining <= 0) {
+    return { ok: false, code: "QUOTA_EXCEEDED", quota: toQuotaInfo(before) };
+  }
+  return analyzeWithAi(deps, {
+    identity,
+    inputKind: "description",
+    fingerprint: descriptionFingerprint(text),
+    callAi: () => deps.vision.identifyFromText(text),
+  });
+}
+
+/** Empreinte d'une description : SHA-256 du texte normalisé (casse, accents, espaces), préfixée pour la distinguer. */
+export function descriptionFingerprint(text: string): string {
+  const normalized = text.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().replace(/\s+/g, " ").trim();
+  return `description:${createHash("sha256").update(normalized).digest("hex")}`;
+}
+
+type AnalysisInput = {
+  identity: QuotaIdentity;
+  inputKind: IdentificationRecord["inputKind"];
+  fingerprint: string;
+  callAi: () => Promise<VisionResult>;
+  onShown?: (result: CacheableResult) => Promise<void>;
+};
+
+/** Étapes 12 à 18, communes à tous les modes : réservation, IA, TMDB, score, décompte ou libération, journal. */
+async function analyzeWithAi(
+  deps: Pick<IdentifyDeps, "quota" | "catalog" | "persist">,
+  { identity, inputKind, fingerprint, callAi, onShown }: AnalysisInput,
+): Promise<IdentifyOutcome> {
   // 12. Réservation atomique : deux requêtes simultanées ne dépassent jamais la limite.
   const reserved = await deps.quota.reserve(identity);
   if (!reserved.ok) {
@@ -68,7 +121,7 @@ export async function identifyClip(
   let vision: VisionResult | undefined;
   try {
     // 13-14. IA (3 tentatives, RG16), rapprochement TMDB de chaque candidat, score combiné.
-    vision = await deps.vision.identify(images, { mode });
+    vision = await callAi();
     const candidates = proposedCandidates(vision.answer);
     const matches = await Promise.all(candidates.map((candidate) => matchProposedTitle(deps.catalog, candidate.proposed)));
     const score = scoreIdentification(candidates.map((candidate, index) => ({ aiConfidence: candidate.confidence, match: matches[index]! })));
@@ -82,8 +135,8 @@ export async function identifyClip(
 
     const identificationId = await deps.persist({
       identity,
-      inputKind: mode,
-      fingerprint: lookup.fingerprint,
+      inputKind,
+      fingerprint,
       source: "ai",
       outcome: score.main ? "shown" : "low_confidence",
       counted: reservation.state === "committed",
@@ -96,9 +149,8 @@ export async function identifyClip(
       latencyMs: vision.latencyMs,
     });
 
-    // 17. Mise en cache (le seuil de confiance est appliqué par le cache lui-même).
-    if (score.main) {
-      await deps.cache.store(lookup, { ...pick(score.main), alternatives: score.alternatives.map(pick) });
+    if (score.main && onShown) {
+      await onShown({ ...pick(score.main), alternatives: score.alternatives.map(pick) });
     }
 
     return {
@@ -120,8 +172,8 @@ export async function identifyClip(
     }
     await deps.persist({
       identity,
-      inputKind: mode,
-      fingerprint: lookup.fingerprint,
+      inputKind,
+      fingerprint,
       source: "ai",
       outcome: "failed",
       counted: false,

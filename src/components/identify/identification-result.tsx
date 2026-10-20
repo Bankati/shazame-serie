@@ -22,14 +22,23 @@ const keyOf = (title: IdentifiedTitle) => `${title.mediaType}-${title.tmdbId}`;
 
 // Carte de résultat (ui-context.md, « Résultat ») : affiche, titre, année et type, confiance, autres pistes.
 // Les actions (fiche U15, liste U18, signalement U20) s'ajouteront dans la zone prévue sous le titre.
-export function IdentificationResult({ response, onReport }: { response: IdentifyResponse; onReport?: () => void }) {
-  const { card, result } = IDENTIFY_TEXT;
+export function IdentificationResult({
+  response,
+  onReport,
+  notRecognized = IDENTIFY_TEXT.result.notRecognized,
+}: {
+  response: IdentifyResponse;
+  onReport?: () => void;
+  /** Message quand rien n'atteint 50 % (adapté à une description, U35). */
+  notRecognized?: string;
+}) {
+  const { card } = IDENTIFY_TEXT;
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
 
   if (!response.main) {
     return (
       <div className="flex flex-col gap-3">
-        <p className="text-sm text-foreground">{result.notRecognized}</p>
+        <p className="text-sm text-foreground">{notRecognized}</p>
         <AlternativeList titles={response.alternatives} heading={card.leads} onSelect={(title) => setSelectedKey(keyOf(title))} />
         {selectedKey ? <SelectedLead response={response} selectedKey={selectedKey} /> : null}
       </div>

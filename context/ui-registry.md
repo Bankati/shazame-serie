@@ -129,6 +129,44 @@ Dernière mise à jour : 14 octobre 2026 (U06)
 
 **Notes de pattern :** depuis U34, sélection multiple (`multiple`, `accept` vidéos + images) : une vidéo lance le clip, 1 à 5 images le mode captures (tri par `classifySelection`, erreurs dans la même zone `role="alert"`) ; titre « Choisir un clip ou des captures », libellé du bouton inchangé. `accept="video/*,.mp4,.mov,…"` depuis U33 (les galeries des téléphones proposent toutes les vidéos ; le contrôle trie ensuite). Le champ fichier est `sr-only`, `tabIndex={-1}`, `aria-hidden` : l'accès clavier et mobile passe par le bouton, qui pointe vers les contraintes (et l'erreur) par `aria-describedby`. La valeur du champ est vidée après chaque choix pour pouvoir reprendre le même fichier. L'indice « ou glissez-le ici » n'apparaît qu'à partir de `md`.
 
+### IdentifyTabs (mode d'identification)
+
+Fichier : `src/components/identify/identify-tabs.tsx`
+Dernière mise à jour : 20 octobre 2026 (U35)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | conteneur `bg-muted` ; onglet choisi `bg-background` |
+| Bordure | none |
+| Radius | conteneur `rounded-lg`, onglets `rounded-md` |
+| Texte principal | onglet choisi `text-sm font-medium text-foreground` |
+| Texte secondaire | onglet non choisi `text-muted-foreground` |
+| Espacement | conteneur `gap-1 p-1`, onglet `h-11 px-3`, largeur égale (`flex-1`) |
+| Hover / focus | `hover:text-foreground` ; `focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring` |
+| Ombre | none |
+| Accent | none |
+
+**Notes de pattern :** contrôle segmenté sans dépendance (pas de composant `ui` tabs) : `role="tablist"` + `role="tab"` (`aria-selected`, `aria-controls`, `tabIndex` 0 sur l'onglet choisi seulement), flèches gauche/droite, Début, Fin ; le panneau a `role="tabpanel"` et `aria-labelledby`. Le changement d'onglet laisse le focus sur l'onglet (modèle WAI-ARIA) ; Tab mène au contenu. U36 ajoutera « Lien » dans `IDENTIFY_TABS`.
+
+### DescriptionForm (identification par description)
+
+Fichier : `src/components/identify/description-form.tsx`
+Dernière mise à jour : 20 octobre 2026 (U35)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | champ `bg-transparent` (`dark:bg-input/30`) |
+| Bordure | champ `border border-input`, au focus `border-ring` + `ring-3 ring-ring/50` |
+| Radius | champ `rounded-md`, bouton `rounded-md` (shadcn) |
+| Texte principal | libellé `font-display text-2xl font-bold` (comme le titre de `ClipDropzone`) ; saisie `text-base` |
+| Texte secondaire | aide et compteur `text-sm text-muted-foreground` ; indication `placeholder:text-muted-foreground` |
+| Espacement | `gap-3` ; champ `px-3 py-2 min-h-28`, redimensionnable verticalement |
+| Hover / focus | bouton `h-11 hover:bg-primary-hover`, désactivé hors 10 à 500 caractères |
+| Ombre | none |
+| Accent | none |
+
+**Notes de pattern :** `<textarea>` natif aux classes du champ shadcn (pas de composant `ui` textarea), `maxLength` 500, décrit par l'aide et le compteur (`aria-describedby`, compteur non annoncé à chaque frappe). Bornes partagées avec le serveur (`src/schemas/describe.ts`). Les erreurs d'envoi s'affichent sous le formulaire (`role="alert"`), le texte reste dans le champ.
+
 ### ExcerptPicker (choix du passage d'une vidéo longue)
 
 Fichier : `src/components/identify/excerpt-picker.tsx`

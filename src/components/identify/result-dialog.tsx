@@ -35,9 +35,11 @@ type ResultDialogProps = {
   onAnother: () => void;
   /** Images du clip encore en mémoire : renvoyées avec un signalement, seulement si la personne y consent. */
   frames: readonly Blob[];
+  /** Origine de la recherche (U35) : adapte « Choisir un autre clip » et le message « non reconnu ». */
+  source?: "media" | "description";
 };
 
-export function ResultDialog({ open, onOpenChange, response, onAnother, frames }: ResultDialogProps) {
+export function ResultDialog({ open, onOpenChange, response, onAnother, frames, source = "media" }: ResultDialogProps) {
   const desktop = useIsDesktop();
   // Vue de la fenêtre : résultat, ou formulaire de signalement (U20) ; un seul signalement par résultat.
   const [view, setView] = useState<"result" | "report" | "reported">("result");
@@ -55,10 +57,14 @@ export function ResultDialog({ open, onOpenChange, response, onAnother, frames }
       />
     ) : (
       <>
-        <IdentificationResult response={response} onReport={canReport ? () => setView("report") : undefined} />
+        <IdentificationResult
+          response={response}
+          onReport={canReport ? () => setView("report") : undefined}
+          notRecognized={source === "description" ? result.notRecognizedDescription : result.notRecognized}
+        />
         <div className="flex flex-col-reverse gap-3 border-t border-border pt-4 sm:flex-row sm:justify-end">
           <Button type="button" variant="outline" className="h-11 text-base" onClick={onAnother}>
-            {result.another}
+            {source === "description" ? IDENTIFY_TEXT.description.another : result.another}
           </Button>
         </div>
       </>

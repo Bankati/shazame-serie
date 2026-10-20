@@ -91,6 +91,8 @@ export type VisionContext = { signal?: AbortSignal; mode?: "clip" | "images" };
 
 export interface VisionProvider {
   identify(images: readonly Buffer[], context?: VisionContext): Promise<VisionResult>;
+  /** Identification d'après une description écrite (U35), même format de réponse ; le texte n'est jamais conservé. */
+  identifyFromText(text: string, context?: { signal?: AbortSignal }): Promise<VisionResult>;
 }
 
 /** Applique les bornes : confiance entière 0 à 100, 3 alternatives au plus, rien de plus si non reconnu. */

@@ -21,6 +21,26 @@ export const IDENTIFY_TEXT = {
     analyzing: "Analyse des images…",
     extracting: (current: number, total: number) => `Extraction des images (${current} sur ${total})…`,
   },
+  // Onglets du mode d'identification (U35).
+  tabs: {
+    label: "Comment identifier le titre",
+    media: "Vidéo ou captures",
+    description: "Description",
+  },
+  // Identification par description (U35).
+  description: {
+    label: "Décrire le film ou la série",
+    hint: "L'histoire, une scène, un personnage, un acteur, une époque : tout ce dont vous vous souvenez.",
+    placeholder: "Ex. : un homme revit sans cesse la même journée dans une petite ville enneigée",
+    counter: (length: number, min: number, max: number) =>
+      length < min
+        ? `${length} / ${max} caractères (${min} au minimum)`
+        : `${length} / ${max} caractères`,
+    submit: "Identifier",
+    sending: "Recherche en cours…",
+    privacy: "Votre description sert uniquement à cette recherche : elle n'est pas conservée.",
+    another: "Décrire un autre titre",
+  },
   // Vidéo de plus de 60 s : choix du passage analysé (AD-40).
   excerpt: {
     title: "Choisissez le passage à analyser",
@@ -55,6 +75,8 @@ export const IDENTIFY_TEXT = {
       `${percent} %, ${decision === "show" ? "très probable" : "probable"}`,
     alternatives: "Autres pistes :",
     notRecognized: "Nous n'avons pas reconnu ce clip avec assez de certitude. Essayez un autre extrait.",
+    notRecognizedDescription:
+      "Nous n'avons pas reconnu ce titre avec assez de certitude. Ajoutez un détail précis : un acteur, une scène, une époque.",
     remaining: (count: number) =>
       count === 0
         ? "C'était votre dernière identification aujourd'hui."
@@ -91,6 +113,7 @@ export const IDENTIFY_TEXT = {
     quota: "Vous avez atteint votre limite d'identifications pour aujourd'hui. Elle se renouvelle à minuit (heure de Paris).",
     rate_limited: "Trop d'essais rapprochés. Patientez une minute, puis réessayez.",
     frames: "Ces images n'ont pas pu être analysées. Choisissez un autre extrait.",
+    text: "Cette description n'a pas pu être analysée. Écrivez entre 10 et 500 caractères.",
     paused:
       "L'identification de nouveaux extraits est en pause pour aujourd'hui, en raison d'une forte affluence. Les extraits déjà connus restent reconnus ; réessayez demain.",
     suspended: "Votre compte est suspendu : l'identification n'est pas disponible.",

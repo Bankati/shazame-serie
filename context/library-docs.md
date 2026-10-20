@@ -40,7 +40,8 @@ Relevées sur le registre npm le **4 octobre 2026**, révisées en U01 le **7 oc
 | `posthog-node` | 5.55.1 (installé) | Erreurs serveur (AD-28) |
 | `vitest` | 5.0.3 | Tests unitaires |
 | `server-only` | 0.0.1 (installé) | Empêche l'import d'un module serveur côté client |
-| `ffmpeg-static` | 5.3.0 | Extraction d'images dans le harnais `eval/` uniquement (dépendance de développement) |
+| `ffmpeg-static` | 5.3.0 (installé) | Vidéos d'essai de U33 (`scripts/make-video-fixtures.mjs`) et harnais `eval/` (dépendance de développement) |
+| `@ffmpeg/ffmpeg` / `@ffmpeg/util` / `@ffmpeg/core` | 0.12.15 / 0.12.2 / 0.12.10 (installés, U33) | Lecture de secours des vidéos dans le navigateur (AD-40) |
 | `@types/node` | 24.19.1 | Types alignés sur le runtime Node 24 (ne pas prendre la dernière majeure) |
 | `eslint` / `typescript-eslint` | 9.39.5 (installé, AD-21) / via `eslint-config-next` | Lint |
 | `@playwright/test` | 1.63.0 | Tests bout en bout |
@@ -235,7 +236,19 @@ Plans d'hébergement : **Vercel Pro** obligatoire (le plan Hobby est réservé �
   - Libérer la mémoire : `URL.revokeObjectURL` après extraction.
   - Échantillonner en évitant le tout début et la toute fin (fondus au noir, logos).
 
-## ffmpeg-static (eval uniquement)
+## ffmpeg.wasm (lecture de secours, U33, AD-40)
+
+- Doc : https://ffmpegwasm.netlify.app/docs/overview — API dans `node_modules/@ffmpeg/ffmpeg/dist/esm/classes.d.ts`.
+- Cœur mono-thread (`@ffmpeg/core`, wasm de 32 Mo) : pas besoin de `SharedArrayBuffer` ni des en-têtes COOP/COEP. Servi par le site depuis `public/ffmpeg/core-<version>/` (copie par `scripts/copy-ffmpeg-core.mjs` au `postinstall`, dossier ignoré par git, `Cache-Control: immutable` dans `next.config.ts`).
+- Pièges vérifiés le 20 octobre 2026 :
+  - **Turbopack casse le worker empaqueté** : son `import(coreURL)` dynamique devient « Cannot find module as expression is too dynamic ». Passer `classWorkerURL` vers la copie servie telle quelle (`public/ffmpeg/worker-<version>/worker.js`, avec `const.js` et `errors.js`).
+  - **`ffprobe()` renvoie -1 même en cas de succès** (0.12.10) : lire le fichier produit par `-o` au lieu du code de retour.
+  - Monter la vidéo en `WORKERFS` (`mount(FFFSType.WORKERFS, { files: [file] }, dir)`, après `createDir`) : lecture par morceaux, pas de copie de 500 Mo en mémoire. Ne pas utiliser `writeFile` pour la vidéo.
+  - `-ss t` **avant** `-i` (déplacement rapide sur image clé), `-frames:v 1` ; une commande par image.
+  - Le `signal` des méthodes rejette la promesse sans arrêter le worker : appeler `terminate()` à l'annulation.
+  - Constantes de version (`src/client/frames/ffmpeg-source.ts`) vérifiées contre les paquets installés par un test : les mettre à jour avec les paquets.
+
+## ffmpeg-static (vidéos d'essai et eval)
 
 - Doc : https://ffmpeg.org/ffmpeg.html — paquet : https://www.npmjs.com/package/ffmpeg-static
 - Appeler le binaire par `child_process.spawn` (ne pas utiliser `fluent-ffmpeg`, qui n'est plus maintenu). Réutiliser les instants d'échantillonnage de `src/shared/frames/` pour reproduire l'extraction du navigateur.

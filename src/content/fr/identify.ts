@@ -5,16 +5,31 @@ import type { RejectReason } from "@/shared/frames/selection";
 export const IDENTIFY_TEXT = {
   dropzone: {
     title: "Choisir un clip",
-    constraints: "MP4, MOV ou WebM, 60 secondes et 50 Mo au maximum",
+    constraints: "MP4, MOV, WebM, M4V, 3GP, MKV ou AVI, 500 Mo au maximum",
     button: "Choisir un clip",
     dropHint: "ou glissez-le ici",
     dropActive: "Déposez le clip pour l'analyser",
     privacy: "Votre vidéo reste sur votre appareil : seules quelques images sont analysées.",
   },
   steps: {
-    reading: "Lecture du clip…",
+    reading: "Lecture de la vidéo…",
+    preparing: (progress: number | null) =>
+      progress === null
+        ? "Cette vidéo demande le lecteur de secours (32 Mo, téléchargé une seule fois)…"
+        : `Préparation du lecteur de secours (32 Mo, une seule fois) : ${Math.round(progress * 100)} %…`,
     analyzing: "Analyse des images…",
     extracting: (current: number, total: number) => `Extraction des images (${current} sur ${total})…`,
+  },
+  // Vidéo de plus de 60 s : choix du passage analysé (AD-40).
+  excerpt: {
+    title: "Choisissez le passage à analyser",
+    explanation: (duration: string) =>
+      `Cette vidéo dure ${duration}. Nous analysons un passage de 60 secondes : placez-le sur la scène à reconnaître.`,
+    label: "Début du passage",
+    range: (from: string, to: string) => `De ${from} à ${to}`,
+    preview: "Aperçu du début du passage",
+    analyze: "Analyser ce passage",
+    another: "Choisir une autre vidéo",
   },
   strip: {
     label: "Images extraites du clip",
@@ -79,12 +94,11 @@ export const IDENTIFY_TEXT = {
     unavailable: "L'identification est momentanément indisponible. Réessayez dans quelques instants.",
   },
   problems: {
-    unsupported_format: "Ce format n'est pas pris en charge. Choisissez un clip MP4, MOV ou WebM.",
+    unsupported_format: "Ce format n'est pas pris en charge. Choisissez une vidéo MP4, MOV, WebM, M4V, 3GP, MKV ou AVI.",
     empty: "Ce fichier est vide. Choisissez un autre clip.",
-    too_large: "Ce clip dépasse 50 Mo. Coupez-le ou choisissez un autre extrait.",
-    too_long: "Ce clip dure plus de 60 secondes. Coupez-le ou choisissez un autre extrait.",
+    too_large: "Cette vidéo dépasse 500 Mo. Coupez-la ou choisissez un autre extrait.",
     too_short: "Ce clip dure moins d'une seconde. Choisissez un extrait plus long.",
     unreadable:
-      "Ce clip n'est pas lisible sur cet appareil. Essayez un autre format (MP4 de préférence) ou un autre extrait.",
+      "Cette vidéo n'a pas pu être lue, même avec le lecteur de secours. Exportez-la en MP4 depuis votre téléphone, ou choisissez un autre extrait.",
   } satisfies Record<ClipProblem, string>,
 } as const;

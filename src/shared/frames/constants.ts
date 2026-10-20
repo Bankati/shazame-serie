@@ -1,13 +1,25 @@
 // Paramètres d'extraction communs au navigateur (U06) et à l'eval (U13), CDC 12.1.
 // Les seuils de qualité sont des valeurs de départ, à calibrer sur le jeu de test (U13).
 
-/** Contraintes du clip (CDC 12.1). */
-export const CLIP_MAX_BYTES = 50 * 1024 * 1024;
-export const CLIP_MAX_DURATION_S = 60;
+/** Contraintes du clip (CDC 12.1, élargies par AD-40 : vidéos de téléphone courantes). */
+export const CLIP_MAX_BYTES = 500 * 1024 * 1024;
 export const CLIP_MIN_DURATION_S = 1;
-export const CLIP_MIME_TYPES = ["video/mp4", "video/quicktime", "video/webm"] as const;
-// Certains Android ne renseignent pas le type MIME : l'extension sert de second indice.
-export const CLIP_EXTENSIONS = [".mp4", ".mov", ".webm"] as const;
+/** Durée du passage analysé dans une vidéo plus longue (AD-40). */
+export const CLIP_EXCERPT_S = 60;
+export const CLIP_MIME_TYPES = [
+  "video/mp4",
+  "video/quicktime",
+  "video/webm",
+  "video/x-m4v",
+  "video/3gpp",
+  "video/3gpp2",
+  "video/x-matroska",
+  "video/avi",
+  "video/x-msvideo",
+  "video/msvideo",
+] as const;
+// Certains Android et Windows ne renseignent pas le type MIME (ou un type inattendu) : l'extension suffit.
+export const CLIP_EXTENSIONS = [".mp4", ".mov", ".webm", ".m4v", ".3gp", ".3g2", ".mkv", ".avi"] as const;
 
 /** Échantillonnage : on évite le début et la fin (fondus au noir, logos). */
 export const CANDIDATE_COUNT = 5;
@@ -26,6 +38,11 @@ export const JPEG_QUALITY_STEPS = [0.8, 0.7, 0.6] as const;
 export const ANALYSIS_WIDTH_PX = 160;
 /** Luminosité moyenne (0 à 255) en dessous de laquelle l'image est jugée noire. */
 export const DARK_MAX_MEAN_LUMINANCE = 20;
+/**
+ * Luminosité en dessous de laquelle l'image est vide (canevas jamais peint) : si toutes les candidates le sont,
+ * le navigateur a « lu » la vidéo sans la décoder, on passe à la lecture de secours (AD-40).
+ */
+export const BLANK_MAX_MEAN_LUMINANCE = 1;
 /** Variance du laplacien en dessous de laquelle l'image est jugée floue. */
 export const BLUR_MIN_LAPLACIAN_VARIANCE = 20;
 /** dHash : image réduite à 9 × 8 pixels, 64 bits. */

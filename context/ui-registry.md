@@ -127,7 +127,26 @@ Dernière mise à jour : 14 octobre 2026 (U06)
 | Ombre | none |
 | Accent | icône d'envoi `text-primary` |
 
-**Notes de pattern :** le champ fichier est `sr-only`, `tabIndex={-1}`, `aria-hidden` : l'accès clavier et mobile passe par le bouton, qui pointe vers les contraintes (et l'erreur) par `aria-describedby`. La valeur du champ est vidée après chaque choix pour pouvoir reprendre le même fichier. L'indice « ou glissez-le ici » n'apparaît qu'à partir de `md`.
+**Notes de pattern :** `accept="video/*,.mp4,.mov,…"` depuis U33 (les galeries des téléphones proposent toutes les vidéos ; le contrôle trie ensuite). Le champ fichier est `sr-only`, `tabIndex={-1}`, `aria-hidden` : l'accès clavier et mobile passe par le bouton, qui pointe vers les contraintes (et l'erreur) par `aria-describedby`. La valeur du champ est vidée après chaque choix pour pouvoir reprendre le même fichier. L'indice « ou glissez-le ici » n'apparaît qu'à partir de `md`.
+
+### ExcerptPicker (choix du passage d'une vidéo longue)
+
+Fichier : `src/components/identify/excerpt-picker.tsx`
+Dernière mise à jour : 20 octobre 2026 (U33)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | hérité de la carte `IdentifyPanel` (`bg-card`) ; aperçu vidéo `bg-muted` |
+| Bordure | none |
+| Radius | aperçu `rounded-lg` ; boutons shadcn `rounded-md` |
+| Texte principal | titre `font-display text-xl font-bold` ; libellé `text-sm font-medium text-foreground` |
+| Texte secondaire | `text-sm text-muted-foreground` (explication, « De 0:45 à 1:45 ») |
+| Espacement | `gap-4` entre blocs, `gap-2` libellé-curseur, `gap-1` titre-explication, boutons `gap-3` |
+| Hover / focus | bouton principal `hover:bg-primary-hover`, secondaire `variant="outline"` ; curseur natif, focus du navigateur |
+| Ombre | none |
+| Accent | curseur `accent-primary` |
+
+**Notes de pattern :** affiché seulement pour une vidéo de plus de 60 s, avant tout envoi (aucune identification décomptée). Curseur `<input type="range">` natif (pas de composant `ui` slider) : `h-11` pour la zone tactile, `aria-valuetext` et texte visible « De … à … » (la position n'est pas donnée par la seule couleur). Aperçu `aspect-video object-contain`, seulement en lecture native. Mêmes boutons `h-11 w-full sm:w-fit` que la fin de parcours d'`IdentifyPanel`.
 
 ### FilmStrip (élément signature)
 

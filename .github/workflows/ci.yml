@@ -48,7 +48,7 @@ jobs:
   e2e:
     name: Parcours navigateur (Playwright)
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v7
 
@@ -58,6 +58,10 @@ jobs:
           cache: npm
 
       - run: npm ci
+
+      # Vidéos d'essai de U33 (un fichier par format, HEVC, 150 s, 64 Mo), générées par ffmpeg-static.
+      - name: Vidéos d'essai
+        run: npm run fixtures:videos
 
       # Build avec le faux TMDB (scripts/tmdb-mock.mjs) : l'accueil est généré au build. IA et quota sont
       # simulés par les tests ; aucun service réel appelé.

@@ -12,6 +12,7 @@ import { IDENTIFY_TEXT } from "@/content/fr/identify";
 import type { IdentifyResponse } from "@/schemas/identify";
 
 import { ClipDropzone } from "./clip-dropzone";
+import { ExcerptPicker } from "./excerpt-picker";
 import { FilmStrip } from "./film-strip";
 import { IdentificationResultSkeleton } from "./identification-result";
 import { ResultDialog } from "./result-dialog";
@@ -20,7 +21,7 @@ import { ResultDialog } from "./result-dialog";
 // et résultat dans une fenêtre (U12, fenêtre demandée le 16 octobre 2026). Le compteur de l'en-tête suit le
 // quota renvoyé par chaque identification.
 export function IdentifyPanel() {
-  const { state, start, reset } = useFrameExtraction();
+  const { state, start, choose, reset } = useFrameExtraction();
   const identification = useIdentification(state.status === "ready" ? state.packageBlobs : null);
   const { dropzone, result, dialog } = IDENTIFY_TEXT;
   useEffect(() => {
@@ -59,6 +60,16 @@ export function IdentifyPanel() {
           onFile={start}
           problem={state.status === "rejected" ? state.problem : undefined}
           focusOnMount={returningFromResult}
+        />
+      ) : state.status === "choosing" ? (
+        <ExcerptPicker
+          // Nouvelle vidéo : curseur remis au milieu.
+          key={state.previewUrl ?? state.durationS}
+          durationS={state.durationS}
+          initialStartS={state.startS}
+          previewUrl={state.previewUrl}
+          onAnalyze={(startS) => void choose(startS)}
+          onCancel={chooseAnother}
         />
       ) : (
         <div className="flex flex-col gap-4">
@@ -110,6 +121,8 @@ function statusMessage(state: ExtractionState, identification: IdentificationSta
   switch (state.status) {
     case "reading":
       return steps.reading;
+    case "preparing":
+      return steps.preparing(state.progress);
     case "extracting":
       return steps.extracting(Math.min(state.frames.length + 1, state.total), state.total);
     case "insufficient":

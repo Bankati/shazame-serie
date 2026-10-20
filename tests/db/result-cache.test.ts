@@ -46,6 +46,30 @@ describe("cache de résultats", () => {
     expect(row).toEqual({ hits: 1, frames: 4 });
   });
 
+  it("mode image (U34) : une capture seule déjà vue sert le cache (correspondance exacte)", async () => {
+    const [capture] = await clipJpegs(300);
+    if (!capture) throw new Error("capture absente");
+    const identify = vi.fn(async () => MATRIX);
+
+    await withResultCache(db, [capture], identify);
+    const again = await withResultCache(db, [capture], identify);
+
+    expect(identify).toHaveBeenCalledTimes(1);
+    expect(again.source).toBe("cache");
+  });
+
+  it("mode image : une autre capture seule ne profite pas d'une correspondance proche (2 images exigées)", async () => {
+    const images = await clipJpegs(400);
+    await withResultCache(db, images, async () => MATRIX);
+    const recompressed = await recompress(images[0]!);
+
+    const identify = vi.fn(async () => MATRIX);
+    const outcome = await withResultCache(db, [recompressed], identify);
+
+    expect(identify).toHaveBeenCalledTimes(1);
+    expect(outcome.source).toBe("ai");
+  });
+
   it("retrouve l'extrait après recompression (correspondance proche)", async () => {
     const images = await clipJpegs(200);
     await withResultCache(db, images, async () => MATRIX);

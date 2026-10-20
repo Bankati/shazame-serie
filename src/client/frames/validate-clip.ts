@@ -1,7 +1,17 @@
 import { CLIP_EXTENSIONS, CLIP_MAX_BYTES, CLIP_MIME_TYPES, CLIP_MIN_DURATION_S } from "@/shared/frames/constants";
 
-/** Motifs de refus d'un clip ; les messages sont dans src/content/fr/identify.ts. */
-export type ClipProblem = "unsupported_format" | "empty" | "too_large" | "too_short" | "unreadable";
+/** Motifs de refus d'un clip ou d'une sélection d'images (U34) ; les messages sont dans src/content/fr/identify.ts. */
+export type ClipProblem =
+  | "unsupported_format"
+  | "empty"
+  | "too_large"
+  | "too_short"
+  | "unreadable"
+  | "mixed_files"
+  | "several_videos"
+  | "too_many_images"
+  | "image_too_large"
+  | "image_unreadable";
 
 export type ClipCheck = { ok: true } | { ok: false; problem: ClipProblem };
 

@@ -16,12 +16,12 @@ import { errorCode } from "@/server/log-error";
 import { createQuotaService, type QuotaIdentity, type QuotaService } from "@/server/quota/quota";
 import { createMemoryQuotaStore, createRedisQuotaStore } from "@/server/quota/quota-store";
 import { loadQuotaLimits } from "@/server/quota/settings";
-import type { QuotaInfo } from "@/schemas/identify";
+import { frameModeSchema, type QuotaInfo } from "@/schemas/identify";
 
 import { identifyClip } from "./identify";
 import { persistIdentification } from "./persist";
 import { findCachedResult, prepareCacheLookup, recordCacheHit, storeCachedResult } from "./result-cache";
-import { validateFrames } from "./validate-frames";
+import { minFrames, validateFrames } from "./validate-frames";
 
 // Traitement HTTP de POST /api/identify et GET /api/quota (la route ne fait qu'appeler ces fonctions, invariant 8).
 
@@ -84,7 +84,12 @@ export async function handleIdentifyRequest(request: Request): Promise<Response>
   } catch {
     return jsonError("VALIDATION_ERROR");
   }
-  const frames = await validateFrames(form.getAll("frames"));
+  // Mode (U34) : clip (2 à 5 images) ou captures (1 à 5). Absent : clip, comme avant U34.
+  const mode = frameModeSchema.safeParse(form.get("mode") ?? undefined);
+  if (!mode.success) {
+    return jsonError("VALIDATION_ERROR");
+  }
+  const frames = await validateFrames(form.getAll("frames"), { minCount: minFrames(mode.data) });
   if (!frames.ok) {
     return frames.reason === "count" ? jsonError("FRAMES_UNUSABLE") : jsonError("VALIDATION_ERROR");
   }
@@ -119,7 +124,7 @@ export async function handleIdentifyRequest(request: Request): Promise<Response>
       },
       persist: (record) => persistIdentification(db, record),
     },
-    { identity, images: frames.images },
+    { identity, images: frames.images, mode: mode.data },
   );
 
   if (outcome.ok) {

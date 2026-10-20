@@ -77,6 +77,36 @@ describe("identifyClip", () => {
     expect(store).toHaveBeenCalledWith(expect.objectContaining({ fingerprint: "empreinte" }), expect.objectContaining({ tmdbId: 603, confidence: 95 }));
   });
 
+  it("mode image (U34) : une seule capture, même circuit, consigne et mode transmis, mode enregistré", async () => {
+    const { deps, quota, records, identify } = setup();
+
+    const outcome = await identifyClip(deps, { identity: VISITOR, images: [IMAGES[0]!], mode: "images" });
+
+    expect(outcome).toMatchObject({ ok: true, response: { decision: "show", source: "ai" } });
+    expect(identify).toHaveBeenCalledWith([IMAGES[0]], { mode: "images" });
+    expect((await quota.status(VISITOR)).used).toBe(1);
+    expect(records[0]).toMatchObject({ inputKind: "images", counted: true });
+  });
+
+  it("mode image : la même capture renvoyée sert le cache, sans décompte ni appel IA (critère de fin U34)", async () => {
+    const cached: CachedResult = { cacheId: "c2", tmdbId: 603, mediaType: "movie", confidence: 91, alternatives: [], validated: false };
+    const { deps, quota, records, identify } = setup({ cached });
+
+    const outcome = await identifyClip(deps, { identity: VISITOR, images: [IMAGES[0]!], mode: "images" });
+
+    expect(outcome).toMatchObject({ ok: true, response: { source: "cache", main: { title: "Matrix" } } });
+    expect(identify).not.toHaveBeenCalled();
+    expect((await quota.status(VISITOR)).used).toBe(0);
+    expect(records[0]).toMatchObject({ inputKind: "images", source: "cache", counted: false });
+  });
+
+  it("sans mode : clip (compatibilité avant U34)", async () => {
+    const { deps, records, identify } = setup();
+    await identifyClip(deps, { identity: VISITOR, images: IMAGES });
+    expect(identify).toHaveBeenCalledWith(IMAGES, { mode: "clip" });
+    expect(records[0]).toMatchObject({ inputKind: "clip" });
+  });
+
   it("ne décompte pas un résultat sous 50 % (RG3)", async () => {
     const { deps, quota, records, store } = setup({ vision: async () => visionResult(UNSURE) });
 

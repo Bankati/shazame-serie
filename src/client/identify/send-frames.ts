@@ -1,7 +1,13 @@
 import { z } from "zod";
 
 import { errorCodeSchema } from "@/schemas/errors";
-import { type IdentifyResponse, identifyResponseSchema, quotaInfoSchema, type QuotaInfo } from "@/schemas/identify";
+import {
+  type FrameMode,
+  type IdentifyResponse,
+  identifyResponseSchema,
+  quotaInfoSchema,
+  type QuotaInfo,
+} from "@/schemas/identify";
 
 // Envoi du paquet d'images (jamais la vidéo, invariant 1) et lecture validée de la réponse.
 
@@ -21,8 +27,10 @@ const errorSchema = z.object({
   error: z.object({ code: errorCodeSchema, details: z.object({ quota: quotaInfoSchema }).optional() }),
 });
 
-export async function sendFrames(frames: readonly Blob[], signal?: AbortSignal): Promise<IdentifyCall> {
+export async function sendFrames(frames: readonly Blob[], mode: FrameMode, signal?: AbortSignal): Promise<IdentifyCall> {
   const body = new FormData();
+  // Mode (U34) : images d'un clip, ou captures envoyées telles quelles (consigne IA propre, 1 image possible).
+  body.set("mode", mode);
   frames.forEach((frame, index) => body.append("frames", frame, `image-${index + 1}.jpg`));
 
   let payload: unknown;

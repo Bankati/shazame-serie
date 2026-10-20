@@ -13,6 +13,7 @@ import { isSameOrigin } from "@/server/http/same-origin";
 import { validateFrames } from "@/server/identification/validate-frames";
 import { log } from "@/server/log";
 import { getStorageAdmin } from "@/server/storage/admin-client";
+import { MIN_USABLE_IMAGES } from "@/shared/frames/constants";
 
 import {
   attachReportImages,
@@ -90,8 +91,9 @@ export async function handleReportPost(request: Request, deps: ReportDeps = repo
   if (!consent && sentFrames.length > 0) {
     return jsonError("VALIDATION_ERROR", undefined, { headers: NO_STORE });
   }
-  // Mêmes contrôles que l'identification (invariant 1) : 2 à 5 images JPEG, 1,5 Mo au plus, type réel.
-  const frames = consent && sentFrames.length > 0 ? await validateFrames(sentFrames) : null;
+  // Mêmes contrôles que l'identification (invariant 1) : 1 à 5 images JPEG (une capture seule en mode image,
+  // U34), 1,5 Mo au plus, type réel.
+  const frames = consent && sentFrames.length > 0 ? await validateFrames(sentFrames, { minCount: MIN_USABLE_IMAGES }) : null;
   if (frames && !frames.ok) {
     return jsonError("VALIDATION_ERROR", undefined, { headers: NO_STORE });
   }

@@ -8,10 +8,16 @@ import { log } from "@/server/log";
 
 import { costMicroEur, isPricedModel } from "./pricing";
 import { IDENTIFY_INSTRUCTIONS, IDENTIFY_PROMPT_VERSION, identifyUserText } from "./prompts/identify.v1";
+import {
+  IDENTIFY_IMAGES_INSTRUCTIONS,
+  IDENTIFY_IMAGES_PROMPT_VERSION,
+  identifyImagesUserText,
+} from "./prompts/identify-images.v1";
 import { withRetries } from "./retry";
 import {
   modelAnswerSchema,
   normalizeAnswer,
+  type VisionContext,
   type VisionProvider,
   type VisionResult,
   type VisionUsage,
@@ -44,8 +50,9 @@ export type OpenAIVisionOptions = {
 export class OpenAIVisionProvider implements VisionProvider {
   constructor(private readonly options: OpenAIVisionOptions) {}
 
-  async identify(images: readonly Buffer[], context: { signal?: AbortSignal } = {}): Promise<VisionResult> {
+  async identify(images: readonly Buffer[], context: VisionContext = {}): Promise<VisionResult> {
     const { client, model, detail, reasoningEffort, sleep, now = Date.now } = this.options;
+    const prompt = promptFor(context.mode ?? "clip");
     // Sans tarif, impossible de compter la dépense (RG5) : on n'appelle pas le modèle.
     if (!isPricedModel(model)) {
       throw new VisionError("unpriced_model");
@@ -57,7 +64,7 @@ export class OpenAIVisionProvider implements VisionProvider {
     const startedAt = now();
 
     const content = [
-      { type: "input_text" as const, text: identifyUserText(images.length) },
+      { type: "input_text" as const, text: prompt.userText(images.length) },
       ...images.map((image) => ({
         type: "input_image" as const,
         image_url: `data:image/jpeg;base64,${image.toString("base64")}`,
@@ -72,7 +79,7 @@ export class OpenAIVisionProvider implements VisionProvider {
           const response = await client.parse(
             {
               model,
-              instructions: IDENTIFY_INSTRUCTIONS,
+              instructions: prompt.instructions,
               input: [{ role: "user", content }],
               text: { format: zodTextFormat(modelAnswerSchema, "identification") },
               max_output_tokens: MAX_OUTPUT_TOKENS,
@@ -111,7 +118,7 @@ export class OpenAIVisionProvider implements VisionProvider {
         answer,
         provider: PROVIDER,
         model,
-        promptVersion: IDENTIFY_PROMPT_VERSION,
+        promptVersion: prompt.version,
         attempts,
         latencyMs: now() - startedAt,
         usage,
@@ -123,6 +130,13 @@ export class OpenAIVisionProvider implements VisionProvider {
       throw new VisionError(reason, spent);
     }
   }
+}
+
+/** Consigne selon le mode : images d'un clip (identify.v1, inchangée) ou captures (identify-images.v1, U34). */
+function promptFor(mode: NonNullable<VisionContext["mode"]>) {
+  return mode === "images"
+    ? { version: IDENTIFY_IMAGES_PROMPT_VERSION, instructions: IDENTIFY_IMAGES_INSTRUCTIONS, userText: identifyImagesUserText }
+    : { version: IDENTIFY_PROMPT_VERSION, instructions: IDENTIFY_INSTRUCTIONS, userText: identifyUserText };
 }
 
 /** Panne passagère : délai dépassé ou connexion (APIConnectionError), saturation (429), erreur serveur (5xx). */

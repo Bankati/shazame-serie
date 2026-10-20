@@ -7,7 +7,7 @@ import { MAX_OUTPUT_TOKENS } from "./openai-vision-provider";
 import { MODEL_PRICES_USD_PER_MILLION, USD_TO_EUR } from "./pricing";
 import { MAX_ATTEMPTS } from "./retry";
 import type { SpendStore } from "./spend-store";
-import { VisionError, type VisionProvider, type VisionResult } from "./vision-provider";
+import { type VisionContext, VisionError, type VisionProvider, type VisionResult } from "./vision-provider";
 
 // Garde de dépense (RG5, invariant 2) : enveloppe le fournisseur de vision, de sorte qu'aucun appel au modèle
 // ne puisse contourner le plafond quotidien. Le coût maximal est réservé avant l'appel, puis ajusté au coût réel.
@@ -51,7 +51,7 @@ export type SpendGuardOptions = {
 export class SpendGuardedVisionProvider implements VisionProvider {
   constructor(private readonly options: SpendGuardOptions) {}
 
-  async identify(images: readonly Buffer[], context?: { signal?: AbortSignal }): Promise<VisionResult> {
+  async identify(images: readonly Buffer[], context?: VisionContext): Promise<VisionResult> {
     const { inner, model, store, now = () => new Date() } = this.options;
     const instant = now();
     const day = parisDay(instant);

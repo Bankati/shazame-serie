@@ -41,6 +41,7 @@ Relevées sur le registre npm le **4 octobre 2026**, révisées en U01 le **7 oc
 | `vitest` | 5.0.3 | Tests unitaires |
 | `server-only` | 0.0.1 (installé) | Empêche l'import d'un module serveur côté client |
 | `ffmpeg-static` | 5.3.0 (installé à la demande, `npm install --no-save`, absent de `package.json`) | Vidéos d'essai de U33 (`scripts/make-video-fixtures.mjs`) et harnais `eval/`. Son installation télécharge le binaire depuis GitHub et sort en erreur sans réseau : hors des dépendances pour ne jamais bloquer un build Vercel |
+| `heic-to` | 1.6.5 (installé, U34) | Décodage HEIC/HEIF dans le navigateur (photos d'iPhone), import `heic-to/next`, chargé seulement si `createImageBitmap` échoue. LGPL-3.0 : utilisée non modifiée, dans son propre fichier JS |
 | `@ffmpeg/ffmpeg` / `@ffmpeg/util` / `@ffmpeg/core` | 0.12.15 / 0.12.2 / 0.12.10 (installés, U33) | Lecture de secours des vidéos dans le navigateur (AD-40) |
 | `@types/node` | 24.19.1 | Types alignés sur le runtime Node 24 (ne pas prendre la dernière majeure) |
 | `eslint` / `typescript-eslint` | 9.39.5 (installé, AD-21) / via `eslint-config-next` | Lint |
@@ -252,6 +253,12 @@ Plans d'hébergement : **Vercel Pro** obligatoire (le plan Hobby est réservé �
   - `-ss t` **avant** `-i` (déplacement rapide sur image clé), `-frames:v 1` ; une commande par image.
   - Le `signal` des méthodes rejette la promesse sans arrêter le worker : appeler `terminate()` à l'annulation.
   - Constantes de version (`src/client/frames/ffmpeg-source.ts`) vérifiées contre les paquets installés par un test : les mettre à jour avec les paquets.
+
+## heic-to (captures HEIC, U34)
+
+- Doc : https://github.com/hoppergee/heic-to — types dans `node_modules/heic-to/dist/next/heic-to.d.ts`.
+- Importer `heic-to/next` (variante prévue pour Next.js). `heicTo({ blob, type: "bitmap", options: { imageOrientation: "from-image" } })` renvoie directement une `ImageBitmap` ; `type: "image/jpeg"` renvoie un `Blob`.
+- Essayer d'abord `createImageBitmap(file)` (Safari décode le HEIC lui-même) ; n'importer `heic-to` (environ 3 Mo) qu'en cas d'échec sur un fichier `.heic`/`.heif`.
 
 ## ffmpeg-static (vidéos d'essai et eval)
 

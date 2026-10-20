@@ -3,14 +3,17 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { reportClipFailure } from "@/client/observability/posthog";
+import type { FrameMode } from "@/schemas/identify";
 import { CLIP_EXCERPT_S } from "@/shared/frames/constants";
 import { type Excerpt, excerptWindow } from "@/shared/frames/sampling";
 import { hasEnoughFrames } from "@/shared/frames/selection";
 
 import { type ClipFailureStage, describeClipFailure, isReportableClipFailure } from "./clip-failure";
-import { type CandidateFrame, ClipError, type ExtractionResult, extractFrames } from "./extract-frames";
+import { decodeImage } from "./decode-image";
+import { type CandidateFrame, ClipError, type ExtractionResult, extractFrames, extractFromImages } from "./extract-frames";
 import { shouldUseFallback } from "./fallback";
 import { type FrameSource, openNativeSource } from "./frame-source";
+import { classifySelection } from "./select-files";
 import { checkClipDuration, checkClipFile, type ClipProblem } from "./validate-clip";
 
 export type ExtractionState =
@@ -22,13 +25,13 @@ export type ExtractionState =
   /** Vidéo de plus de 60 s : choix du passage avant l'analyse (AD-40). */
   | { status: "choosing"; durationS: number; startS: number; previewUrl: string | null }
   | { status: "extracting"; frames: CandidateFrame[]; total: number }
-  | { status: "ready"; frames: CandidateFrame[]; packageBlobs: Blob[] }
-  | { status: "insufficient"; frames: CandidateFrame[] };
+  | { status: "ready"; mode: FrameMode; frames: CandidateFrame[]; packageBlobs: Blob[] }
+  | { status: "insufficient"; mode: FrameMode; frames: CandidateFrame[] };
 
 /**
- * Parcours d'extraction d'une vidéo : lecture native, puis lecture de secours si le navigateur ne sait pas la
- * décoder ; choix du passage pour une vidéo longue. Un seul traitement à la fois (une nouvelle vidéo annule la
- * précédente) ; source et aperçus libérés à chaque changement et au démontage.
+ * Parcours d'extraction d'une vidéo ou de captures (U34) : lecture native, puis lecture de secours si le
+ * navigateur ne sait pas décoder la vidéo ; choix du passage pour une vidéo longue. Un seul traitement à la fois
+ * (une nouvelle sélection annule la précédente) ; source et aperçus libérés à chaque changement et au démontage.
  */
 export function useFrameExtraction() {
   const [state, setState] = useState<ExtractionState>({ status: "idle" });
@@ -60,14 +63,14 @@ export function useFrameExtraction() {
   }, [closeSource, releasePreviews]);
 
   const fail = useCallback(
-    (current: AbortController, error: unknown) => {
+    (current: AbortController, error: unknown, failedFile: File | null | undefined = file.current) => {
       if (current.signal.aborted) {
         return;
       }
       closeSource();
       releasePreviews();
-      if (file.current && isReportableClipFailure(error)) {
-        reportClipFailure(describeClipFailure(file.current, stage.current, error));
+      if (failedFile && isReportableClipFailure(error)) {
+        reportClipFailure(describeClipFailure(failedFile, stage.current, error));
       }
       setState({ status: "rejected", problem: error instanceof ClipError ? error.problem : "unreadable" });
     },
@@ -87,26 +90,27 @@ export function useFrameExtraction() {
     });
   }, []);
 
+  /** Affiche chaque image dès qu'elle est jugée ; celle d'une sélection déjà remplacée est jetée. */
+  const showFrame = useCallback(
+    (signal: AbortSignal) => (frame: CandidateFrame, total: number) => {
+      if (signal.aborted) {
+        URL.revokeObjectURL(frame.previewUrl);
+        return;
+      }
+      previewUrls.current.push(frame.previewUrl);
+      setState((previous) => ({
+        status: "extracting",
+        frames: [...(previous.status === "extracting" ? previous.frames : []), frame],
+        total,
+      }));
+    },
+    [],
+  );
+
   const extract = useCallback(
     async (current: AbortController, excerpt: Excerpt) => {
       const signal = current.signal;
-      const run = (from: FrameSource, window: Excerpt) =>
-        extractFrames(from, window, {
-          signal,
-          onFrame: (frame, total) => {
-            // Image d'une vidéo déjà remplacée par une autre : on la jette au lieu de la mélanger.
-            if (signal.aborted) {
-              URL.revokeObjectURL(frame.previewUrl);
-              return;
-            }
-            previewUrls.current.push(frame.previewUrl);
-            setState((previous) => ({
-              status: "extracting",
-              frames: [...(previous.status === "extracting" ? previous.frames : []), frame],
-              total,
-            }));
-          },
-        });
+      const run = (from: FrameSource, window: Excerpt) => extractFrames(from, window, { signal, onFrame: showFrame(signal) });
 
       try {
         let opened = source.current;
@@ -141,20 +145,63 @@ export function useFrameExtraction() {
         const verdicts = result.frames.map((frame) => frame.verdict);
         setState(
           hasEnoughFrames(verdicts) && result.packageBlobs.length > 0
-            ? { status: "ready", frames: result.frames, packageBlobs: result.packageBlobs }
-            : { status: "insufficient", frames: result.frames },
+            ? { status: "ready", mode: "clip", frames: result.frames, packageBlobs: result.packageBlobs }
+            : { status: "insufficient", mode: "clip", frames: result.frames },
         );
       } catch (error) {
         fail(current, error);
       }
     },
-    [closeSource, fail, openFallback, releasePreviews],
+    [closeSource, fail, openFallback, releasePreviews, showFrame],
+  );
+
+  /** Captures (U34) : décodées une à une, jugées, réduites ; 1 exploitable suffit. */
+  const startImages = useCallback(
+    async (images: File[]) => {
+      const current = new AbortController();
+      controller.current = current;
+      stage.current = "native";
+      setState({ status: "reading" });
+
+      let decoding: File | undefined;
+      try {
+        const result = await extractFromImages(
+          images.length,
+          (index) => {
+            decoding = images[index];
+            return decoding ? decodeImage(decoding) : Promise.reject(new ClipError("image_unreadable"));
+          },
+          { signal: current.signal, onFrame: showFrame(current.signal) },
+        );
+        if (current.signal.aborted) {
+          return;
+        }
+        setState(
+          result.packageBlobs.length > 0
+            ? { status: "ready", mode: "images", frames: result.frames, packageBlobs: result.packageBlobs }
+            : { status: "insufficient", mode: "images", frames: result.frames },
+        );
+      } catch (error) {
+        fail(current, error, decoding);
+      }
+    },
+    [fail, showFrame],
   );
 
   const start = useCallback(
-    async (video: File) => {
+    async (selected: readonly File[]) => {
       cancel();
 
+      const selection = classifySelection(selected);
+      if (!selection.ok) {
+        setState({ status: "rejected", problem: selection.problem });
+        return;
+      }
+      if (selection.kind === "images") {
+        await startImages(selection.files);
+        return;
+      }
+      const video = selection.file;
       const check = checkClipFile(video);
       if (!check.ok) {
         setState({ status: "rejected", problem: check.problem });
@@ -195,7 +242,7 @@ export function useFrameExtraction() {
         fail(current, error);
       }
     },
-    [cancel, extract, fail, openFallback],
+    [cancel, extract, fail, openFallback, startImages],
   );
 
   /** Analyse du passage choisi (vidéo de plus de 60 s). */

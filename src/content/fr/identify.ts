@@ -4,11 +4,11 @@ import type { RejectReason } from "@/shared/frames/selection";
 // Textes du parcours d'identification (U06). Vouvoiement, espaces insécables avant ? ! : ; (ui-context.md).
 export const IDENTIFY_TEXT = {
   dropzone: {
-    title: "Choisir un clip",
-    constraints: "MP4, MOV, WebM, M4V, 3GP, MKV ou AVI, 500 Mo au maximum",
+    title: "Choisir un clip ou des captures",
+    constraints: "Une vidéo (MP4, MOV, WebM, M4V, 3GP, MKV, AVI, 500 Mo au maximum) ou 1 à 5 captures d'écran (JPEG, PNG, WebP, HEIC)",
     button: "Choisir un clip",
     dropHint: "ou glissez-le ici",
-    dropActive: "Déposez le clip pour l'analyser",
+    dropActive: "Déposez la vidéo ou les captures pour les analyser",
     privacy: "Votre vidéo reste sur votre appareil : seules quelques images sont analysées.",
   },
   steps: {
@@ -47,6 +47,8 @@ export const IDENTIFY_TEXT = {
     ready: (count: number) => `${count} images prêtes.`,
     insufficient:
       "Moins de 2 images exploitables dans ce clip (trop sombres, floues ou identiques). Choisissez un extrait plus lumineux, où l'image change.",
+    insufficientImages:
+      "Aucune capture exploitable (trop sombre, floue ou identique à une autre). Choisissez une image nette, où la scène se voit bien.",
     another: "Choisir un autre clip",
     title: (title: string, year: number | null) => (year ? `${title} (${year})` : title),
     confidence: (percent: number, decision: "show" | "show_with_alternatives") =>
@@ -95,11 +97,17 @@ export const IDENTIFY_TEXT = {
     unavailable: "L'identification est momentanément indisponible. Réessayez dans quelques instants.",
   },
   problems: {
-    unsupported_format: "Ce format n'est pas pris en charge. Choisissez une vidéo MP4, MOV, WebM, M4V, 3GP, MKV ou AVI.",
+    unsupported_format:
+      "Ce format n'est pas pris en charge. Choisissez une vidéo (MP4, MOV, WebM, M4V, 3GP, MKV, AVI) ou des captures (JPEG, PNG, WebP, HEIC).",
     empty: "Ce fichier est vide. Choisissez un autre clip.",
     too_large: "Cette vidéo dépasse 500 Mo. Coupez-la ou choisissez un autre extrait.",
     too_short: "Ce clip dure moins d'une seconde. Choisissez un extrait plus long.",
     unreadable:
       "Cette vidéo n'a pas pu être lue, même avec le lecteur de secours. Exportez-la en MP4 depuis votre téléphone, ou choisissez un autre extrait.",
+    mixed_files: "Choisissez soit une vidéo, soit des captures d'écran, pas les deux à la fois.",
+    several_videos: "Choisissez une seule vidéo à la fois.",
+    too_many_images: "Choisissez 5 captures au maximum.",
+    image_too_large: "Une des images dépasse 30 Mo. Choisissez une capture d'écran plutôt que la photo d'origine.",
+    image_unreadable: "Une des images n'a pas pu être lue. Choisissez une capture JPEG, PNG, WebP ou HEIC.",
   } satisfies Record<ClipProblem, string>,
 } as const;

@@ -6,7 +6,7 @@ import { matchProposedTitle } from "@/server/catalog/match-title";
 import type { ProposedTitle } from "@/server/catalog/matching";
 import type { StoredAlternative } from "@/server/db/schema";
 import type { QuotaIdentity, QuotaService, QuotaStatus } from "@/server/quota/quota";
-import type { IdentifiedTitle, IdentifyResponse, QuotaInfo } from "@/schemas/identify";
+import type { FrameMode, IdentifiedTitle, IdentifyResponse, QuotaInfo } from "@/schemas/identify";
 
 import type { IdentificationRecord } from "./persist";
 import type { CacheableResult, CachedResult, CacheLookup } from "./result-cache";
@@ -38,9 +38,9 @@ export type IdentifyOutcome =
 
 export async function identifyClip(
   deps: IdentifyDeps,
-  input: { identity: QuotaIdentity; images: readonly Buffer[] },
+  input: { identity: QuotaIdentity; images: readonly Buffer[]; mode?: FrameMode },
 ): Promise<IdentifyOutcome> {
-  const { identity, images } = input;
+  const { identity, images, mode = "clip" } = input;
 
   // 8. Quota vérifié avant le cache (AD-13) : paywall prévisible, même pour un extrait déjà connu.
   const before = await deps.quota.status(identity);
@@ -52,7 +52,7 @@ export async function identifyClip(
   const lookup = await deps.prepareLookup(images);
   const cached = await deps.cache.find(lookup);
   if (cached) {
-    const fromCache = await answerFromCache(deps, identity, lookup, cached, before);
+    const fromCache = await answerFromCache(deps, identity, mode, lookup, cached, before);
     if (fromCache) {
       return fromCache;
     }
@@ -68,7 +68,7 @@ export async function identifyClip(
   let vision: VisionResult | undefined;
   try {
     // 13-14. IA (3 tentatives, RG16), rapprochement TMDB de chaque candidat, score combiné.
-    vision = await deps.vision.identify(images);
+    vision = await deps.vision.identify(images, { mode });
     const candidates = proposedCandidates(vision.answer);
     const matches = await Promise.all(candidates.map((candidate) => matchProposedTitle(deps.catalog, candidate.proposed)));
     const score = scoreIdentification(candidates.map((candidate, index) => ({ aiConfidence: candidate.confidence, match: matches[index]! })));
@@ -82,6 +82,7 @@ export async function identifyClip(
 
     const identificationId = await deps.persist({
       identity,
+      inputKind: mode,
       fingerprint: lookup.fingerprint,
       source: "ai",
       outcome: score.main ? "shown" : "low_confidence",
@@ -119,6 +120,7 @@ export async function identifyClip(
     }
     await deps.persist({
       identity,
+      inputKind: mode,
       fingerprint: lookup.fingerprint,
       source: "ai",
       outcome: "failed",
@@ -142,6 +144,7 @@ export async function identifyClip(
 async function answerFromCache(
   deps: IdentifyDeps,
   identity: QuotaIdentity,
+  mode: FrameMode,
   lookup: CacheLookup,
   cached: CachedResult,
   quota: QuotaStatus,
@@ -170,6 +173,7 @@ async function answerFromCache(
   await deps.cache.recordHit(cached.cacheId);
   const identificationId = await deps.persist({
     identity,
+    inputKind: mode,
     fingerprint: lookup.fingerprint,
     source: "cache",
     outcome: decision === "ask_another_clip" ? "low_confidence" : "shown",

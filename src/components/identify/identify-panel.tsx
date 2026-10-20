@@ -22,7 +22,10 @@ import { ResultDialog } from "./result-dialog";
 // quota renvoyé par chaque identification.
 export function IdentifyPanel() {
   const { state, start, choose, reset } = useFrameExtraction();
-  const identification = useIdentification(state.status === "ready" ? state.packageBlobs : null);
+  const identification = useIdentification(
+    state.status === "ready" ? state.packageBlobs : null,
+    state.status === "ready" ? state.mode : "clip",
+  );
   const { dropzone, result, dialog, steps } = IDENTIFY_TEXT;
   useEffect(() => {
     if (identification.status === "done") {
@@ -59,7 +62,7 @@ export function IdentifyPanel() {
     >
       {showDropzone ? (
         <ClipDropzone
-          onFile={start}
+          onFiles={(files) => void start(files)}
           problem={state.status === "rejected" ? state.problem : undefined}
           focusOnMount={returningFromResult}
         />
@@ -133,7 +136,7 @@ function statusMessage(state: ExtractionState, identification: IdentificationSta
     case "extracting":
       return steps.extracting(Math.min(state.frames.length + 1, state.total), state.total);
     case "insufficient":
-      return result.insufficient;
+      return state.mode === "images" ? result.insufficientImages : result.insufficient;
     case "ready":
       if (identification.status === "failed") {
         return failures[identification.failure.kind];

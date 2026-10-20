@@ -86,8 +86,11 @@ export class VisionError extends Error {
   }
 }
 
+/** `mode` : images tirées d'un clip (par défaut) ou captures envoyées telles quelles (U34), chacun sa consigne. */
+export type VisionContext = { signal?: AbortSignal; mode?: "clip" | "images" };
+
 export interface VisionProvider {
-  identify(images: readonly Buffer[], context?: { signal?: AbortSignal }): Promise<VisionResult>;
+  identify(images: readonly Buffer[], context?: VisionContext): Promise<VisionResult>;
 }
 
 /** Applique les bornes : confiance entière 0 à 100, 3 alternatives au plus, rien de plus si non reconnu. */

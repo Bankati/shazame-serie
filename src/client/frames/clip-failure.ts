@@ -1,4 +1,4 @@
-import { CLIP_EXTENSIONS } from "@/shared/frames/constants";
+import { CLIP_EXTENSIONS, IMAGE_EXTENSIONS } from "@/shared/frames/constants";
 
 import { ClipError } from "./clip-error";
 
@@ -24,8 +24,9 @@ const MAX_MIME_LENGTH = 40;
 
 export function describeClipFailure(file: File, stage: ClipFailureStage, error: unknown): ClipFailureReport {
   const name = file.name.toLowerCase();
-  const extension = CLIP_EXTENSIONS.find((candidate) => name.endsWith(candidate)) ?? "other";
-  const mimeType = /^video\/[\w.+-]+$/.test(file.type) && file.type.length <= MAX_MIME_LENGTH ? file.type : file.type ? "other" : "none";
+  const extension = [...CLIP_EXTENSIONS, ...IMAGE_EXTENSIONS].find((candidate) => name.endsWith(candidate)) ?? "other";
+  const mimeType =
+    /^(video|image)\/[\w.+-]+$/.test(file.type) && file.type.length <= MAX_MIME_LENGTH ? file.type : file.type ? "other" : "none";
   const report: ClipFailureReport = {
     problem: error instanceof ClipError ? error.problem : "unreadable",
     stage,
@@ -42,5 +43,5 @@ export function describeClipFailure(file: File, stage: ClipFailureStage, error: 
 
 /** À signaler : seulement les échecs de lecture (pas un fichier trop gros ou trop court, choix de l'utilisateur). */
 export function isReportableClipFailure(error: unknown): boolean {
-  return !(error instanceof ClipError) || error.problem === "unreadable";
+  return !(error instanceof ClipError) || error.problem === "unreadable" || error.problem === "image_unreadable";
 }

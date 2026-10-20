@@ -26,6 +26,14 @@ export const CANDIDATE_COUNT = 5;
 export const SAMPLE_START_RATIO = 0.1;
 export const SAMPLE_END_RATIO = 0.9;
 
+/** Images envoyées telles quelles (U34, AD-38) : 1 à 5 captures, 30 Mo chacune au plus avant réduction. */
+export const IMAGE_MAX_COUNT = 5;
+export const IMAGE_MAX_BYTES = 30 * 1024 * 1024;
+export const IMAGE_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"] as const;
+export const IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif"] as const;
+/** Une seule capture exploitable suffit (un clip en demande 2). */
+export const MIN_USABLE_IMAGES = 1;
+
 /** Paquet envoyé au serveur (invariant 1). */
 export const MIN_USABLE_FRAMES = 2;
 // Égal au nombre de candidates : la sélection n'a pas à plafonner. Sert au contrôle serveur (U11).

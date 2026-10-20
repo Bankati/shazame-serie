@@ -127,7 +127,7 @@ Dernière mise à jour : 14 octobre 2026 (U06)
 | Ombre | none |
 | Accent | icône d'envoi `text-primary` |
 
-**Notes de pattern :** `accept="video/*,.mp4,.mov,…"` depuis U33 (les galeries des téléphones proposent toutes les vidéos ; le contrôle trie ensuite). Le champ fichier est `sr-only`, `tabIndex={-1}`, `aria-hidden` : l'accès clavier et mobile passe par le bouton, qui pointe vers les contraintes (et l'erreur) par `aria-describedby`. La valeur du champ est vidée après chaque choix pour pouvoir reprendre le même fichier. L'indice « ou glissez-le ici » n'apparaît qu'à partir de `md`.
+**Notes de pattern :** depuis U34, sélection multiple (`multiple`, `accept` vidéos + images) : une vidéo lance le clip, 1 à 5 images le mode captures (tri par `classifySelection`, erreurs dans la même zone `role="alert"`) ; titre « Choisir un clip ou des captures », libellé du bouton inchangé. `accept="video/*,.mp4,.mov,…"` depuis U33 (les galeries des téléphones proposent toutes les vidéos ; le contrôle trie ensuite). Le champ fichier est `sr-only`, `tabIndex={-1}`, `aria-hidden` : l'accès clavier et mobile passe par le bouton, qui pointe vers les contraintes (et l'erreur) par `aria-describedby`. La valeur du champ est vidée après chaque choix pour pouvoir reprendre le même fichier. L'indice « ou glissez-le ici » n'apparaît qu'à partir de `md`.
 
 ### ExcerptPicker (choix du passage d'une vidéo longue)
 

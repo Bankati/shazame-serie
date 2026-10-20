@@ -23,10 +23,13 @@ export type IdentificationRecord = {
   latencyMs: number | null;
 };
 
-/** Écrit l'identification ; un échec d'écriture ne doit pas priver l'utilisateur de son résultat. */
-export async function persistIdentification(db: Database, record: IdentificationRecord): Promise<void> {
+/**
+ * Écrit l'identification et renvoie son identifiant (signalement, U20) ; un échec d'écriture ne doit pas
+ * priver l'utilisateur de son résultat : null dans ce cas.
+ */
+export async function persistIdentification(db: Database, record: IdentificationRecord): Promise<string | null> {
   try {
-    await withQueryTimeout(db, (tx) =>
+    const [row] = await withQueryTimeout(db, (tx) =>
       tx.insert(identifications).values({
         userId: record.identity.kind === "user" ? record.identity.id : null,
         visitorKey: record.identity.kind === "visitor" ? record.identity.id : null,
@@ -43,9 +46,11 @@ export async function persistIdentification(db: Database, record: Identification
         model: record.model,
         costMicroEur: record.costMicroEur,
         latencyMs: record.latencyMs,
-      }),
+      }).returning({ id: identifications.id }),
     );
+    return row?.id ?? null;
   } catch {
     log.error("identification.persist_failed", { source: record.source, outcome: record.outcome });
+    return null;
   }
 }

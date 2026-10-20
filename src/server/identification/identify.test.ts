@@ -49,6 +49,7 @@ function setup(options: { vision?: VisionProvider["identify"]; cached?: CachedRe
     cache: { find: async () => options.cached ?? null, recordHit, store },
     persist: async (record) => {
       records.push(record);
+      return `00000000-0000-4000-8000-${String(records.length).padStart(12, "0")}`;
     },
   };
   return { deps, quota, records, identify, store, recordHit };
@@ -62,7 +63,14 @@ describe("identifyClip", () => {
 
     expect(outcome).toMatchObject({
       ok: true,
-      response: { decision: "show", source: "ai", main: { tmdbId: 603, title: "Matrix", confidence: 95 }, quota: { limit: 3, remaining: 2 } },
+      response: {
+        decision: "show",
+        source: "ai",
+        main: { tmdbId: 603, title: "Matrix", confidence: 95 },
+        quota: { limit: 3, remaining: 2 },
+        // U20 : la réponse porte l'identifiant enregistré, pour un éventuel signalement.
+        identificationId: "00000000-0000-4000-8000-000000000001",
+      },
     });
     expect((await quota.status(VISITOR)).used).toBe(1);
     expect(records).toEqual([expect.objectContaining({ source: "ai", outcome: "shown", counted: true, costMicroEur: 1800, model: "gpt-6.1-sol" })]);

@@ -26,7 +26,8 @@ export type IdentifyDeps = {
     recordHit(cacheId: string): Promise<void>;
     store(lookup: CacheLookup, result: CacheableResult): Promise<void>;
   };
-  persist(record: IdentificationRecord): Promise<void>;
+  /** Renvoie l'identifiant enregistré, ou null si l'écriture a échoué. */
+  persist(record: IdentificationRecord): Promise<string | null>;
 };
 
 export type IdentifyOutcome =
@@ -79,7 +80,7 @@ export async function identifyClip(
       await reservation.release();
     }
 
-    await deps.persist({
+    const identificationId = await deps.persist({
       identity,
       fingerprint: lookup.fingerprint,
       source: "ai",
@@ -107,6 +108,7 @@ export async function identifyClip(
         main: score.main ? toIdentifiedTitle(score.main) : null,
         alternatives: score.alternatives.map(toIdentifiedTitle),
         quota: toQuotaInfo(await deps.quota.status(identity)),
+        identificationId,
       },
     };
   } catch (error) {
@@ -166,7 +168,7 @@ async function answerFromCache(
   }
   const decision = decide(main.confidence);
   await deps.cache.recordHit(cached.cacheId);
-  await deps.persist({
+  const identificationId = await deps.persist({
     identity,
     fingerprint: lookup.fingerprint,
     source: "cache",
@@ -185,8 +187,8 @@ async function answerFromCache(
     ok: true,
     response:
       decision === "ask_another_clip"
-        ? { decision, source: "cache", main: null, alternatives: [main, ...known], quota: toQuotaInfo(quota) }
-        : { decision, source: "cache", main, alternatives: known, quota: toQuotaInfo(quota) },
+        ? { decision, source: "cache", main: null, alternatives: [main, ...known], quota: toQuotaInfo(quota), identificationId }
+        : { decision, source: "cache", main, alternatives: known, quota: toQuotaInfo(quota), identificationId },
   };
 }
 

@@ -8,6 +8,7 @@ import { ShareButton } from "@/components/share/share-button";
 import { WatchlistButton } from "@/components/watchlist/watchlist-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { IDENTIFY_TEXT } from "@/content/fr/identify";
+import { REPORT_TEXT } from "@/content/fr/report";
 import { titlePath } from "@/lib/title-url";
 import type { IdentifiedTitle, IdentifyResponse } from "@/schemas/identify";
 
@@ -21,7 +22,7 @@ const keyOf = (title: IdentifiedTitle) => `${title.mediaType}-${title.tmdbId}`;
 
 // Carte de résultat (ui-context.md, « Résultat ») : affiche, titre, année et type, confiance, autres pistes.
 // Les actions (fiche U15, liste U18, signalement U20) s'ajouteront dans la zone prévue sous le titre.
-export function IdentificationResult({ response }: { response: IdentifyResponse }) {
+export function IdentificationResult({ response, onReport }: { response: IdentifyResponse; onReport?: () => void }) {
   const { card, result } = IDENTIFY_TEXT;
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
 
@@ -42,6 +43,15 @@ export function IdentificationResult({ response }: { response: IdentifyResponse 
   return (
     <div className="flex flex-col gap-4">
       <MainTitle title={shown} />
+      {onReport ? (
+        <button
+          type="button"
+          onClick={onReport}
+          className="flex min-h-11 w-fit items-center text-sm font-medium text-muted-foreground underline underline-offset-4 hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+        >
+          {REPORT_TEXT.link}
+        </button>
+      ) : null}
       <AlternativeList titles={others} heading={card.alternatives} onSelect={(title) => setSelectedKey(keyOf(title))} />
     </div>
   );

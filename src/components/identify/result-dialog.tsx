@@ -1,7 +1,7 @@
 "use client";
 
 import { X } from "lucide-react";
-import { useSyncExternalStore } from "react";
+import { useState, useSyncExternalStore } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -10,6 +10,7 @@ import { IDENTIFY_TEXT } from "@/content/fr/identify";
 import type { IdentifyResponse } from "@/schemas/identify";
 
 import { IdentificationResult } from "./identification-result";
+import { ReportForm } from "./report-form";
 
 // Résultat dans une fenêtre (demande du fondateur, 16 octobre 2026) : centrée sur ordinateur, feuille qui
 // glisse du bas sur mobile (ui-context.md, « Modales »). Le focus y entre à l'ouverture et revient au
@@ -32,23 +33,36 @@ type ResultDialogProps = {
   onOpenChange: (open: boolean) => void;
   response: IdentifyResponse;
   onAnother: () => void;
+  /** Images du clip encore en mémoire : renvoyées avec un signalement, seulement si la personne y consent. */
+  frames: readonly Blob[];
 };
 
-export function ResultDialog({ open, onOpenChange, response, onAnother }: ResultDialogProps) {
+export function ResultDialog({ open, onOpenChange, response, onAnother, frames }: ResultDialogProps) {
   const desktop = useIsDesktop();
+  // Vue de la fenêtre : résultat, ou formulaire de signalement (U20) ; un seul signalement par résultat.
+  const [view, setView] = useState<"result" | "report" | "reported">("result");
   const { dialog, result } = IDENTIFY_TEXT;
   const description = result.remaining(response.quota.remaining);
 
-  const body = (
-    <>
-      <IdentificationResult response={response} />
-      <div className="flex flex-col-reverse gap-3 border-t border-border pt-4 sm:flex-row sm:justify-end">
-        <Button type="button" variant="outline" className="h-11 text-base" onClick={onAnother}>
-          {result.another}
-        </Button>
-      </div>
-    </>
-  );
+  const canReport = view === "result" && response.main !== null && response.identificationId !== null;
+  const body =
+    view === "report" && response.identificationId ? (
+      <ReportForm
+        identificationId={response.identificationId}
+        frames={frames}
+        onDone={() => setView("reported")}
+        onCancel={() => setView("result")}
+      />
+    ) : (
+      <>
+        <IdentificationResult response={response} onReport={canReport ? () => setView("report") : undefined} />
+        <div className="flex flex-col-reverse gap-3 border-t border-border pt-4 sm:flex-row sm:justify-end">
+          <Button type="button" variant="outline" className="h-11 text-base" onClick={onAnother}>
+            {result.another}
+          </Button>
+        </div>
+      </>
+    );
 
   if (desktop) {
     return (

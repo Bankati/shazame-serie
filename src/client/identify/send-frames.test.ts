@@ -9,6 +9,8 @@ const RESPONSE = {
   main: { tmdbId: 603, mediaType: "movie", title: "Matrix", year: 1999, posterPath: null, confidence: 94 },
   alternatives: [],
   quota: { ...QUOTA, remaining: 2 },
+  // U20 : identifiant de l'identification enregistrée (signalement).
+  identificationId: "6f1c2a3b-0000-4000-8000-0000000000aa",
 };
 
 function mockFetch(body: unknown) {
@@ -25,6 +27,11 @@ describe("sendFrames", () => {
     const result = await sendFrames([new Blob(["a"], { type: "image/jpeg" }), new Blob(["b"], { type: "image/jpeg" })]);
 
     expect(result).toEqual({ ok: true, response: RESPONSE });
+    // Une réponse sans identifiant (ancien serveur, écriture échouée) reste valide : signalement indisponible.
+    const withoutId: Partial<typeof RESPONSE> = { ...RESPONSE };
+    delete withoutId.identificationId;
+    mockFetch({ ok: true, data: withoutId });
+    expect(await sendFrames([])).toEqual({ ok: true, response: { ...withoutId, identificationId: null } });
     const init = fetch.mock.calls[0]?.[1] as RequestInit;
     expect((init.body as FormData).getAll("frames")).toHaveLength(2);
   });

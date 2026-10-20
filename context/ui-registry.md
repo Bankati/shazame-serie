@@ -551,3 +551,22 @@ Dernière mise à jour : 20 octobre 2026
 | Accent | confirmation « Lien copié » par `toast.success` |
 
 **Notes de pattern :** carte d'aperçu 1200 × 630 : image large TMDB sous un voile (dégradé `inverse` → transparent), affiche 300 × 450 arrondie, marque, titre Archivo 800 (76 px, 60 px au-delà de 30 caractères), méta en vert `brandStrong`, synopsis coupé à 150 caractères, pied « Identifié avec SHAZAM SERIE · Données TMDB ». Couleurs : `src/server/share/og-palette.ts` (copie des jetons, à tenir à jour).
+
+### ReportForm (signalement d'erreur)
+
+Fichier : `src/components/identify/report-form.tsx` (dans `ResultDialog`, U20)
+Dernière mise à jour : 20 octobre 2026
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | résultats de recherche `bg-card`, survol `hover:bg-accent` |
+| Bordure | résultat `border border-border`, choisi `border-brand-strong` ; champ `Input` (`border-input`) |
+| Radius | champ et résultats `rounded-md` |
+| Texte principal | titre `font-display text-xl font-bold` ; libellés `text-sm font-medium text-foreground` |
+| Texte secondaire | aide, états de recherche `text-sm text-muted-foreground` |
+| Espacement | formulaire `gap-4` ; résultat `p-2 gap-3` ; liste `max-h-64 overflow-y-auto` |
+| Hover / focus | `focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring` |
+| Ombre | none |
+| Accent | coche `text-brand-strong` sur le titre choisi |
+
+**Notes de pattern :** lien d'entrée discret sous le résultat (`text-sm text-muted-foreground underline`, `min-h-11`). Résultat choisi porté par `aria-pressed` ; recherche après 350 ms, annonces dans une région `aria-live`. Case de consentement non cochée par défaut avec son explication (`aria-describedby`), affichée seulement si des images sont encore en mémoire. Confirmation par `toast.success`, puis retour au résultat sans le lien (un seul signalement).

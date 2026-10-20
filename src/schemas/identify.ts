@@ -25,6 +25,8 @@ export const identifyResponseSchema = z.object({
   main: identifiedTitleSchema.nullable(),
   alternatives: z.array(identifiedTitleSchema),
   quota: quotaInfoSchema,
+  // Identifiant de l'identification enregistrée (U20 : signalement d'erreur), null si l'écriture a échoué.
+  identificationId: z.uuid().nullable().default(null),
 });
 
 export type IdentifiedTitle = z.infer<typeof identifiedTitleSchema>;

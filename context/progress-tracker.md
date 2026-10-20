@@ -122,6 +122,11 @@ Mettre à jour ce fichier après chaque changement d'implémentation significati
   - Fait : bouton « Partager » (résultat et fiche) avec feuille de partage native du téléphone et repli par copie du lien ; carte d'aperçu Open Graph 1200 × 630 générée pour chaque fiche (police Archivo embarquée, couleurs des jetons), métadonnées X en grande image ; faux TMDB étendu d'une fiche complète.
   - Vérifié : unitaires (natif, annulation, copie, échec), Playwright (fiche ouverte sans compte avec carte PNG 1200 × 630 : critère de fin ; copie du lien), cartes contrôlées visuellement (film, série). 399 tests unitaires, 9 parcours navigateur.
 
+- U20 — Signalement d'erreur (plan : `context/plans/U20.md`, 20 octobre 2026).
+  - Fait : `identificationId` dans la réponse d'identification ; lien « Ce n'est pas le bon titre ? » et formulaire dans la fenêtre de résultat (recherche du bon titre, consentement non coché) ; `GET /api/catalog/search` (30/min/IP), `POST /api/reports` (origine, 10/h/IP, propriété de l'identification, proposition relue en base, idempotent, cache désactivé, images seulement si consenti, contrôles des images) ; `GET /api/admin/reports/{id}/images` (admin, liens signés 15 min) ; limiteur partagé `attempt-limiter.ts`.
+  - Vérifié : `test:db` (critères de fin : sans consentement aucune image ; avec consentement images privées, illisibles avec la clé publique), unitaires (route, recherche, accès admin), Playwright (signalement sans puis avec consentement : images absentes puis 2 à 5). Rendu contrôlé sur mobile.
+  - Reste : purge des images de signalement selon Q16 (U30) ; revue des signalements dans le back-office (U24).
+
 ## Next Up
 
 - **Tests avant déploiement** (demandés par le fondateur le 20 octobre 2026) : `SUPABASE_SECRET_KEY` dans Vercel, CI verte sur GitHub, PR `dev` → `staging` → `main`, migration `0004`, essais en production (inscription email, Google, liste, profil, partage).

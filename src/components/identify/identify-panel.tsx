@@ -88,6 +88,9 @@ export function IdentifyPanel() {
       )}
       {response ? (
         <ResultDialog
+          // Nouvelle identification : fenêtre remise à zéro (vue résultat, signalement possible).
+          key={response.identificationId ?? "sans-identifiant"}
+          frames={state.status === "ready" ? state.packageBlobs : []}
           open={closedResponse !== response}
           onOpenChange={(open) => setClosedResponse(open ? null : response)}
           response={response}

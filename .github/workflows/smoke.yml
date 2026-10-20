@@ -62,7 +62,13 @@ jobs:
           fi
           # Compteur de quota : touche la base ET Redis. Échoue si DATABASE_URL ou Upstash sont mal réglés
           # sur ce déploiement (incident du 20 octobre 2026 : mot de passe de la base périmé dans Vercel).
-          quota_status=$(curl --silent --output /dev/null --write-out '%{http_code}' --retry 3 --retry-delay 5 --max-time 20             -H "x-vercel-protection-bypass: $BYPASS_SECRET" "${DEPLOYMENT_URL%/}/api/quota")
+          # Trois essais espacés (démarrage à froid) ; jamais d'arrêt brutal de curl : on veut le code HTTP.
+          quota_status=000
+          for attempt in 1 2 3; do
+            quota_status=$(curl --silent --output /dev/null --write-out '%{http_code}' --max-time 20               -H "x-vercel-protection-bypass: $BYPASS_SECRET" "${DEPLOYMENT_URL%/}/api/quota" || true)
+            [ "$quota_status" = "200" ] && break
+            sleep 5
+          done
           if [ "$quota_status" != "200" ]; then
             echo "::error::/api/quota répond $quota_status : base de données ou Redis injoignable sur ce déploiement (vérifier DATABASE_URL et UPSTASH_* dans Vercel, puis /api/health/deep)."
             exit 1

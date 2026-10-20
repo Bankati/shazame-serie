@@ -40,7 +40,7 @@ Relevées sur le registre npm le **4 octobre 2026**, révisées en U01 le **7 oc
 | `posthog-node` | 5.55.1 (installé) | Erreurs serveur (AD-28) |
 | `vitest` | 5.0.3 | Tests unitaires |
 | `server-only` | 0.0.1 (installé) | Empêche l'import d'un module serveur côté client |
-| `ffmpeg-static` | 5.3.0 (installé) | Vidéos d'essai de U33 (`scripts/make-video-fixtures.mjs`) et harnais `eval/` (dépendance de développement) |
+| `ffmpeg-static` | 5.3.0 (installé à la demande, `npm install --no-save`, absent de `package.json`) | Vidéos d'essai de U33 (`scripts/make-video-fixtures.mjs`) et harnais `eval/`. Son installation télécharge le binaire depuis GitHub et sort en erreur sans réseau : hors des dépendances pour ne jamais bloquer un build Vercel |
 | `@ffmpeg/ffmpeg` / `@ffmpeg/util` / `@ffmpeg/core` | 0.12.15 / 0.12.2 / 0.12.10 (installés, U33) | Lecture de secours des vidéos dans le navigateur (AD-40) |
 | `@types/node` | 24.19.1 | Types alignés sur le runtime Node 24 (ne pas prendre la dernière majeure) |
 | `eslint` / `typescript-eslint` | 9.39.5 (installé, AD-21) / via `eslint-config-next` | Lint |

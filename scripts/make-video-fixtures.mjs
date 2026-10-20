@@ -1,6 +1,8 @@
 // Génère les vidéos d'essai de U33 (un fichier par format, HEVC, vidéo longue, gros fichier) dans
 // tests/e2e/fixtures/videos/ (ignoré par git). Images de synthèse uniquement (fractale), aucun contenu protégé.
-// Usage : node scripts/make-video-fixtures.mjs [--force]
+// Usage : npm install --no-save ffmpeg-static@5.3.0, puis npm run fixtures:videos [-- --force]
+// ffmpeg-static n'est pas dans package.json : son installation télécharge un binaire depuis GitHub et échoue
+// sans réseau, ce qui ferait échouer les builds Vercel. On l'installe à la demande (ici et en CI).
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, statSync } from "node:fs";
 import path from "node:path";

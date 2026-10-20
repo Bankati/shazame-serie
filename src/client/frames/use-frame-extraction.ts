@@ -6,7 +6,8 @@ import { CLIP_EXCERPT_S } from "@/shared/frames/constants";
 import { type Excerpt, excerptWindow } from "@/shared/frames/sampling";
 import { hasEnoughFrames } from "@/shared/frames/selection";
 
-import { type CandidateFrame, ClipError, extractFrames } from "./extract-frames";
+import { type CandidateFrame, ClipError, type ExtractionResult, extractFrames } from "./extract-frames";
+import { shouldUseFallback } from "./fallback";
 import { type FrameSource, openNativeSource } from "./frame-source";
 import { checkClipDuration, checkClipFile, type ClipProblem } from "./validate-clip";
 
@@ -102,9 +103,16 @@ export function useFrameExtraction() {
       try {
         let opened = source.current;
         if (!opened) throw new ClipError("unreadable");
-        let result = await run(opened, excerpt);
-        // Images toutes vides : le navigateur a « lu » la vidéo sans la décoder. On passe au secours.
-        if (result.blank && opened.kind === "native" && file.current) {
+        let result: ExtractionResult | null = null;
+        let failure: unknown = null;
+        try {
+          result = await run(opened, excerpt);
+        } catch (error) {
+          failure = error;
+        }
+        const attempt = result ? { ok: true as const, blank: result.blank } : { ok: false as const, error: failure };
+        // Le navigateur a ouvert la vidéo sans savoir la décoder (déplacement en échec, images vides) : secours.
+        if (shouldUseFallback(opened.kind, attempt, signal.aborted) && file.current) {
           releasePreviews();
           closeSource();
           opened = await openFallback(file.current, signal);
@@ -114,6 +122,8 @@ export function useFrameExtraction() {
           }
           source.current = opened;
           result = await run(opened, excerptWindow(opened.durationS, excerpt.startS));
+        } else if (!result) {
+          throw failure;
         }
         if (signal.aborted) {
           return;
@@ -153,7 +163,7 @@ export function useFrameExtraction() {
         try {
           opened = await openNativeSource(video, current.signal);
         } catch (error) {
-          if (current.signal.aborted || !(error instanceof ClipError)) throw error;
+          if (!shouldUseFallback("native", { ok: false, error }, current.signal.aborted)) throw error;
           opened = await openFallback(video, current.signal);
         }
         if (current.signal.aborted) {

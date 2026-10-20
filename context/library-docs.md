@@ -236,6 +236,11 @@ Plans d'hébergement : **Vercel Pro** obligatoire (le plan Hobby est réservé �
   - Libérer la mémoire : `URL.revokeObjectURL` après extraction.
   - Échantillonner en évitant le tout début et la toute fin (fondus au noir, logos).
 
+## npm : fichier de verrouillage sous Windows
+
+- Piège vérifié le 20 octobre 2026 : `npm install` sous Windows (npm 11.6) retire du `package-lock.json` les dépendances optionnelles `@emnapi/core` et `@emnapi/runtime`, requises sous Linux ; `npm ci` échoue alors en CI (« Missing: @emnapi/... from lock file »).
+- Après toute installation, vérifier sous Linux : `docker run --rm -v <copie de package.json + package-lock.json>:/app -w /app node:24 npm ci --ignore-scripts --dry-run`. Si les entrées manquent, les reprendre du verrou précédent, à leur place (juste avant `node_modules/@emnapi/wasi-threads`).
+
 ## ffmpeg.wasm (lecture de secours, U33, AD-40)
 
 - Doc : https://ffmpegwasm.netlify.app/docs/overview — API dans `node_modules/@ffmpeg/ffmpeg/dist/esm/classes.d.ts`.

@@ -17,4 +17,10 @@ describe("versions de ffmpeg.wasm", () => {
     expect(FFMPEG_CORE_VERSION).toBe(installedVersion("core"));
     expect(FFMPEG_WORKER_VERSION).toBe(installedVersion("ffmpeg"));
   });
+
+  it("le smoke test vérifie les fichiers de ces versions", () => {
+    const smoke = readFileSync(path.join(process.cwd(), ".github", "workflows", "smoke.yml"), "utf8");
+    expect(smoke).toContain(`ffmpeg/core-${FFMPEG_CORE_VERSION}/ffmpeg-core.wasm`);
+    expect(smoke).toContain(`ffmpeg/worker-${FFMPEG_WORKER_VERSION}/worker.js`);
+  });
 });

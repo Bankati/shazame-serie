@@ -146,7 +146,7 @@ Dernière mise à jour : 20 octobre 2026 (U33)
 | Ombre | none |
 | Accent | curseur `accent-primary` |
 
-**Notes de pattern :** affiché seulement pour une vidéo de plus de 60 s, avant tout envoi (aucune identification décomptée). Curseur `<input type="range">` natif (pas de composant `ui` slider) : `h-11` pour la zone tactile, `aria-valuetext` et texte visible « De … à … » (la position n'est pas donnée par la seule couleur). Aperçu `aspect-video object-contain`, seulement en lecture native. Mêmes boutons `h-11 w-full sm:w-fit` que la fin de parcours d'`IdentifyPanel`.
+**Notes de pattern :** affiché seulement pour une vidéo de plus de 60 s, avant tout envoi (aucune identification décomptée). Le focus passe au curseur à l'apparition (le bouton d'envoi vient de disparaître), décrit par l'explication et le passage. Pendant la lecture (`reading`, `preparing`, `extracting`), `IdentifyPanel` affiche un bouton `variant="outline"` « Annuler » (`h-11 w-full sm:w-fit`) qui ramène à la zone d'envoi, focus compris. Curseur `<input type="range">` natif (pas de composant `ui` slider) : `h-11` pour la zone tactile, `aria-valuetext` et texte visible « De … à … » (la position n'est pas donnée par la seule couleur). Aperçu `aspect-video object-contain`, seulement en lecture native. Mêmes boutons `h-11 w-full sm:w-fit` que la fin de parcours d'`IdentifyPanel`.
 
 ### FilmStrip (élément signature)
 

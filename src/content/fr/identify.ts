@@ -13,6 +13,7 @@ export const IDENTIFY_TEXT = {
   },
   steps: {
     reading: "Lecture de la vidéo…",
+    cancel: "Annuler",
     preparing: (progress: number | null) =>
       progress === null
         ? "Cette vidéo demande le lecteur de secours (32 Mo, téléchargé une seule fois)…"

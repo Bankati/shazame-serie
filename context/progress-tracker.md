@@ -135,7 +135,9 @@ Mettre à jour ce fichier après chaque changement d'implémentation significati
 - U33 — Formats vidéo élargis et conversion de secours (plan validé le 20 octobre 2026 : `context/plans/U33.md`).
   - Diagnostic : MKV, 3GP et AVI refusés (liste MP4/MOV/WebM), vidéos de plus de 60 s ou de 50 Mo refusées, HEVC illisible sans décodeur matériel (Chromium).
   - Fait (20 octobre 2026) : formats MP4, MOV, WebM, M4V, 3GP, MKV, AVI ; 500 Mo ; passage de 60 s (milieu par défaut, curseur `ExcerptPicker` avant l'analyse) ; lecture de secours ffmpeg.wasm servie par le site (`public/ffmpeg/`, `postinstall`), bascule sur erreur de lecture native ou images toutes vides ; vidéos d'essai `npm run fixtures:videos` ; Playwright `tests/e2e/formats.spec.ts` (11 vidéos, aucune requête au-delà du paquet d'images).
-  - Reste (fondateur) : essai sur Chrome Android et Safari iOS avec ses propres vidéos (dont une HEVC d'iPhone de plus d'une minute) sur la préproduction.
+  - `/review` (20 octobre 2026) : bascule aussi sur un échec en cours d'extraction (`shouldUseFallback`, testé) ; `ffmpeg-static` retiré de `package.json` (installé à la demande en CI : son téléchargement pouvait faire échouer un build Vercel).
+  - `/audit` (20 octobre 2026) : bouton « Annuler » pendant la lecture ; focus sur le curseur du passage ; smoke test des fichiers ffmpeg.wasm servis ; événement PostHog `clip_read_failed` (extension, type MIME, taille arrondie, étape ; jamais le nom du fichier). Restant mineur : anneau de focus natif du curseur ; `npm run eval` attendra U13.
+  - Reste (fondateur) : essai sur Chrome Android et Safari iOS avec ses propres vidéos (dont une HEVC d'iPhone de plus d'une minute) sur la préproduction ; dans PostHog, surveiller `clip_read_failed`.
 
 ## Next Up
 

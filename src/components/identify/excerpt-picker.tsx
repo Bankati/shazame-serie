@@ -25,7 +25,15 @@ export function ExcerptPicker({ durationS, initialStartS, previewUrl, onAnalyze,
   const endS = Math.min(durationS, startS + CLIP_EXCERPT_S);
   const sliderId = useId();
   const rangeId = useId();
+  const explanationId = useId();
   const video = useRef<HTMLVideoElement>(null);
+  const slider = useRef<HTMLInputElement>(null);
+
+  // Le bouton « Choisir un clip », qui avait le focus, vient de disparaître : le focus passe au curseur, qui
+  // annonce l'explication et le passage (clavier, lecteur d'écran).
+  useEffect(() => {
+    slider.current?.focus();
+  }, []);
 
   useEffect(() => {
     if (video.current && video.current.readyState >= HTMLMediaElement.HAVE_METADATA) {
@@ -37,7 +45,9 @@ export function ExcerptPicker({ durationS, initialStartS, previewUrl, onAnalyze,
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
         <p className="font-display text-xl font-bold">{excerpt.title}</p>
-        <p className="text-sm text-muted-foreground">{excerpt.explanation(formatDuration(durationS))}</p>
+        <p id={explanationId} className="text-sm text-muted-foreground">
+          {excerpt.explanation(formatDuration(durationS))}
+        </p>
       </div>
       {previewUrl ? (
         <video
@@ -58,13 +68,14 @@ export function ExcerptPicker({ durationS, initialStartS, previewUrl, onAnalyze,
           {excerpt.label}
         </label>
         <input
+          ref={slider}
           id={sliderId}
           type="range"
           min={0}
           max={latestStartS}
           step={1}
           value={startS}
-          aria-describedby={rangeId}
+          aria-describedby={`${explanationId} ${rangeId}`}
           aria-valuetext={excerpt.range(formatDuration(startS), formatDuration(endS))}
           onChange={(event) => setStartS(Number(event.target.value))}
           className="h-11 w-full cursor-pointer accent-primary"

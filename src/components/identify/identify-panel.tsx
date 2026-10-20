@@ -23,7 +23,7 @@ import { ResultDialog } from "./result-dialog";
 export function IdentifyPanel() {
   const { state, start, choose, reset } = useFrameExtraction();
   const identification = useIdentification(state.status === "ready" ? state.packageBlobs : null);
-  const { dropzone, result, dialog } = IDENTIFY_TEXT;
+  const { dropzone, result, dialog, steps } = IDENTIFY_TEXT;
   useEffect(() => {
     if (identification.status === "done") {
       publishQuota(identification.response.quota);
@@ -45,6 +45,8 @@ export function IdentifyPanel() {
   };
 
   const showDropzone = state.status === "idle" || state.status === "rejected";
+  // Lecture longue possible (lecteur de secours de 32 Mo en 4G, grosse vidéo) : on peut toujours renoncer.
+  const reading = state.status === "reading" || state.status === "preparing" || state.status === "extracting";
   const finished =
     state.status === "insufficient" || (state.status === "ready" && identification.status !== "sending" && identification.status !== "idle");
 
@@ -79,6 +81,11 @@ export function IdentifyPanel() {
             {identification.status === "sending" ? <IdentificationResultSkeleton /> : null}
             {response ? <p className="text-sm text-muted-foreground">{result.remaining(response.quota.remaining)}</p> : null}
           </div>
+          {reading ? (
+            <Button type="button" variant="outline" onClick={chooseAnother} className="h-11 w-full text-base sm:w-fit">
+              {steps.cancel}
+            </Button>
+          ) : null}
           {finished ? (
             <div className="flex flex-col gap-3 sm:flex-row">
               {response ? (

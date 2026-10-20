@@ -2,10 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { reportClipFailure } from "@/client/observability/posthog";
 import { CLIP_EXCERPT_S } from "@/shared/frames/constants";
 import { type Excerpt, excerptWindow } from "@/shared/frames/sampling";
 import { hasEnoughFrames } from "@/shared/frames/selection";
 
+import { type ClipFailureStage, describeClipFailure, isReportableClipFailure } from "./clip-failure";
 import { type CandidateFrame, ClipError, type ExtractionResult, extractFrames } from "./extract-frames";
 import { shouldUseFallback } from "./fallback";
 import { type FrameSource, openNativeSource } from "./frame-source";
@@ -34,6 +36,8 @@ export function useFrameExtraction() {
   const source = useRef<FrameSource | null>(null);
   const file = useRef<File | null>(null);
   const previewUrls = useRef<string[]>([]);
+  // Étape en cours, pour le signalement d'une vidéo illisible.
+  const stage = useRef<ClipFailureStage>("native");
 
   const releasePreviews = useCallback(() => {
     for (const url of previewUrls.current) {
@@ -62,6 +66,9 @@ export function useFrameExtraction() {
       }
       closeSource();
       releasePreviews();
+      if (file.current && isReportableClipFailure(error)) {
+        reportClipFailure(describeClipFailure(file.current, stage.current, error));
+      }
       setState({ status: "rejected", problem: error instanceof ClipError ? error.problem : "unreadable" });
     },
     [closeSource, releasePreviews],
@@ -69,6 +76,7 @@ export function useFrameExtraction() {
 
   /** Lecture de secours, chargée à la demande (environ 32 Mo, mis en cache par le navigateur). */
   const openFallback = useCallback(async (video: File, signal: AbortSignal): Promise<FrameSource> => {
+    stage.current = "fallback";
     setState({ status: "preparing", progress: null });
     const { openFfmpegSource } = await import("./ffmpeg-source");
     return openFfmpegSource(video, {
@@ -156,6 +164,7 @@ export function useFrameExtraction() {
       const current = new AbortController();
       controller.current = current;
       file.current = video;
+      stage.current = "native";
       setState({ status: "reading" });
 
       try {

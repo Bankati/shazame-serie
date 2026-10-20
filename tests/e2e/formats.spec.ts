@@ -72,6 +72,8 @@ test("vidéo de 150 s : choix du passage avant l'analyse, rien n'est envoyé ava
   await expect(page.getByText("Choisissez le passage à analyser")).toBeVisible({ timeout: 60_000 });
   await expect(page.getByText("Cette vidéo dure 2:30.", { exact: false })).toBeVisible();
   const slider = page.getByRole("slider", { name: "Début du passage" });
+  // Le bouton d'envoi a disparu : le focus passe au curseur (clavier, lecteur d'écran).
+  await expect(slider).toBeFocused();
   await expect(slider).toHaveValue("45");
   await expect(page.getByText("De 0:45 à 1:45")).toBeVisible();
   await slider.fill("80");
@@ -80,6 +82,24 @@ test("vidéo de 150 s : choix du passage avant l'analyse, rien n'est envoyé ava
 
   await page.getByRole("button", { name: "Analyser ce passage" }).click();
   await expectFramesSent(page, server);
+});
+
+test("« Annuler » pendant la lecture de secours : retour à la zone d'envoi, rien n'est envoyé", async ({ page }) => {
+  test.setTimeout(120_000);
+  const server = await simulateServer(page);
+  // Lecteur de secours ralenti : on a le temps d'annuler pendant sa préparation.
+  await page.route("**/ffmpeg/core-*/ffmpeg-core.wasm", async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 10_000));
+    await route.continue().catch(() => undefined);
+  });
+  await chooseVideo(page, "mpeg4.avi");
+
+  await expect(page.getByText("lecteur de secours", { exact: false })).toBeVisible({ timeout: 60_000 });
+  await page.getByRole("button", { name: "Annuler" }).click();
+  await expect(page.getByRole("button", { name: "Choisir un clip" })).toBeFocused();
+  await page.waitForTimeout(12_000);
+  expect(server.sent).toHaveLength(0);
+  await expect(page.getByRole("button", { name: "Choisir un clip" })).toBeVisible();
 });
 
 test("format non pris en charge : refus immédiat, sans lecture", async ({ page }) => {

@@ -28,6 +28,13 @@ function useIsDesktop(): boolean {
   return useSyncExternalStore(subscribe, () => window.matchMedia(DESKTOP_QUERY).matches, () => false);
 }
 
+/** Libellés propres à l'origine de la recherche (U35, U36). */
+const SOURCE_TEXT = {
+  media: { notRecognized: IDENTIFY_TEXT.result.notRecognized, another: IDENTIFY_TEXT.result.another },
+  description: { notRecognized: IDENTIFY_TEXT.result.notRecognizedDescription, another: IDENTIFY_TEXT.description.another },
+  link: { notRecognized: IDENTIFY_TEXT.result.notRecognizedLink, another: IDENTIFY_TEXT.link.another },
+} as const;
+
 type ResultDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -36,7 +43,7 @@ type ResultDialogProps = {
   /** Images du clip encore en mémoire : renvoyées avec un signalement, seulement si la personne y consent. */
   frames: readonly Blob[];
   /** Origine de la recherche (U35) : adapte « Choisir un autre clip » et le message « non reconnu ». */
-  source?: "media" | "description";
+  source?: "media" | "description" | "link";
 };
 
 export function ResultDialog({ open, onOpenChange, response, onAnother, frames, source = "media" }: ResultDialogProps) {
@@ -60,11 +67,11 @@ export function ResultDialog({ open, onOpenChange, response, onAnother, frames, 
         <IdentificationResult
           response={response}
           onReport={canReport ? () => setView("report") : undefined}
-          notRecognized={source === "description" ? result.notRecognizedDescription : result.notRecognized}
+          notRecognized={SOURCE_TEXT[source].notRecognized}
         />
         <div className="flex flex-col-reverse gap-3 border-t border-border pt-4 sm:flex-row sm:justify-end">
           <Button type="button" variant="outline" className="h-11 text-base" onClick={onAnother}>
-            {source === "description" ? IDENTIFY_TEXT.description.another : result.another}
+            {SOURCE_TEXT[source].another}
           </Button>
         </div>
       </>

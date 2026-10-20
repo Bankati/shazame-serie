@@ -5,6 +5,7 @@ import { getDb, withQueryTimeout } from "@/server/db/client";
 import {
   type CacheableResult,
   disableCachedResult,
+  findCachedResult,
   prepareCacheLookup,
   storeCachedResult,
   withResultCache,
@@ -56,6 +57,15 @@ describe("cache de résultats", () => {
 
     expect(identify).toHaveBeenCalledTimes(1);
     expect(again.source).toBe("cache");
+  });
+
+  it("lien (U36) : entrée sans image, retrouvée par son empreinte exacte", async () => {
+    const lookup = { frameHashes: [], fingerprint: "link:youtube:dQw4w9WgXcQ" };
+    expect(await withQueryTimeout(db, (tx) => storeCachedResult(tx, lookup, MATRIX))).toMatch(/^[0-9a-f-]{36}$/);
+    const found = await withQueryTimeout(db, (tx) => findCachedResult(tx, lookup));
+    expect(found).toMatchObject({ tmdbId: 603, mediaType: "movie", confidence: 92 });
+    const [row] = await sql<{ frames: number }[]>`select count(*)::int as frames from public.result_cache_frames`;
+    expect(row?.frames).toBe(0);
   });
 
   it("mode image : une autre capture seule ne profite pas d'une correspondance proche (2 images exigées)", async () => {

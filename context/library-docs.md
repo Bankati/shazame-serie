@@ -254,6 +254,13 @@ Plans d'hébergement : **Vercel Pro** obligatoire (le plan Hobby est réservé �
   - Le `signal` des méthodes rejette la promesse sans arrêter le worker : appeler `terminate()` à l'annulation.
   - Constantes de version (`src/client/frames/ffmpeg-source.ts`) vérifiées contre les paquets installés par un test : les mettre à jour avec les paquets.
 
+## YouTube Data API v3 et oEmbed TikTok (liens, U36)
+
+- YouTube : https://developers.google.com/youtube/v3/docs/videos/list — `GET https://www.googleapis.com/youtube/v3/videos?part=snippet&id=<id>&key=<YOUTUBE_API_KEY>` (1 unité de quota sur 10 000 par jour). Vidéo privée ou supprimée : `items` vide (pas de 404). Vignettes : `maxres` → `standard` → `high` → `medium` → `default`, servies par `i.ytimg.com`. Vérifié en direct le 20 octobre 2026 (`tests/live/youtube-metadata.test.ts`).
+- TikTok : https://developers.tiktok.com/doc/embed-videos — `GET https://www.tiktok.com/oembed?url=<adresse de la vidéo>`, sans clé ; renvoie `title` (légende), `author_name`, `thumbnail_url` (domaines `*.tiktokcdn*.com`, adresses signées et temporaires). Une vidéo supprimée peut répondre 200 sans titre ni vignette : traitée comme « sans indice ».
+- Instagram : aucune lecture publique sans application Meta validée (« oEmbed Read », D11) ; l'ancienne adresse `api.instagram.com/oembed` renvoie une page web.
+- Liens courts TikTok (`vm.tiktok.com`, `vt.tiktok.com`, `/t/`) : `fetch(…, { redirect: "manual" })` puis vérification de chaque `Location` (jamais `redirect: "follow"`).
+
 ## heic-to (captures HEIC, U34)
 
 - Doc : https://github.com/hoppergee/heic-to — types dans `node_modules/heic-to/dist/next/heic-to.d.ts`.

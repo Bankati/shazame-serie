@@ -5,7 +5,14 @@ import type { CatalogCandidate, CatalogProvider, CatalogTitleDetails } from "@/s
 import { createQuotaService, type QuotaIdentity } from "@/server/quota/quota";
 import { createMemoryQuotaStore } from "@/server/quota/quota-store";
 
-import { descriptionFingerprint, type IdentifyDeps, identifyClip, identifyDescription } from "./identify";
+import {
+  descriptionFingerprint,
+  type IdentifyDeps,
+  identifyClip,
+  identifyDescription,
+  identifyLink,
+  type LinkSources,
+} from "./identify";
 import type { IdentificationRecord } from "./persist";
 import type { CachedResult } from "./result-cache";
 
@@ -25,7 +32,12 @@ const SURE: VisionAnswer = { recognized: true, title: "Matrix", originalTitle: "
 const UNSURE: VisionAnswer = { ...SURE, confidence: 40 };
 
 function setup(
-  options: { vision?: VisionProvider["identify"]; text?: VisionProvider["identifyFromText"]; cached?: CachedResult | null } = {},
+  options: {
+    vision?: VisionProvider["identify"];
+    text?: VisionProvider["identifyFromText"];
+    link?: VisionProvider["identifyFromLink"];
+    cached?: CachedResult | null;
+  } = {},
 ) {
   // Même horloge pour le service et le stockage (sinon les compteurs paraîtraient expirés).
   const now = new Date("2026-07-14T10:00:00Z");
@@ -35,6 +47,7 @@ function setup(
   const recordHit = vi.fn(async () => {});
   const identify = vi.fn(options.vision ?? (async () => visionResult(SURE)));
   const identifyFromText = vi.fn(options.text ?? (async () => ({ ...visionResult(SURE), promptVersion: "describe.v1" })));
+  const identifyFromLink = vi.fn(options.link ?? (async () => ({ ...visionResult(SURE), promptVersion: "link.v1" })));
   const catalog: CatalogProvider = {
     searchTitles: async () => [MATRIX],
     getTitleDetails: async () => DETAILS,
@@ -46,7 +59,7 @@ function setup(
   };
   const deps: IdentifyDeps = {
     quota,
-    vision: { identify, identifyFromText },
+    vision: { identify, identifyFromText, identifyFromLink },
     catalog,
     prepareLookup: async () => ({ frameHashes: [1n, 2n], fingerprint: "empreinte" }),
     cache: { find: async () => options.cached ?? null, recordHit, store },
@@ -55,8 +68,79 @@ function setup(
       return `00000000-0000-4000-8000-${String(records.length).padStart(12, "0")}`;
     },
   };
-  return { deps, quota, records, identify, identifyFromText, store, recordHit };
+  return { deps, quota, records, identify, identifyFromText, identifyFromLink, store, recordHit };
 }
+
+describe("identifyLink (U36)", () => {
+  const LINK = { ok: true, platform: "youtube", videoId: "dQw4w9WgXcQ", canonicalUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" } as const;
+  const META = { platform: "youtube" as const, videoId: "dQw4w9WgXcQ", title: "Scène culte de Matrix", description: "", author: "Ciné", tags: [], thumbnailUrl: "https://i.ytimg.com/vi/x/max.jpg" };
+
+  function sources(overrides: Partial<LinkSources> = {}): LinkSources & { [K in keyof LinkSources]: ReturnType<typeof vi.fn> } {
+    return {
+      resolveShort: vi.fn(async () => ({ videoId: "7300000000000000001", canonicalUrl: "https://www.tiktok.com/@a/video/7300000000000000001" })),
+      metadata: vi.fn(async () => ({ ok: true as const, metadata: META })),
+      thumbnail: vi.fn(async () => Buffer.from("jpeg")),
+      ...overrides,
+    } as LinkSources & { [K in keyof LinkSources]: ReturnType<typeof vi.fn> };
+  }
+
+  it("résultat sûr : décompté, mode « link », mis en cache par vidéo, indices transmis à l'IA", async () => {
+    const { deps, quota, records, identifyFromLink, store } = setup();
+    const outcome = await identifyLink(deps, sources(), { identity: VISITOR, link: LINK });
+
+    expect(outcome).toMatchObject({ ok: true, response: { decision: "show", main: { title: "Matrix" } } });
+    expect(identifyFromLink).toHaveBeenCalledWith(expect.objectContaining({ platform: "youtube", title: "Scène culte de Matrix", thumbnail: Buffer.from("jpeg") }));
+    expect((await quota.status(VISITOR)).used).toBe(1);
+    expect(records[0]).toMatchObject({ inputKind: "link", fingerprint: "link:youtube:dQw4w9WgXcQ", counted: true });
+    expect(store).toHaveBeenCalledWith({ frameHashes: [], fingerprint: "link:youtube:dQw4w9WgXcQ" }, expect.objectContaining({ tmdbId: 603 }));
+  });
+
+  it("même lien déjà identifié : cache, ni décompte, ni appel des plateformes, ni appel IA (RG6)", async () => {
+    const cached: CachedResult = { cacheId: "c3", tmdbId: 603, mediaType: "movie", confidence: 93, alternatives: [], validated: false };
+    const { deps, quota, identifyFromLink } = setup({ cached });
+    const linkSources = sources();
+
+    const outcome = await identifyLink(deps, linkSources, { identity: VISITOR, link: LINK });
+
+    expect(outcome).toMatchObject({ ok: true, response: { source: "cache" } });
+    expect(linkSources.metadata).not.toHaveBeenCalled();
+    expect(identifyFromLink).not.toHaveBeenCalled();
+    expect((await quota.status(VISITOR)).used).toBe(0);
+  });
+
+  it("publication sans indice : LINK_NO_CLUES, rien de décompté, aucun appel IA", async () => {
+    const { deps, quota, identifyFromLink } = setup();
+    const empty = sources({
+      metadata: vi.fn(async () => ({ ok: true as const, metadata: { ...META, title: " ", thumbnailUrl: null } })),
+      thumbnail: vi.fn(async () => null),
+    });
+    expect(await identifyLink(deps, empty, { identity: VISITOR, link: LINK })).toEqual({ ok: false, code: "LINK_NO_CLUES" });
+    expect(identifyFromLink).not.toHaveBeenCalled();
+    expect((await quota.status(VISITOR)).used).toBe(0);
+  });
+
+  it.each([
+    ["introuvable", "not_found", "LINK_NOT_FOUND"],
+    ["plateforme indisponible", "unavailable", "UPSTREAM_ERROR"],
+  ] as const)("publication %s : %s, rien de décompté", async (_label, failure, code) => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    const { deps, quota } = setup();
+    const failing = sources({ metadata: vi.fn(async () => ({ ok: false as const, failure })) });
+    expect(await identifyLink(deps, failing, { identity: VISITOR, link: LINK })).toEqual({ ok: false, code });
+    expect((await quota.status(VISITOR)).used).toBe(0);
+    vi.restoreAllMocks();
+  });
+
+  it("lien court TikTok : résolu avant le cache ; non résolu → LINK_NOT_FOUND", async () => {
+    const { deps, records } = setup();
+    const short = { ok: true, platform: "tiktok", shortUrl: "https://vm.tiktok.com/ZMabc123/" } as const;
+    await identifyLink(deps, sources(), { identity: VISITOR, link: short });
+    expect(records[0]).toMatchObject({ fingerprint: "link:tiktok:7300000000000000001" });
+
+    const unresolved = sources({ resolveShort: vi.fn(async () => null) });
+    expect(await identifyLink(setup().deps, unresolved, { identity: VISITOR, link: short })).toEqual({ ok: false, code: "LINK_NOT_FOUND" });
+  });
+});
 
 describe("identifyDescription (U35)", () => {
   const TEXT = "Un homme revit sans cesse la même journée dans une petite ville enneigée";

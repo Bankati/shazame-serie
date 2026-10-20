@@ -167,6 +167,25 @@ Dernière mise à jour : 20 octobre 2026 (U35)
 
 **Notes de pattern :** `<textarea>` natif aux classes du champ shadcn (pas de composant `ui` textarea), `maxLength` 500, décrit par l'aide et le compteur (`aria-describedby`, compteur non annoncé à chaque frappe). Bornes partagées avec le serveur (`src/schemas/describe.ts`). Les erreurs d'envoi s'affichent sous le formulaire (`role="alert"`), le texte reste dans le champ.
 
+### LinkForm (identification par lien)
+
+Fichier : `src/components/identify/link-form.tsx`
+Dernière mise à jour : 20 octobre 2026 (U36)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | champ `bg-transparent` (`dark:bg-input/30`) |
+| Bordure | champ `border border-input`, au focus `border-ring` + `ring-3 ring-ring/50`, invalide `aria-invalid:border-destructive` |
+| Radius | champ `rounded-md`, bouton `rounded-md` (shadcn) |
+| Texte principal | libellé `font-display text-2xl font-bold` ; saisie `text-base` |
+| Texte secondaire | aide `text-sm text-muted-foreground` ; erreur `text-sm font-medium text-destructive` (`role="alert"`) |
+| Espacement | `gap-3` ; champ `h-11 px-3` |
+| Hover / focus | bouton `h-11 hover:bg-primary-hover`, désactivé tant que le lien n'est pas reconnu |
+| Ombre | none |
+| Accent | none |
+
+**Notes de pattern :** même gabarit que `DescriptionForm` (libellé-titre, aide, champ, bouton aligné à droite dès `sm`). `type="url"`, `inputMode="url"`, `noValidate` : le contrôle est celui de `parseVideoLink` (partagé avec le serveur), affiché après la sortie du champ ou l'envoi, pas à chaque frappe. Erreurs serveur affichées par `IdentifyPanel` sous le formulaire, lien conservé dans le champ.
+
 ### ExcerptPicker (choix du passage d'une vidéo longue)
 
 Fichier : `src/components/identify/excerpt-picker.tsx`

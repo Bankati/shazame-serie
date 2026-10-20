@@ -23,7 +23,8 @@ Pas de code. Chaque décision est consignée dans `progress-tracker.md`.
 | D7 | Valeurs RG2 (visiteur), RG4 (plafond Premium), plafond IA quotidien initial | U11, U14 |
 | D8 | Nom commercial provisoire et domaine (pour emails, OAuth Google, mentions légales) | U04, U23 |
 | D9 | Plans payants Vercel Pro et Supabase (production) intégrés au budget | U01 |
-| D10 | Clé YouTube Data API (Google Cloud, gratuite dans la limite du quota) pour l'identification par lien | U36 |
+| D10 | Clé YouTube Data API (Google Cloud, gratuite dans la limite du quota) pour l'identification par lien — **fermée le 20 octobre 2026** | U36 |
+| D11 | Application Meta (Facebook for Developers) avec la fonction « oEmbed Read », validée par Meta, et son jeton : seul accès public aux publications Instagram | U36 (Instagram) |
 
 ---
 

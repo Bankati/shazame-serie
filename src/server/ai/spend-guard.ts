@@ -7,7 +7,13 @@ import { MAX_OUTPUT_TOKENS } from "./openai-vision-provider";
 import { MODEL_PRICES_USD_PER_MILLION, USD_TO_EUR } from "./pricing";
 import { MAX_ATTEMPTS } from "./retry";
 import type { SpendStore } from "./spend-store";
-import { type VisionContext, VisionError, type VisionProvider, type VisionResult } from "./vision-provider";
+import {
+  type LinkClues,
+  type VisionContext,
+  VisionError,
+  type VisionProvider,
+  type VisionResult,
+} from "./vision-provider";
 
 // Garde de dépense (RG5, invariant 2) : enveloppe le fournisseur de vision, de sorte qu'aucun appel au modèle
 // ne puisse contourner le plafond quotidien. Le coût maximal est réservé avant l'appel, puis ajusté au coût réel.
@@ -60,6 +66,12 @@ export class SpendGuardedVisionProvider implements VisionProvider {
   identifyFromText(text: string, context?: { signal?: AbortSignal }): Promise<VisionResult> {
     const estimate = estimateMaxCostMicroEur(this.options.model, 0);
     return this.guarded(estimate, () => this.options.inner.identifyFromText(text, context));
+  }
+
+  /** Lien (U36) : une image au plus (la vignette), métadonnées bornées à 2 000 caractères. */
+  identifyFromLink(link: LinkClues, context?: { signal?: AbortSignal }): Promise<VisionResult> {
+    const estimate = estimateMaxCostMicroEur(this.options.model, link.thumbnail ? 1 : 0);
+    return this.guarded(estimate, () => this.options.inner.identifyFromLink(link, context));
   }
 
   private async guarded(estimate: number, call: () => Promise<VisionResult>): Promise<VisionResult> {

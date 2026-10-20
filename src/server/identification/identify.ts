@@ -7,8 +7,11 @@ import type { CatalogProvider, MediaType } from "@/server/catalog/catalog-provid
 import { matchProposedTitle } from "@/server/catalog/match-title";
 import type { ProposedTitle } from "@/server/catalog/matching";
 import type { StoredAlternative } from "@/server/db/schema";
+import { hasClues, type MetadataResult } from "@/server/links/link-metadata";
+import { log } from "@/server/log";
 import type { QuotaIdentity, QuotaService, QuotaStatus } from "@/server/quota/quota";
 import type { FrameMode, IdentifiedTitle, IdentifyResponse, QuotaInfo } from "@/schemas/identify";
+import type { LinkPlatform, ParsedLink } from "@/shared/links/parse-link";
 
 import type { IdentificationRecord } from "./persist";
 import type { CacheableResult, CachedResult, CacheLookup } from "./result-cache";
@@ -36,6 +39,9 @@ export type IdentifyOutcome =
   | { ok: true; response: IdentifyResponse }
   | { ok: false; code: "QUOTA_EXCEEDED"; quota: QuotaInfo }
   | { ok: false; code: "AI_PAUSED" }
+  /** Lien (U36) : publication introuvable, ou sans indice exploitable ; jamais décompté. */
+  | { ok: false; code: "LINK_NOT_FOUND" }
+  | { ok: false; code: "LINK_NO_CLUES" }
   | { ok: false; code: "UPSTREAM_ERROR" };
 
 export async function identifyClip(
@@ -89,6 +95,64 @@ export async function identifyDescription(
     inputKind: "description",
     fingerprint: descriptionFingerprint(text),
     callAi: () => deps.vision.identifyFromText(text),
+  });
+}
+
+/** Sources des indices d'un lien (U36) : injectées pour les tests (aucun appel réseau réel). */
+export type LinkSources = {
+  resolveShort(shortUrl: string): Promise<{ videoId: string; canonicalUrl: string } | null>;
+  metadata(platform: LinkPlatform, videoId: string, canonicalUrl: string): Promise<MetadataResult>;
+  thumbnail(url: string | null, platform: LinkPlatform): Promise<Buffer | null>;
+};
+
+/**
+ * Identification par lien (U36, AD-44) : quota d'abord (AD-13), puis cache par vidéo (le même lien ne coûte ni
+ * identification ni appel IA, RG6), métadonnées publiques et vignette, et l'étape d'analyse commune. Une
+ * publication introuvable ou sans indice n'est jamais décomptée.
+ */
+export async function identifyLink(
+  deps: Pick<IdentifyDeps, "quota" | "vision" | "catalog" | "persist" | "cache">,
+  sources: LinkSources,
+  input: { identity: QuotaIdentity; link: Extract<ParsedLink, { ok: true }> },
+): Promise<IdentifyOutcome> {
+  const { identity, link } = input;
+  const before = await deps.quota.status(identity);
+  if (before.remaining <= 0) {
+    return { ok: false, code: "QUOTA_EXCEEDED", quota: toQuotaInfo(before) };
+  }
+
+  const video = "videoId" in link ? { videoId: link.videoId, canonicalUrl: link.canonicalUrl } : await sources.resolveShort(link.shortUrl);
+  if (!video) {
+    return { ok: false, code: "LINK_NOT_FOUND" };
+  }
+
+  // Empreinte calculée par le serveur à partir de l'identifiant extrait (invariant 4) ; aucune image.
+  const lookup: CacheLookup = { frameHashes: [], fingerprint: `link:${link.platform}:${video.videoId}` };
+  const cached = await deps.cache.find(lookup);
+  if (cached) {
+    const fromCache = await answerFromCache(deps, identity, "link", lookup, cached, before);
+    if (fromCache) {
+      return fromCache;
+    }
+  }
+
+  const metadata = await sources.metadata(link.platform, video.videoId, video.canonicalUrl);
+  if (!metadata.ok) {
+    log.warn("link.metadata_failed", { platform: link.platform, failure: metadata.failure });
+    return { ok: false, code: metadata.failure === "not_found" ? "LINK_NOT_FOUND" : "UPSTREAM_ERROR" };
+  }
+  const thumbnail = await sources.thumbnail(metadata.metadata.thumbnailUrl, link.platform);
+  if (!hasClues(metadata.metadata, thumbnail)) {
+    return { ok: false, code: "LINK_NO_CLUES" };
+  }
+
+  const { title, description, author, tags } = metadata.metadata;
+  return analyzeWithAi(deps, {
+    identity,
+    inputKind: "link",
+    fingerprint: lookup.fingerprint,
+    callAi: () => deps.vision.identifyFromLink({ platform: link.platform, title, description, author, tags, thumbnail }),
+    onShown: (result) => deps.cache.store(lookup, result),
   });
 }
 
@@ -194,9 +258,9 @@ async function analyzeWithAi(
 
 /** Réponse depuis le cache, ou null si l'entrée ne peut plus être affichée (fiche TMDB disparue). */
 async function answerFromCache(
-  deps: IdentifyDeps,
+  deps: Pick<IdentifyDeps, "catalog" | "cache" | "persist">,
   identity: QuotaIdentity,
-  mode: FrameMode,
+  mode: IdentificationRecord["inputKind"],
   lookup: CacheLookup,
   cached: CachedResult,
   quota: QuotaStatus,

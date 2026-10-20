@@ -39,6 +39,9 @@ const envSchema = z.object({
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: optional(z.string().min(20)),
   // Clé secrète Supabase (U05, stockage des photos de profil) : contourne la RLS, uniquement côté serveur.
   SUPABASE_SECRET_KEY: optional(z.string().min(20)),
+  // YouTube Data API v3 (U36, D10) : clé restreinte à cette API. Facultative : sans elle, un lien YouTube
+  // répond « momentanément indisponible » au lieu d'empêcher le déploiement.
+  YOUTUBE_API_KEY: optional(z.string().regex(/^AIza[\w-]{35}$/)),
   // Signature du cookie visiteur (U11, RG2). Différent par environnement.
   VISITOR_COOKIE_SECRET: optional(z.string().min(32)),
 });

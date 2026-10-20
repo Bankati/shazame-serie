@@ -26,6 +26,17 @@ export const IDENTIFY_TEXT = {
     label: "Comment identifier le titre",
     media: "Vidéo ou captures",
     description: "Description",
+    link: "Lien",
+  },
+  // Identification par lien (U36).
+  link: {
+    label: "Coller le lien de la publication",
+    hint: "Une vidéo YouTube (y compris les Shorts) ou TikTok. Seules ses informations publiques sont lues, jamais la vidéo.",
+    placeholder: "https://www.tiktok.com/@compte/video/…",
+    submit: "Identifier",
+    sending: "Recherche en cours…",
+    privacy: "Nous lisons uniquement les informations publiques de la publication : la vidéo n'est jamais téléchargée.",
+    another: "Coller un autre lien",
   },
   // Identification par description (U35).
   description: {
@@ -75,6 +86,8 @@ export const IDENTIFY_TEXT = {
       `${percent} %, ${decision === "show" ? "très probable" : "probable"}`,
     alternatives: "Autres pistes :",
     notRecognized: "Nous n'avons pas reconnu ce clip avec assez de certitude. Essayez un autre extrait.",
+    notRecognizedLink:
+      "Nous n'avons pas reconnu le titre de cette publication avec assez de certitude. Envoyez plutôt le clip ou une capture.",
     notRecognizedDescription:
       "Nous n'avons pas reconnu ce titre avec assez de certitude. Ajoutez un détail précis : un acteur, une scène, une époque.",
     remaining: (count: number) =>
@@ -114,6 +127,12 @@ export const IDENTIFY_TEXT = {
     rate_limited: "Trop d'essais rapprochés. Patientez une minute, puis réessayez.",
     frames: "Ces images n'ont pas pu être analysées. Choisissez un autre extrait.",
     text: "Cette description n'a pas pu être analysée. Écrivez entre 10 et 500 caractères.",
+    link_instagram:
+      "Les liens Instagram ne sont pas encore pris en charge. Enregistrez le clip ou faites une capture d'écran, puis envoyez-la dans « Vidéo ou captures ».",
+    link_unsupported: "Ce lien n'est pas pris en charge. Collez le lien d'une vidéo YouTube ou TikTok.",
+    link_not_found: "Cette publication est introuvable ou n'est pas publique. Vérifiez le lien.",
+    link_no_clues:
+      "Cette publication ne donne pas assez d'indices. Envoyez plutôt le clip ou une capture d'écran dans « Vidéo ou captures ».",
     paused:
       "L'identification de nouveaux extraits est en pause pour aujourd'hui, en raison d'une forte affluence. Les extraits déjà connus restent reconnus ; réessayez demain.",
     suspended: "Votre compte est suspendu : l'identification n'est pas disponible.",

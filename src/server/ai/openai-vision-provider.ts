@@ -19,8 +19,10 @@ import {
   IDENTIFY_IMAGES_PROMPT_VERSION,
   identifyImagesUserText,
 } from "./prompts/identify-images.v1";
+import { LINK_INSTRUCTIONS, LINK_MAX_ALTERNATIVES, LINK_PROMPT_VERSION, linkUserText } from "./prompts/link.v1";
 import { withRetries } from "./retry";
 import {
+  type LinkClues,
   modelAnswerSchema,
   normalizeAnswer,
   type VisionContext,
@@ -84,6 +86,20 @@ export class OpenAIVisionProvider implements VisionProvider {
     );
     // 3 propositions au plus (U35) : le titre principal et 2 alternatives.
     return { ...result, answer: { ...result.answer, alternatives: result.answer.alternatives.slice(0, DESCRIBE_MAX_ALTERNATIVES) } };
+  }
+
+  async identifyFromLink(link: LinkClues, context: { signal?: AbortSignal } = {}): Promise<VisionResult> {
+    const content: UserContent = [
+      {
+        type: "input_text",
+        text: linkUserText({ ...link, hasThumbnail: link.thumbnail !== null }),
+      },
+      ...(link.thumbnail
+        ? [{ type: "input_image" as const, image_url: `data:image/jpeg;base64,${link.thumbnail.toString("base64")}`, detail: this.options.detail }]
+        : []),
+    ];
+    const result = await this.run(LINK_PROMPT_VERSION, LINK_INSTRUCTIONS, content, context.signal);
+    return { ...result, answer: { ...result.answer, alternatives: result.answer.alternatives.slice(0, LINK_MAX_ALTERNATIVES) } };
   }
 
   private async run(promptVersion: string, instructions: string, content: UserContent, signal?: AbortSignal): Promise<VisionResult> {

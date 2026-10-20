@@ -91,4 +91,9 @@ describe("loadHomeShowcase", () => {
     vi.spyOn(console, "warn").mockImplementation(() => {});
     await expect(loadHomeShowcase(failing, { configured: true })).rejects.toThrow("TMDB en panne");
   });
+
+  it("TMDB en panne pendant un build : hero simple, le déploiement n'est pas bloqué", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    expect(await loadHomeShowcase(failing, { configured: true, building: true })).toBeNull();
+  });
 });

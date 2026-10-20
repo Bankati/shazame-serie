@@ -3,6 +3,7 @@ import "server-only";
 import { type Database, withQueryTimeout } from "@/server/db/client";
 import { identifications, type StoredAlternative } from "@/server/db/schema";
 import { log } from "@/server/log";
+import { errorCode } from "@/server/log-error";
 import type { QuotaIdentity } from "@/server/quota/quota";
 
 // Journal des identifications (architecture.md, Storage Model) : historique (U17), statistiques (U25), coût IA.
@@ -49,8 +50,8 @@ export async function persistIdentification(db: Database, record: Identification
       }).returning({ id: identifications.id }),
     );
     return row?.id ?? null;
-  } catch {
-    log.error("identification.persist_failed", { source: record.source, outcome: record.outcome });
+  } catch (error) {
+    log.error("identification.persist_failed", { source: record.source, outcome: record.outcome, code: errorCode(error) });
     return null;
   }
 }

@@ -127,6 +127,11 @@ Mettre à jour ce fichier après chaque changement d'implémentation significati
   - Vérifié : `test:db` (critères de fin : sans consentement aucune image ; avec consentement images privées, illisibles avec la clé publique), unitaires (route, recherche, accès admin), Playwright (signalement sans puis avec consentement : images absentes puis 2 à 5). Rendu contrôlé sur mobile.
   - Reste : purge des images de signalement selon Q16 (U30) ; revue des signalements dans le back-office (U24).
 
+- Vérifications de production (20 octobre 2026), à la demande du fondateur :
+  - Test de fumée en échec sur `main` (« Domaine de déploiement non autorisé : github.com ») : le job de migration, lié à l'environnement GitHub « production », crée lui aussi un « déploiement » (page du workflow). Corrigé : le test de fumée ne vise plus que les déploiements Vercel. Le vrai déploiement de production avait réussi.
+  - **`/api/quota` répond 502 en production** : la base répond avec le bon mot de passe (5 migrations dont `0004`, réglages présents), mais un ancien mot de passe transmis est refusé (28P01). Cause la plus probable : `DATABASE_URL` périmée dans Vercel, qui fait échouer tout ce qui touche la base (quota, profils, historique, liste). **Action fondateur** : recopier l'URL du pooler (port 6543) avec le mot de passe actuel dans Vercel (Production et Preview), redéployer.
+  - Ajouts : codes d'erreur techniques dans les journaux (`errorCode`, jamais le message) ; `GET /api/health/deep` (CRON_SECRET) qui vérifie base, Redis et stockage ; le test de fumée vérifie aussi `/api/quota` (base + Redis) ; une panne de TMDB pendant un build ne bloque plus le déploiement (hero simple, vedette à la régénération suivante, vérifié) ; `unstable_rethrow` dans la lecture de session ; parcours compte exécuté après les autres tests en local (projet Playwright « compte »).
+
 ## Next Up
 
 - **Tests avant déploiement** (demandés par le fondateur le 20 octobre 2026) : `SUPABASE_SECRET_KEY` dans Vercel, CI verte sur GitHub, PR `dev` → `staging` → `main`, migration `0004`, essais en production (inscription email, Google, liste, profil, partage).

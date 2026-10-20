@@ -12,6 +12,7 @@ import { jsonError, jsonOk } from "@/server/http/respond";
 import { checkIdentifyRateLimit, clientIp } from "@/server/http/rate-limit";
 import { isSameOrigin } from "@/server/http/same-origin";
 import { log } from "@/server/log";
+import { errorCode } from "@/server/log-error";
 import { createQuotaService, type QuotaIdentity, type QuotaService } from "@/server/quota/quota";
 import { createMemoryQuotaStore, createRedisQuotaStore } from "@/server/quota/quota-store";
 import { loadQuotaLimits } from "@/server/quota/settings";
@@ -137,9 +138,10 @@ export async function handleQuotaRequest(): Promise<Response> {
   let status: Awaited<ReturnType<QuotaService["status"]>>;
   try {
     status = await getQuotaService().status((await currentRequester()).identity);
-  } catch {
-    // Redis lent ou injoignable : le compteur n'est pas affiché, l'identification reste contrôlée par le serveur.
-    log.warn("quota.status_unavailable");
+  } catch (error) {
+    // Redis ou base injoignable : le compteur n'est pas affiché, l'identification reste contrôlée par le
+    // serveur. Le code technique (ex. 28P01 : mot de passe de la base refusé) aide au diagnostic.
+    log.warn("quota.status_unavailable", { code: errorCode(error) });
     return jsonError("UPSTREAM_ERROR", undefined, { headers: { "Cache-Control": "no-store" } });
   }
   const quota: QuotaInfo = { limit: status.limit, remaining: status.remaining, resetAt: status.resetAt.toISOString() };

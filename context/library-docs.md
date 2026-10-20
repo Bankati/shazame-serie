@@ -40,7 +40,9 @@ Relevées sur le registre npm le **4 octobre 2026**, révisées en U01 le **7 oc
 | `posthog-node` | 5.55.1 (installé) | Erreurs serveur (AD-28) |
 | `vitest` | 5.0.3 | Tests unitaires |
 | `server-only` | 0.0.1 (installé) | Empêche l'import d'un module serveur côté client |
-| `ffmpeg-static` | 5.3.0 | Extraction d'images dans le harnais `eval/` uniquement (dépendance de développement) |
+| `ffmpeg-static` | 5.3.0 (installé à la demande, `npm install --no-save`, absent de `package.json`) | Vidéos d'essai de U33 (`scripts/make-video-fixtures.mjs`) et harnais `eval/`. Son installation télécharge le binaire depuis GitHub et sort en erreur sans réseau : hors des dépendances pour ne jamais bloquer un build Vercel |
+| `heic-to` | 1.6.5 (installé, U34) | Décodage HEIC/HEIF dans le navigateur (photos d'iPhone), import `heic-to/next`, chargé seulement si `createImageBitmap` échoue. LGPL-3.0 : utilisée non modifiée, dans son propre fichier JS |
+| `@ffmpeg/ffmpeg` / `@ffmpeg/util` / `@ffmpeg/core` | 0.12.15 / 0.12.2 / 0.12.10 (installés, U33) | Lecture de secours des vidéos dans le navigateur (AD-40) |
 | `@types/node` | 24.19.1 | Types alignés sur le runtime Node 24 (ne pas prendre la dernière majeure) |
 | `eslint` / `typescript-eslint` | 9.39.5 (installé, AD-21) / via `eslint-config-next` | Lint |
 | `@playwright/test` | 1.63.0 | Tests bout en bout |
@@ -235,7 +237,30 @@ Plans d'hébergement : **Vercel Pro** obligatoire (le plan Hobby est réservé �
   - Libérer la mémoire : `URL.revokeObjectURL` après extraction.
   - Échantillonner en évitant le tout début et la toute fin (fondus au noir, logos).
 
-## ffmpeg-static (eval uniquement)
+## npm : fichier de verrouillage sous Windows
+
+- Piège vérifié le 20 octobre 2026 : `npm install` sous Windows (npm 11.6) retire du `package-lock.json` les dépendances optionnelles `@emnapi/core` et `@emnapi/runtime`, requises sous Linux ; `npm ci` échoue alors en CI (« Missing: @emnapi/... from lock file »).
+- Après toute installation, vérifier sous Linux : `docker run --rm -v <copie de package.json + package-lock.json>:/app -w /app node:24 npm ci --ignore-scripts --dry-run`. Si les entrées manquent, les reprendre du verrou précédent, à leur place (juste avant `node_modules/@emnapi/wasi-threads`).
+
+## ffmpeg.wasm (lecture de secours, U33, AD-40)
+
+- Doc : https://ffmpegwasm.netlify.app/docs/overview — API dans `node_modules/@ffmpeg/ffmpeg/dist/esm/classes.d.ts`.
+- Cœur mono-thread (`@ffmpeg/core`, wasm de 32 Mo) : pas besoin de `SharedArrayBuffer` ni des en-têtes COOP/COEP. Servi par le site depuis `public/ffmpeg/core-<version>/` (copie par `scripts/copy-ffmpeg-core.mjs` au `postinstall`, dossier ignoré par git, `Cache-Control: immutable` dans `next.config.ts`).
+- Pièges vérifiés le 20 octobre 2026 :
+  - **Turbopack casse le worker empaqueté** : son `import(coreURL)` dynamique devient « Cannot find module as expression is too dynamic ». Passer `classWorkerURL` vers la copie servie telle quelle (`public/ffmpeg/worker-<version>/worker.js`, avec `const.js` et `errors.js`).
+  - **`ffprobe()` renvoie -1 même en cas de succès** (0.12.10) : lire le fichier produit par `-o` au lieu du code de retour.
+  - Monter la vidéo en `WORKERFS` (`mount(FFFSType.WORKERFS, { files: [file] }, dir)`, après `createDir`) : lecture par morceaux, pas de copie de 500 Mo en mémoire. Ne pas utiliser `writeFile` pour la vidéo.
+  - `-ss t` **avant** `-i` (déplacement rapide sur image clé), `-frames:v 1` ; une commande par image.
+  - Le `signal` des méthodes rejette la promesse sans arrêter le worker : appeler `terminate()` à l'annulation.
+  - Constantes de version (`src/client/frames/ffmpeg-source.ts`) vérifiées contre les paquets installés par un test : les mettre à jour avec les paquets.
+
+## heic-to (captures HEIC, U34)
+
+- Doc : https://github.com/hoppergee/heic-to — types dans `node_modules/heic-to/dist/next/heic-to.d.ts`.
+- Importer `heic-to/next` (variante prévue pour Next.js). `heicTo({ blob, type: "bitmap", options: { imageOrientation: "from-image" } })` renvoie directement une `ImageBitmap` ; `type: "image/jpeg"` renvoie un `Blob`.
+- Essayer d'abord `createImageBitmap(file)` (Safari décode le HEIC lui-même) ; n'importer `heic-to` (environ 3 Mo) qu'en cas d'échec sur un fichier `.heic`/`.heif`.
+
+## ffmpeg-static (vidéos d'essai et eval)
 
 - Doc : https://ffmpeg.org/ffmpeg.html — paquet : https://www.npmjs.com/package/ffmpeg-static
 - Appeler le binaire par `child_process.spawn` (ne pas utiliser `fluent-ffmpeg`, qui n'est plus maintenu). Réutiliser les instants d'échantillonnage de `src/shared/frames/` pour reproduire l'extraction du navigateur.

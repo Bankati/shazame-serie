@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import type { IdentifyResponse } from "@/schemas/identify";
+import type { FrameMode, IdentifyResponse } from "@/schemas/identify";
 
 import { type IdentifyFailure, sendFrames } from "./send-frames";
 
@@ -19,7 +19,7 @@ type Settled = Extract<IdentificationState, { status: "done" | "failed" }>;
  * L'état « envoi en cours » se déduit du paquet courant : seule la réponse déclenche une mise à jour.
  * Un nouveau paquet (autre clip) annule l'envoi précédent ; `null` remet l'état à zéro.
  */
-export function useIdentification(packageBlobs: readonly Blob[] | null): IdentificationState {
+export function useIdentification(packageBlobs: readonly Blob[] | null, mode: FrameMode = "clip"): IdentificationState {
   const [settled, setSettled] = useState<{ blobs: readonly Blob[]; state: Settled } | null>(null);
 
   useEffect(() => {
@@ -27,7 +27,7 @@ export function useIdentification(packageBlobs: readonly Blob[] | null): Identif
       return;
     }
     const controller = new AbortController();
-    sendFrames(packageBlobs, controller.signal)
+    sendFrames(packageBlobs, mode, controller.signal)
       .then((call) => {
         if (!controller.signal.aborted) {
           setSettled({
@@ -40,7 +40,8 @@ export function useIdentification(packageBlobs: readonly Blob[] | null): Identif
         // Annulation volontaire (autre clip, démontage) : rien à afficher.
       });
     return () => controller.abort();
-  }, [packageBlobs]);
+    // Le mode change toujours avec son paquet (même état « prêt ») : pas d'envoi en double.
+  }, [packageBlobs, mode]);
 
   if (!packageBlobs) {
     return { status: "idle" };

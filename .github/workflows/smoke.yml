@@ -10,7 +10,14 @@ permissions: {}
 jobs:
   health:
     name: Santé du déploiement
-    if: github.event.deployment_status.state == 'success'
+    # Seulement les déploiements Vercel. Un job GitHub lié à un environnement (ex. « production » du
+    # workflow de migration) crée lui aussi un « déploiement », dont l'adresse est la page du workflow sur
+    # github.com : il n'y a rien à tester et le secret Vercel ne doit pas y être envoyé (incident du
+    # 20 octobre 2026, « Domaine de déploiement non autorisé : github.com »).
+    if: >-
+      github.event.deployment_status.state == 'success' &&
+      github.event.deployment.creator.login != 'github-actions[bot]' &&
+      !startsWith(github.event.deployment_status.target_url, 'https://github.com/')
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -53,3 +60,29 @@ jobs:
             echo "::error::Réponse inattendue de /api/health."
             exit 1
           fi
+          # Compteur de quota : touche la base ET Redis. Échoue si DATABASE_URL ou Upstash sont mal réglés
+          # sur ce déploiement (incident du 20 octobre 2026 : mot de passe de la base périmé dans Vercel).
+          # Trois essais espacés (démarrage à froid) ; jamais d'arrêt brutal de curl : on veut le code HTTP.
+          quota_status=000
+          for attempt in 1 2 3; do
+            quota_status=$(curl --silent --output /dev/null --write-out '%{http_code}' --max-time 20               -H "x-vercel-protection-bypass: $BYPASS_SECRET" "${DEPLOYMENT_URL%/}/api/quota" || true)
+            [ "$quota_status" = "200" ] && break
+            sleep 5
+          done
+          if [ "$quota_status" != "200" ]; then
+            echo "::error::/api/quota répond $quota_status : base de données ou Redis injoignable sur ce déploiement (vérifier DATABASE_URL et UPSTASH_* dans Vercel, puis /api/health/deep)."
+            exit 1
+          fi
+          echo "Quota : OK (base et Redis joignables)."
+          # Lecture de secours des vidéos (U33) : ffmpeg.wasm copié dans public/ffmpeg/ par le postinstall. Sans
+          # ces fichiers, le secours échoue pour tout le monde. Versions alignées sur
+          # src/client/frames/ffmpeg-source.ts (vérifié par ffmpeg-source.test.ts).
+          for path in ffmpeg/core-0.12.10/ffmpeg-core.wasm ffmpeg/core-0.12.10/ffmpeg-core.js ffmpeg/worker-0.12.15/worker.js; do
+            status=$(curl --silent --head --output /dev/null --write-out '%{http_code}' --max-time 20 \
+              -H "x-vercel-protection-bypass: $BYPASS_SECRET" "${DEPLOYMENT_URL%/}/$path" || true)
+            if [ "$status" != "200" ]; then
+              echo "::error::/$path répond $status : lecture de secours des vidéos indisponible (copie du postinstall absente du build ?)."
+              exit 1
+            fi
+          done
+          echo "Lecture de secours : OK (fichiers ffmpeg.wasm servis)."

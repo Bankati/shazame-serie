@@ -36,6 +36,13 @@
       "when": 1792450638591,
       "tag": "0004_avatars_bucket_webp",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792509942998,
+      "tag": "0005_identification_input_kind",
+      "breakpoints": true
     }
   ]
 }

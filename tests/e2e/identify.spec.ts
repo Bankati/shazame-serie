@@ -93,3 +93,70 @@ test("quota épuisé : message clair, aucun résultat", async ({ page }) => {
   await expect(page.getByText("0 restante")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Matrix" })).toHaveCount(0);
 });
+
+test("signaler une erreur : images envoyées seulement avec le consentement (U20, RG8)", async ({ page }) => {
+  const identificationId = "6f1c2a3b-0000-4000-8000-0000000000aa";
+  await simulateServer(page, {
+    status: 200,
+    body: {
+      ok: true,
+      data: { decision: "show", source: "ai", main: MATRIX, alternatives: [], quota: { limit: 3, remaining: 2, resetAt: RESET_AT }, identificationId },
+    },
+  });
+  await page.route("**/api/catalog/search?*", (route) =>
+    route.fulfill({ json: { ok: true, data: { results: [{ tmdbId: 604, mediaType: "movie", title: "Matrix Reloaded", year: 2003, posterPath: "/r.jpg" }] } } }),
+  );
+  const reports: string[] = [];
+  await page.route("**/api/reports", async (route) => {
+    reports.push(route.request().postDataBuffer()?.toString("latin1") ?? "");
+    await route.fulfill({ status: 201, json: { ok: true, data: { reportId: "6f1c2a3b-0000-4000-8000-0000000000bb", imagesStored: 0 } } });
+  });
+
+  await chooseClip(page);
+  await page.getByRole("button", { name: "Ce n'est pas le bon titre ?" }).click({ timeout: 30_000 });
+  await page.getByLabel(/Quel est le bon titre/).fill("matrix rel");
+  await page.getByRole("button", { name: /Matrix Reloaded/ }).click();
+  const consent = page.getByRole("checkbox");
+  await expect(consent).not.toBeChecked();
+  await page.getByRole("button", { name: "Envoyer le signalement" }).click();
+  await expect(page.getByText("Votre signalement a bien été envoyé")).toBeVisible();
+
+  // Sans consentement : la correction part, aucune image.
+  expect(reports[0]).toContain(identificationId);
+  expect(reports[0]).toContain('name="correctedTmdbId"');
+  expect(reports[0]).not.toContain('name="frames"');
+  // Un seul signalement par résultat : le lien disparaît.
+  await expect(page.getByRole("button", { name: "Ce n'est pas le bon titre ?" })).toHaveCount(0);
+});
+
+test("signaler avec consentement : les images extraites accompagnent le signalement", async ({ page }) => {
+  await simulateServer(page, {
+    status: 200,
+    body: {
+      ok: true,
+      data: {
+        decision: "show",
+        source: "ai",
+        main: MATRIX,
+        alternatives: [],
+        quota: { limit: 3, remaining: 2, resetAt: RESET_AT },
+        identificationId: "6f1c2a3b-0000-4000-8000-0000000000cc",
+      },
+    },
+  });
+  const reports: string[] = [];
+  await page.route("**/api/reports", async (route) => {
+    reports.push(route.request().postDataBuffer()?.toString("latin1") ?? "");
+    await route.fulfill({ status: 201, json: { ok: true, data: { reportId: "6f1c2a3b-0000-4000-8000-0000000000dd", imagesStored: 3 } } });
+  });
+
+  await chooseClip(page);
+  await page.getByRole("button", { name: "Ce n'est pas le bon titre ?" }).click({ timeout: 30_000 });
+  await page.getByRole("checkbox").check();
+  await page.getByRole("button", { name: "Envoyer le signalement" }).click();
+  await expect(page.getByText("Votre signalement a bien été envoyé")).toBeVisible();
+  const frames = (reports[0]?.match(/name="frames"/g) ?? []).length;
+  expect(frames).toBeGreaterThanOrEqual(2);
+  expect(frames).toBeLessThanOrEqual(5);
+  expect(reports[0]).toContain('name="imagesConsent"\r\n\r\ntrue');
+});

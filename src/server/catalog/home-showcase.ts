@@ -61,12 +61,15 @@ export function buildShowcase(sources: ShowcaseSources): HomeShowcase {
 
 /**
  * Contenu de l'accueil. TMDB non configuré (CI, local sans jeton) : null, l'accueil garde son hero simple.
- * TMDB configuré mais en panne : l'erreur remonte. Pendant une régénération ISR, Next conserve alors la
- * dernière page réussie au lieu d'enregistrer une page sans vedette pour 6 heures.
+ * TMDB en panne :
+ * - pendant une régénération ISR, l'erreur remonte : Next conserve la dernière page réussie au lieu
+ *   d'enregistrer une page sans vedette pour 6 heures ;
+ * - pendant un build (`building`), il n'y a pas de page précédente : null (hero simple) plutôt qu'un
+ *   déploiement bloqué par une panne de TMDB. La vedette revient à la régénération suivante.
  */
 export async function loadHomeShowcase(
   catalog: () => CatalogProvider,
-  options: { configured: boolean },
+  options: { configured: boolean; building?: boolean },
 ): Promise<HomeShowcase | null> {
   if (!options.configured) {
     return null;
@@ -82,7 +85,8 @@ export async function loadHomeShowcase(
     const showcase = buildShowcase({ trendingMovies, trendingShows, topRated, genres });
     return showcase.featured.length > 0 ? showcase : null;
   } catch (error) {
-    log.warn("home.showcase_unavailable");
+    log.warn("home.showcase_unavailable", { building: options.building === true });
+    if (options.building) return null;
     throw error;
   }
 }

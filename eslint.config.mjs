@@ -26,6 +26,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // ffmpeg.wasm copié depuis node_modules (scripts/copy-ffmpeg-core.mjs) : code tiers.
+    "public/ffmpeg/**",
   ]),
 ]);
 

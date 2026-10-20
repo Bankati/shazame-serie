@@ -3,6 +3,13 @@ import { z } from "zod";
 // Contrat de POST /api/identify et GET /api/quota, partagé entre le serveur (construction) et le navigateur
 // (validation de la réponse avant affichage).
 
+/**
+ * Mode d'une identification par images (champ `mode` du formulaire) : images tirées d'un clip, ou captures
+ * envoyées telles quelles (U34, AD-38). Absent : `clip` (compatibilité avec les clients d'avant U34).
+ */
+export const frameModeSchema = z.enum(["clip", "images"]).default("clip");
+export type FrameMode = z.infer<typeof frameModeSchema>;
+
 export const identifiedTitleSchema = z.object({
   tmdbId: z.number().int().positive(),
   mediaType: z.enum(["movie", "tv"]),
@@ -25,6 +32,8 @@ export const identifyResponseSchema = z.object({
   main: identifiedTitleSchema.nullable(),
   alternatives: z.array(identifiedTitleSchema),
   quota: quotaInfoSchema,
+  // Identifiant de l'identification enregistrée (U20 : signalement d'erreur), null si l'écriture a échoué.
+  identificationId: z.uuid().nullable().default(null),
 });
 
 export type IdentifiedTitle = z.infer<typeof identifiedTitleSchema>;

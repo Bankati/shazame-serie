@@ -24,7 +24,11 @@ import { getStaticPageCatalog, isCatalogConfigured } from "@/server/catalog/tmdb
 export const revalidate = 21600;
 
 export default async function Home() {
-  const showcase = await loadHomeShowcase(getStaticPageCatalog, { configured: isCatalogConfigured() });
+  const showcase = await loadHomeShowcase(getStaticPageCatalog, {
+    configured: isCatalogConfigured(),
+    // Pendant `next build`, une panne de TMDB ne doit pas bloquer le déploiement.
+    building: process.env.NEXT_PHASE === "phase-production-build",
+  });
   const { rows } = SHOWCASE_TEXT;
 
   return (

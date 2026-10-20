@@ -19,7 +19,11 @@ export default defineConfig({
   },
   projects: [
     // Chrome installé sur le poste et sur les runners GitHub : pas de navigateur à télécharger.
-    { name: "mobile-chrome", use: { ...devices["Pixel 7"], channel: "chrome" } },
+    { name: "mobile-chrome", testIgnore: /auth\.spec\.ts/, use: { ...devices["Pixel 7"], channel: "chrome" } },
+    // Parcours compte (Supabase local + Mailpit) : après les autres, jamais en même temps. Sur un poste
+    // chargé, les pages animées des autres tests ralentissaient assez la page pour faire échouer ses délais.
+    // En CI, il tourne seul dans son job (`--project=compte --no-deps`).
+    { name: "compte", testMatch: /auth\.spec\.ts/, dependencies: ["mobile-chrome"], use: { ...devices["Pixel 7"], channel: "chrome" } },
   ],
   webServer: [
     // Faux TMDB (accueil, fiches) : l'accueil est généré au build avec lui (npm run build:e2e).

@@ -9,6 +9,8 @@ const RESPONSE = {
   main: { tmdbId: 603, mediaType: "movie", title: "Matrix", year: 1999, posterPath: null, confidence: 94 },
   alternatives: [],
   quota: { ...QUOTA, remaining: 2 },
+  // U20 : identifiant de l'identification enregistrée (signalement).
+  identificationId: "6f1c2a3b-0000-4000-8000-0000000000aa",
 };
 
 function mockFetch(body: unknown) {
@@ -20,18 +22,31 @@ describe("sendFrames", () => {
     vi.restoreAllMocks();
   });
 
+  it("mode image (U34) : le champ « mode » accompagne une capture seule", async () => {
+    const fetch = mockFetch({ ok: true, data: RESPONSE });
+    await sendFrames([new Blob(["a"], { type: "image/jpeg" })], "images");
+    const body = (fetch.mock.calls[0]?.[1] as RequestInit).body as FormData;
+    expect(body.get("mode")).toBe("images");
+    expect(body.getAll("frames")).toHaveLength(1);
+  });
+
   it("envoie les images dans le champ « frames » et valide la réponse", async () => {
     const fetch = mockFetch({ ok: true, data: RESPONSE });
-    const result = await sendFrames([new Blob(["a"], { type: "image/jpeg" }), new Blob(["b"], { type: "image/jpeg" })]);
+    const result = await sendFrames([new Blob(["a"], { type: "image/jpeg" }), new Blob(["b"], { type: "image/jpeg" })], "clip");
 
     expect(result).toEqual({ ok: true, response: RESPONSE });
+    // Une réponse sans identifiant (ancien serveur, écriture échouée) reste valide : signalement indisponible.
+    const withoutId: Partial<typeof RESPONSE> = { ...RESPONSE };
+    delete withoutId.identificationId;
+    mockFetch({ ok: true, data: withoutId });
+    expect(await sendFrames([], "clip")).toEqual({ ok: true, response: { ...withoutId, identificationId: null } });
     const init = fetch.mock.calls[0]?.[1] as RequestInit;
     expect((init.body as FormData).getAll("frames")).toHaveLength(2);
   });
 
   it("traduit un quota épuisé avec son heure de remise à zéro", async () => {
     mockFetch({ ok: false, error: { code: "QUOTA_EXCEEDED", message: "…", details: { quota: QUOTA } } });
-    expect(await sendFrames([])).toEqual({ ok: false, failure: { kind: "quota", quota: QUOTA } });
+    expect(await sendFrames([], "clip")).toEqual({ ok: false, failure: { kind: "quota", quota: QUOTA } });
   });
 
   it.each([
@@ -41,16 +56,16 @@ describe("sendFrames", () => {
     ["UPSTREAM_ERROR", "unavailable"],
   ])("traduit %s", async (code, kind) => {
     mockFetch({ ok: false, error: { code, message: "…" } });
-    expect(await sendFrames([])).toEqual({ ok: false, failure: { kind } });
+    expect(await sendFrames([], "clip")).toEqual({ ok: false, failure: { kind } });
   });
 
   it("refuse une réponse inattendue sans planter", async () => {
     mockFetch({ ok: true, data: { decision: "inconnue" } });
-    expect(await sendFrames([])).toEqual({ ok: false, failure: { kind: "unavailable" } });
+    expect(await sendFrames([], "clip")).toEqual({ ok: false, failure: { kind: "unavailable" } });
   });
 
   it("traite une panne réseau comme une indisponibilité", async () => {
     vi.spyOn(globalThis, "fetch").mockRejectedValue(new TypeError("réseau"));
-    expect(await sendFrames([])).toEqual({ ok: false, failure: { kind: "unavailable" } });
+    expect(await sendFrames([], "clip")).toEqual({ ok: false, failure: { kind: "unavailable" } });
   });
 });

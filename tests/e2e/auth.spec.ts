@@ -136,7 +136,12 @@ test("inscription → confirmation → déconnexion → connexion, puis lien de 
   // Liste de suivi (U18) : ajout depuis le résultat (IA simulée), page « Ma liste », retrait.
   await page.route("**/api/identify", (route) => route.fulfill({ json: IDENTIFY_RESULT }));
   await page.route("https://image.tmdb.org/**", (route) => route.fulfill({ body: POSTER, contentType: "image/jpeg" }));
-  await page.locator('input[type="file"]').setInputFiles(CLIP);
+  // Juste après la connexion, la page peut ne pas encore écouter le champ de fichier : on renvoie le clip
+  // jusqu'à ce que l'extraction démarre (pellicule affichée).
+  await expect(async () => {
+    await page.locator('input[type="file"]').setInputFiles(CLIP);
+    await expect(page.getByRole("figure", { name: "Images extraites du clip" })).toBeVisible({ timeout: 2_000 });
+  }).toPass({ timeout: 30_000 });
   const add = page.getByRole("button", { name: "Ajouter à ma liste" });
   await add.click({ timeout: 30_000 });
   const added = page.getByRole("button", { name: "Dans ma liste" });

@@ -6,6 +6,7 @@ import { titlePath } from "@/lib/title-url";
 import { getDb, withQueryTimeout } from "@/server/db/client";
 import { resultCache } from "@/server/db/schema";
 import { log } from "@/server/log";
+import { errorCode } from "@/server/log-error";
 
 import { getStaticPageCatalog } from "./tmdb/tmdb-catalog";
 
@@ -45,7 +46,7 @@ export async function listIdentifiedTitlePaths(): Promise<SitemapTitle[]> {
       throw error;
     }
     // Base ou TMDB indisponible (CI, panne) : le sitemap garde au moins l'accueil.
-    log.warn("sitemap.titles_unavailable");
+    log.warn("sitemap.titles_unavailable", { code: errorCode(error) });
     return [];
   }
 }

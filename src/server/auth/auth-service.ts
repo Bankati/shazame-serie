@@ -14,6 +14,7 @@ import {
 } from "@/schemas/auth";
 import type { RateLimitResult } from "@/server/http/rate-limit";
 import { log } from "@/server/log";
+import { errorCode } from "@/server/log-error";
 
 import type { AttemptLimiter } from "./auth-rate-limit";
 import { safeNextPath } from "./redirect";
@@ -325,8 +326,8 @@ async function ensureAccountQuietly(deps: AuthDeps, user: UserLike, step: string
   try {
     const { created } = await deps.ensureAccount({ userId: user.id, displayName: displayNameOf(user) });
     return created;
-  } catch {
-    log.error("auth.profile_create_failed", { step });
+  } catch (error) {
+    log.error("auth.profile_create_failed", { step, code: errorCode(error) });
     return false;
   }
 }

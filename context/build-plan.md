@@ -23,6 +23,7 @@ Pas de code. Chaque décision est consignée dans `progress-tracker.md`.
 | D7 | Valeurs RG2 (visiteur), RG4 (plafond Premium), plafond IA quotidien initial | U11, U14 |
 | D8 | Nom commercial provisoire et domaine (pour emails, OAuth Google, mentions légales) | U04, U23 |
 | D9 | Plans payants Vercel Pro et Supabase (production) intégrés au budget | U01 |
+| D10 | Clé YouTube Data API (Google Cloud, gratuite dans la limite du quota) pour l'identification par lien | U36 |
 
 ---
 
@@ -182,6 +183,36 @@ Pas de code. Chaque décision est consignée dans `progress-tracker.md`.
 
 ---
 
+## Sprint 3 bis — Modes d'identification élargis (ajout du fondateur, 20 octobre 2026)
+
+Ajout de périmètre décidé par le fondateur (AD-37 à AD-40) : le cahier des charges ne prévoyait en V1 que l'envoi d'un clip MP4, MOV ou WebM ; l'identification par lien y était prévue en V2. Règle inchangée : **le serveur ne reçoit jamais de vidéo** (invariant 1).
+
+### U33 — Formats vidéo élargis et conversion de secours
+- **Objectif** : qu'une vidéo de téléphone courante soit analysée, quel que soit son format.
+- **Périmètre** : formats MP4, MOV, WebM, M4V, 3GP, MKV et AVI (type MIME ou extension) ; vidéos jusqu'à 500 Mo et de toute durée, dont on n'analyse qu'un extrait de 60 secondes (choisi au milieu, ou à partir d'un instant réglable) ; vidéo que le navigateur ne sait pas lire (HEVC, AVI, codecs rares) : conversion dans le navigateur par ffmpeg.wasm, chargé seulement dans ce cas, avec progression affichée ; messages clairs à chaque refus ; diagnostic du problème actuel (« la fonctionnalité ne fonctionne pas comme prévu ») sur les vidéos d'essai du fondateur. AD-40.
+- **Fin** : tests unitaires des contrôles ; jeu de vidéos d'essai (au moins un fichier par format, une vidéo HEVC d'iPhone, une vidéo de plus de 60 s et de plus de 50 Mo) analysé avec succès sur Chrome Android, Safari iOS et Chrome Windows ; la vidéo n'est jamais envoyée (test réseau).
+- **Dépend de** : U06, U12.
+
+### U34 — Identification par image
+- **Objectif** : identifier un titre à partir de 1 à 5 captures d'écran ou photos d'un écran.
+- **Périmètre** : choix « Clip ou Images » dans la zone d'envoi ; JPEG, PNG, WebP et HEIC (converti dans le navigateur), réduits à 768 px et compressés dans le navigateur ; même pipeline que le clip (contrôle du type réel, cache par empreinte, quota, règle de décompte RG3, plafond IA, signalement) ; invariant 1 étendu : 1 à 5 images pour ce mode. AD-38.
+- **Fin** : tests du contrôle (1 à 5 images, 1,5 Mo au total) ; Playwright : capture → résultat ; une même capture renvoyée sert le cache sans décompte.
+- **Dépend de** : U11, U12.
+
+### U35 — Identification par description
+- **Objectif** : retrouver un titre décrit avec ses mots (« un film où un homme revit la même journée »).
+- **Périmètre** : champ de 10 à 500 caractères ; appel IA texte seul via `server/ai` (nouvelle méthode du fournisseur, consigne versionnée `describe.v1`, sortie JSON validée), jusqu'à 3 propositions rapprochées de TMDB avec leur confiance ; même quota et même règle de décompte que les autres modes ; garde de dépense ; texte jamais journalisé (invariant 9) ; pas de cache par empreinte (cache facultatif par texte normalisé). AD-39.
+- **Fin** : tests avec fournisseur simulé ; jeu de 20 descriptions de titres connus évalué (`npm run eval`, volet description) ; Playwright : description → résultat.
+- **Dépend de** : U07, U11, U12.
+
+### U36 — Identification par lien (métadonnées publiques)
+- **Objectif** : identifier le film d'une publication YouTube, TikTok ou Instagram à partir de son lien.
+- **Périmètre** : champ « Coller un lien » ; le serveur ne télécharge **jamais** la vidéo : il lit les métadonnées publiques (YouTube Data API officielle : titre, description, chaîne, vignette ; TikTok et Instagram : aperçu public oEmbed, légende et vignette), puis l'IA en déduit le titre (texte + vignette) ; liste blanche de domaines et protection SSRF (aucune requête vers une autre adresse) ; même quota et même règle de décompte ; message clair quand la publication ne donne aucun indice (proposer l'envoi d'un clip). Clé YouTube Data API (décision D10). Validation juridique à confirmer avant l'ouverture publique (Q23). AD-37.
+- **Fin** : tests du filtrage des liens (domaines, SSRF, redirections) ; tests avec réponses simulées des trois plateformes ; Playwright : lien → résultat.
+- **Dépend de** : U35, D10.
+
+---
+
 ## Sprint 4 — Pilotage, conformité, lancement (13 au 31 décembre)
 
 ### U25 — Back-office : tableau de bord
@@ -222,7 +253,7 @@ Pas de code. Chaque décision est consignée dans `progress-tracker.md`.
 ### U32 — Bêta fermée et lancement
 - **Périmètre** : 20 à 50 testeurs, collecte des signalements, `npm run eval` final ≥ 85 %, test de charge k6 (500 simultanés), checklist de mise en production, gel au 20 décembre.
 - **Fin** : lancement doux le 31 décembre 2026, surveillance renforcée la première semaine.
-- **Dépend de** : U01 à U31.
+- **Dépend de** : U01 à U31, U33 à U36.
 
 ---
 

@@ -22,10 +22,10 @@ test("vedette, rangées et genres ; zone d'envoi au premier écran ; aucune erre
 
   await page.goto("/");
 
-  // Zone d'envoi visible sans défiler (ui-context.md), au-dessus de la vedette sur mobile.
-  const upload = page.getByRole("button", { name: "Choisir un clip" }).first();
-  await expect(upload).toBeVisible();
-  const box = await upload.boundingBox();
+  // Lanceur d'identification visible sans défiler (U38), au-dessus de la vedette sur mobile.
+  const launcher = page.getByLabel("Lien de la publication YouTube ou TikTok");
+  await expect(launcher).toBeVisible();
+  const box = await launcher.boundingBox();
   const viewport = page.viewportSize();
   expect(box && viewport && box.y + box.height <= viewport.height).toBe(true);
 

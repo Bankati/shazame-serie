@@ -24,7 +24,7 @@ async function simulateServer(page: Page, identify: { status: number; body: unkn
 }
 
 async function openLinkTab(page: Page) {
-  await page.goto("/");
+  await page.goto("/identifier");
   const tab = page.getByRole("tab", { name: "Lien" });
   await expect(async () => {
     await tab.click();

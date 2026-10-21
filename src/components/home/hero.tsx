@@ -2,7 +2,7 @@ import { Sparkles } from "lucide-react";
 
 import { CurvedFilmBand } from "@/components/decor/curved-film-band";
 import { FilmStripDecor } from "@/components/decor/film-strip-decor";
-import { IdentifyPanel } from "@/components/identify/identify-panel";
+import { IdentifyLauncher } from "@/components/identify/identify-launcher";
 import { TwoTone } from "@/components/layout/two-tone";
 import { HOME_TEXT } from "@/content/fr/home";
 
@@ -41,7 +41,7 @@ export function Hero() {
           </h1>
           <p className="max-w-prose text-base text-inverse-muted md:text-lg">{hero.subtitle}</p>
         </div>
-        <IdentifyPanel />
+        <IdentifyLauncher />
       </div>
       <FilmStripDecor className="relative" />
     </section>

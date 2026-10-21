@@ -12,9 +12,20 @@ export const LAYOUT_TEXT = {
       { href: "/#tarifs", label: "Tarifs" },
       { href: "/#faq", label: "FAQ" },
     ],
-    cta: { href: "/#identifier", label: "Identifier un titre" },
+    cta: { href: "/identifier", label: "Identifier un titre" },
     openMenu: "Ouvrir le menu",
     menuTitle: "Menu",
+  },
+  // Navigation de l'application (U38, AD-46) : en-tête sur ordinateur, barre d'onglets en bas sur mobile.
+  app: {
+    label: "Navigation de l'application",
+    tabsLabel: "Navigation principale",
+    identify: "Identifier",
+    history: "Historique",
+    watchlist: "Ma liste",
+    account: "Compte",
+    signIn: "Connexion",
+    floating: "Identifier un titre",
   },
   footer: {
     tagline: "Le titre de cet extrait, sa fiche et où le regarder, en quelques secondes.",

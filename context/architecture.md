@@ -192,3 +192,9 @@ Chaque appel externe : délai maximal, journalisation sans donnée personnelle, 
 11. Aucun travail long après la réponse dans un route handler : les traitements différés passent par les crons.
 12. La mention TMDB (et celle de la source des données de streaming) est visible sur chaque fiche et dans les pages légales.
 13. Une migration appliquée n'est jamais modifiée ; toute évolution de schéma passe par une nouvelle migration.
+
+## Vitrine et application (U38, AD-46)
+
+- **Vitrine** : `src/app/(vitrine)` (accueil, conditions, confidentialité, bienvenue), `src/app/(auth)`, pages 404 et d'erreur. Coquille `MarketingShell` (en-tête de présentation, pied de page complet).
+- **Application** : `src/app/(app)` (`/identifier`, `/historique`, `/ma-liste`, `/compte`) et `src/app/titre`. Coquille `AppShell` (en-tête de l'application, barre d'onglets mobile, bouton flottant « Identifier », pied de page compact avec les mentions TMDB et JustWatch).
+- L'identification n'a lieu que sur `/identifier` ; la vitrine y mène par un lanceur (`?lien=` identifié aussitôt puis retiré de l'adresse, `?mode=` pour l'onglet).

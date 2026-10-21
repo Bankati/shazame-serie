@@ -11,13 +11,15 @@ type LinkFormProps = {
   sending: boolean;
   /** Place le focus sur le champ à l'affichage (« Coller un autre lien »). */
   focusOnMount?: boolean;
+  /** Lien transmis par la vitrine (U38), déjà envoyé : affiché dans le champ. */
+  initialValue?: string;
 };
 
 // Lien de publication (U36) : YouTube ou TikTok. Le contrôle immédiat (même analyse que le serveur) évite un envoi
 // inutile pour un lien Instagram ou d'un autre site ; le serveur reste seul juge.
-export function LinkForm({ onSubmit, sending, focusOnMount = false }: LinkFormProps) {
+export function LinkForm({ onSubmit, sending, focusOnMount = false, initialValue = "" }: LinkFormProps) {
   const { link, failures } = IDENTIFY_TEXT;
-  const [value, setValue] = useState("");
+  const [value, setValue] = useState(initialValue);
   const [touched, setTouched] = useState(false);
   const field = useRef<HTMLInputElement>(null);
   const ids = { field: useId(), hint: useId(), problem: useId() };

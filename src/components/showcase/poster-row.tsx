@@ -7,15 +7,14 @@ import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { SHOWCASE_TEXT } from "@/content/fr/showcase";
-import type { ShowcaseTitle } from "@/server/catalog/catalog-provider";
 
-import { PosterCard } from "./poster-card";
+import { PosterCard, type PosterItem } from "./poster-card";
 
 const STAGGER = { hidden: {}, visible: { transition: { staggerChildren: 0.06 } } } as const;
 
 // Rangée d'affiches à faire glisser (doigt, souris, flèches) : Embla en défilement libre. Les affiches
 // apparaissent en cascade quand la rangée entre dans l'écran.
-export function PosterRow({ id, title, titles }: { id: string; title: string; titles: readonly ShowcaseTitle[] }) {
+export function PosterRow({ id, title, titles }: { id: string; title: string; titles: readonly PosterItem[] }) {
   const [viewportRef, api] = useEmblaCarousel({ align: "start", dragFree: true, containScroll: "trimSnaps" });
   const [edges, setEdges] = useState({ previous: false, next: true });
   const { rows } = SHOWCASE_TEXT;

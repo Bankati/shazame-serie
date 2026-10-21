@@ -24,7 +24,7 @@ async function simulateServer(page: Page, identify: { status: number; body: unkn
 }
 
 async function openDescriptionTab(page: Page) {
-  await page.goto("/");
+  await page.goto("/identifier");
   const tab = page.getByRole("tab", { name: "Description" });
   // Sous charge, le clic peut précéder l'hydratation : on recommence jusqu'à voir le champ.
   await expect(async () => {
@@ -93,7 +93,7 @@ test("quota épuisé : message clair, champ conservé", async ({ page }) => {
 
 test("onglets au clavier : flèches pour changer de mode", async ({ page }) => {
   await simulateServer(page, { status: 200, body: {} });
-  await page.goto("/");
+  await page.goto("/identifier");
   const media = page.getByRole("tab", { name: "Vidéo, image" });
   await expect(media).toHaveAttribute("aria-selected", "true");
   await expect(async () => {

@@ -6,10 +6,23 @@ import { Logo } from "./logo";
 const linkClass =
   "inline-flex min-h-11 items-center text-sm text-inverse-muted underline-offset-4 hover:text-inverse-foreground hover:underline focus-visible:outline-2 focus-visible:outline-brand";
 
-// Pied de page sur surface inversée, avec la mention obligatoire des sources (invariant 12).
-export function SiteFooter() {
+// Pied de page sur surface inversée, avec la mention obligatoire des sources (invariant 12). `compact` (application,
+// U38) : seulement les sources et le copyright, la navigation passant par l'en-tête et la barre d'onglets.
+export function SiteFooter({ compact = false }: { compact?: boolean }) {
   const { footer, nav } = LAYOUT_TEXT;
   const year = new Date().getFullYear();
+
+  if (compact) {
+    return (
+      <footer className="border-t border-border bg-inverse text-sm text-inverse-muted">
+        <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-6 sm:px-6">
+          <p>{footer.tmdbNotice}</p>
+          <p>{footer.streamingNotice}</p>
+          <p>{footer.copyright(year, APP_TEXT.name)}</p>
+        </div>
+      </footer>
+    );
+  }
 
   return (
     <footer className="bg-inverse text-inverse-foreground">

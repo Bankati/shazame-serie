@@ -28,6 +28,15 @@ export const IDENTIFY_TEXT = {
     description: "Description",
     link: "Lien",
   },
+  // Lanceur de la vitrine (U38) : mène à l'application.
+  launcher: {
+    linkLabel: "Lien de la publication YouTube ou TikTok",
+    linkPlaceholder: "Collez un lien YouTube ou TikTok…",
+    submit: "Identifier",
+    or: "ou",
+    media: "Envoyer une vidéo ou des captures",
+    description: "Décrire la scène",
+  },
   // Identification par lien (U36).
   link: {
     label: "Coller le lien de la publication",

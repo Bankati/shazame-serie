@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { Archivo, Public_Sans } from "next/font/google";
 
-import { SiteFooter } from "@/components/layout/site-footer";
-import { SiteHeader } from "@/components/layout/site-header";
 import { MotionProvider } from "@/components/showcase/motion-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { APP_TEXT } from "@/content/fr/app";
@@ -37,13 +35,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <noscript>
           <style>{"[data-reveal]{opacity:1!important;transform:none!important}"}</style>
         </noscript>
-        <MotionProvider>
-          <SiteHeader />
-          <main id="contenu" className="flex-1">
-            {children}
-          </main>
-          <SiteFooter />
-        </MotionProvider>
+        {/* En-tête, contenu et pied de page : coquille de la vitrine ou de l'application (U38, AD-46). */}
+        <MotionProvider>{children}</MotionProvider>
         {/* Thème sombre imposé (AD-35) : le Toaster shadcn suivrait sinon le thème du système. */}
         <Toaster theme="dark" />
       </body>

@@ -129,6 +129,44 @@ Dernière mise à jour : 14 octobre 2026 (U06)
 
 **Notes de pattern :** depuis U34, sélection multiple (`multiple`, `accept` vidéos + images) : une vidéo lance le clip, 1 à 5 images le mode captures (tri par `classifySelection`, erreurs dans la même zone `role="alert"`) ; titre « Choisir un clip ou des captures », libellé du bouton inchangé. `accept="video/*,.mp4,.mov,…"` depuis U33 (les galeries des téléphones proposent toutes les vidéos ; le contrôle trie ensuite). Le champ fichier est `sr-only`, `tabIndex={-1}`, `aria-hidden` : l'accès clavier et mobile passe par le bouton, qui pointe vers les contraintes (et l'erreur) par `aria-describedby`. La valeur du champ est vidée après chaque choix pour pouvoir reprendre le même fichier. L'indice « ou glissez-le ici » n'apparaît qu'à partir de `md`.
 
+### Navigation de l'application : AppHeader, AppTabBar, FloatingIdentify
+
+Fichiers : `src/components/layout/app-header.tsx`, `app-tab-bar.tsx`, `floating-identify.tsx`, `app-nav.ts`
+Dernière mise à jour : 21 octobre 2026 (U38)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | en-tête `bg-background/85 backdrop-blur-md` ; barre d'onglets `bg-background/95 backdrop-blur-md` ; bouton flottant `bg-primary` |
+| Bordure | en-tête `border-b border-border` ; barre d'onglets `border-t border-border` |
+| Radius | liens de l'en-tête `rounded-md` ; bouton flottant `rounded-full` |
+| Texte principal | lien actif `text-foreground` sur `bg-muted` (en-tête), `text-brand-strong` (onglets) ; bouton flottant `text-base font-semibold text-primary-foreground` |
+| Texte secondaire | liens inactifs `text-muted-foreground`, onglets `text-xs font-medium` |
+| Espacement | en-tête `h-16`, liens `min-h-11 px-3 gap-2` ; onglets `min-h-14 gap-1`, 4 colonnes égales ; bouton flottant `h-12 px-5 gap-2`, `right-6 bottom-6` |
+| Hover / focus | `hover:text-foreground` ; bouton flottant `hover:bg-primary-hover` ; focus `outline-2 outline-ring` (onglets : décalage intérieur) |
+| Ombre | bouton flottant `shadow-lg` |
+| Accent | icône de la page active en vert (`text-brand-strong`) |
+
+**Notes de pattern :** `aria-current="page"` sur l'entrée active (`isActive` : page ou sous-page). Barre d'onglets mobile seulement (`md:hidden`), la page réserve `pb-20` ; marge de la barre système en style en ligne (`env(safe-area-inset-bottom)`). Bouton flottant ordinateur seulement, masqué sur `/identifier`. Visiteur : l'onglet Compte devient « Connexion » avec retour à la page en cours.
+
+### IdentifyLauncher (lanceur de la vitrine)
+
+Fichier : `src/components/identify/identify-launcher.tsx`
+Dernière mise à jour : 21 octobre 2026 (U38)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | carte `bg-card shadow-lg` (comme `IdentifyPanel`) ; champ `bg-transparent dark:bg-input/30` |
+| Bordure | champ `border border-input`, focus `border-ring ring-3 ring-ring/50` |
+| Radius | carte `rounded-xl`, champ et bouton `rounded-md` |
+| Texte principal | saisie `text-base` ; bouton `text-base font-semibold` |
+| Texte secondaire | raccourcis `text-sm font-medium text-muted-foreground`, « ou » et confidentialité `text-sm text-muted-foreground` |
+| Espacement | carte `p-4 md:p-6 gap-4` ; champ et bouton `h-12` ; raccourcis `min-h-11 px-2 gap-2` |
+| Hover / focus | bouton `hover:bg-primary-hover` ; raccourcis `hover:text-foreground` |
+| Ombre | `shadow-lg` (carte du hero) |
+| Accent | icônes des raccourcis et du cadenas `text-brand-strong` |
+
+**Notes de pattern :** champ lien en vedette (icône à gauche), raccourcis en icône + texte dessous (« ou »), comme la référence ; l'identification se fait toujours dans l'application.
+
 ### TwoTone (grand titre en deux tons)
 
 Fichier : `src/components/layout/two-tone.tsx`

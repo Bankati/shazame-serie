@@ -155,7 +155,7 @@ Mettre à jour ce fichier après chaque changement d'implémentation significati
 
 ## Next Up
 
-- **Sprint 3 ter — refonte de l'expérience (demande du fondateur, 21 octobre 2026)** : U37 fait (plan `context/plans/U37.md` : accent vert unique, titres en deux tons, textes à jour), puis U38 vitrine et application séparées, U39 vitrine refondue, U40 fiche titre et états, U41 connexion en fenêtre, U42 calendrier des sorties (AD-45 à AD-47).
+- **Sprint 3 ter — refonte de l'expérience (demande du fondateur, 21 octobre 2026)** : U37 fait (plan `context/plans/U37.md` : accent vert unique, titres en deux tons, textes à jour) ; U38 fait (plan `context/plans/U38.md` : vitrine `/` et application `/identifier`, barre d'onglets mobile, bouton flottant, lanceur sur la vitrine, identifications récentes), puis U39 vitrine refondue, U40 fiche titre et états, U41 connexion en fenêtre, U42 calendrier des sorties (AD-45 à AD-47).
 
 - **Sprint 3 bis (ajout du fondateur, 20 octobre 2026)** : U33 en cours, puis U34 identification par image, U35 par description, U36 par lien (D10 : clé YouTube Data API ; Q23).
 - **Tests avant déploiement** (demandés par le fondateur le 20 octobre 2026) : `SUPABASE_SECRET_KEY` dans Vercel, CI verte sur GitHub, PR `dev` → `staging` → `main`, migration `0004`, essais en production (inscription email, Google, liste, profil, partage).

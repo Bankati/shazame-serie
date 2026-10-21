@@ -28,7 +28,7 @@ async function simulateServer(page: Page, identify: { status: number; body: unkn
 }
 
 async function chooseClip(page: Page) {
-  await page.goto("/");
+  await page.goto("/identifier");
   await page.locator('input[type="file"]').setInputFiles(CLIP);
 }
 
@@ -47,7 +47,7 @@ test("clip → résultat sûr : affiche, titre, « Très probable », compteur m
   await expect(page.getByText("2 restantes")).toBeVisible();
   await expect(page.getByRole("link", { name: "Voir la fiche" })).toHaveAttribute("href", "/titre/film/603-matrix");
   // Visiteur : « Ajouter à ma liste » mène à la connexion, avec retour sur la page (U18).
-  await expect(page.getByRole("link", { name: "Ajouter à ma liste" })).toHaveAttribute("href", "/connexion?suite=%2F");
+  await expect(page.getByRole("link", { name: "Ajouter à ma liste" })).toHaveAttribute("href", "/connexion?suite=%2Fidentifier");
   // Le serveur n'a reçu que des images, 2 à 5 (invariant 1).
   expect(frameCounts[0]).toBeGreaterThanOrEqual(2);
   expect(frameCounts[0]).toBeLessThanOrEqual(5);

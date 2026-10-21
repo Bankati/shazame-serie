@@ -11,6 +11,9 @@ import type { ShowcaseTitle } from "@/server/catalog/catalog-provider";
 
 import { StarRating } from "./star-rating";
 
+/** Titre affiché dans une rangée ; `caption` remplace la note (ex. « 94 % » pour une identification récente). */
+export type PosterItem = ShowcaseTitle & { caption?: string };
+
 /** Variantes d'apparition d'une affiche dans une rangée (cascade pilotée par la rangée). */
 export const POSTER_CARD_ITEM = {
   hidden: { opacity: 0, y: 24 },
@@ -18,7 +21,7 @@ export const POSTER_CARD_ITEM = {
 } as const;
 
 // Affiche cliquable : soulevée et agrandie au survol, lien vers la fiche du titre.
-export function PosterCard({ title }: { title: ShowcaseTitle }) {
+export function PosterCard({ title }: { title: PosterItem }) {
   const src = posterUrl(title.posterPath, "w342");
   return (
     <m.div variants={POSTER_CARD_ITEM} whileHover={{ y: -8, scale: 1.04 }} transition={{ type: "spring", stiffness: 300, damping: 22 }}>
@@ -42,7 +45,8 @@ export function PosterCard({ title }: { title: ShowcaseTitle }) {
           <span className="truncate text-sm font-semibold text-foreground">{title.title}</span>
           <span className="flex items-center gap-2 text-sm text-muted-foreground">
             {title.year ? <span>{title.year}</span> : null}
-            <StarRating voteAverage={title.voteAverage} />
+            {/* Identifications récentes (U38) : la confiance du résultat à la place de la note TMDB. */}
+            {title.caption ? <span className="text-brand-strong">{title.caption}</span> : <StarRating voteAverage={title.voteAverage} />}
           </span>
         </span>
       </Link>

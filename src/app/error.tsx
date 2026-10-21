@@ -23,7 +23,7 @@ export default function ErrorPage({ error, retry }: { error: Error & { digest?: 
       description={text.description}
       actions={
         <>
-          <Button onClick={() => retry()} className="h-11 bg-brand px-6 text-base text-inverse hover:bg-brand/85">
+          <Button onClick={() => retry()} className="h-11 px-6 text-base hover:bg-primary-hover">
             {text.retry}
           </Button>
           <Button

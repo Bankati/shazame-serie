@@ -12,7 +12,7 @@ export function HowItWorks() {
   return (
     <section id="comment-ca-marche" aria-labelledby="how-title" className="scroll-mt-16 px-4 py-16 sm:px-6 md:py-24">
       <div className="mx-auto flex max-w-6xl flex-col gap-12">
-        <SectionHeading id="how-title" eyebrow={howItWorks.eyebrow} title={howItWorks.title} subtitle={howItWorks.subtitle} />
+        <SectionHeading id="how-title" eyebrow={howItWorks.eyebrow} title={howItWorks.title} highlight={howItWorks.highlight} subtitle={howItWorks.subtitle} />
         <ol className="grid gap-4 md:grid-cols-3">
           {howItWorks.steps.map((step, index) => {
             const Icon = STEP_ICONS[index] ?? Film;

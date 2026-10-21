@@ -86,9 +86,9 @@
   --card-foreground: #f3f4f6;
   --popover: #182030;
   --popover-foreground: #f3f4f6;
-  /* Boutons : texte blanc 5,2:1. Pour un lien sur fond sombre, utiliser --link (7,5:1). */
-  --primary: #2563eb;
-  --primary-foreground: #ffffff;
+  /* Accent unique (AD-45, U37) : vert du logo. Bouton 7,6:1 sur le fond ; texte foncé dessus 7,9:1. */
+  --primary: #10b981;
+  --primary-foreground: #05080e;
   --secondary: #1c2433;
   --secondary-foreground: #f3f4f6;
   --muted: #1c2433;
@@ -101,10 +101,12 @@
   --border: #263042;
   /* Contour de champ 4:1 (WCAG 1.4.11 : 3:1 minimum) */
   --input: #6b7280;
-  --ring: #60a5fa;
+  /* Anneau de focus et liens texte : vert clair, 9:1 sur une carte, 10:1 sur le fond */
+  --ring: #34d399;
 
-  --primary-hover: #1d4ed8;
-  --link: #60a5fa;
+  /* Survol : plus clair (texte foncé 10,4:1) */
+  --primary-hover: #34d399;
+  --link: #34d399;
   /* Surface plus profonde que le fond : hero, blocs de contraste, pied de page */
   --inverse: #05080e;
   --inverse-foreground: #ffffff;

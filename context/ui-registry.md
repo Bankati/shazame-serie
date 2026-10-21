@@ -129,10 +129,29 @@ Dernière mise à jour : 14 octobre 2026 (U06)
 
 **Notes de pattern :** depuis U34, sélection multiple (`multiple`, `accept` vidéos + images) : une vidéo lance le clip, 1 à 5 images le mode captures (tri par `classifySelection`, erreurs dans la même zone `role="alert"`) ; titre « Choisir un clip ou des captures », libellé du bouton inchangé. `accept="video/*,.mp4,.mov,…"` depuis U33 (les galeries des téléphones proposent toutes les vidéos ; le contrôle trie ensuite). Le champ fichier est `sr-only`, `tabIndex={-1}`, `aria-hidden` : l'accès clavier et mobile passe par le bouton, qui pointe vers les contraintes (et l'erreur) par `aria-describedby`. La valeur du champ est vidée après chaque choix pour pouvoir reprendre le même fichier. L'indice « ou glissez-le ici » n'apparaît qu'à partir de `md`.
 
+### TwoTone (grand titre en deux tons)
+
+Fichier : `src/components/layout/two-tone.tsx`
+Dernière mise à jour : 21 octobre 2026 (U37)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | none (s'insère dans un titre) |
+| Bordure | none |
+| Radius | none |
+| Texte principal | celui du titre parent |
+| Texte secondaire | mot clé `text-brand-strong` ; sur `bg-inverse` : `text-brand` |
+| Espacement | none |
+| Hover / focus | none |
+| Ombre | none |
+| Accent | mot clé en vert d'accent |
+
+**Notes de pattern :** un seul mot clé par titre (champ `highlight` des textes de `src/content/fr/`) ; titre lu d'un seul tenant. Sur-titre associé : `text-xs font-semibold uppercase tracking-widest text-brand-strong`. Utilisé par `SectionHeading`, `Hero`, `FeaturedHero`, `FinalCta`.
+
 ### IdentifyTabs (mode d'identification)
 
 Fichier : `src/components/identify/identify-tabs.tsx`
-Dernière mise à jour : 20 octobre 2026 (U35)
+Dernière mise à jour : 21 octobre 2026 (U37 : onglet actif en accent plein `bg-primary font-semibold text-primary-foreground`, `whitespace-nowrap px-2`)
 
 | Propriété | Classe |
 | --- | --- |

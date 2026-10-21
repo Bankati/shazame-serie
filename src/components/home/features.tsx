@@ -14,7 +14,7 @@ export function Features() {
   return (
     <section id="fonctionnalites" aria-labelledby="features-title" className="scroll-mt-16 bg-card px-4 py-16 sm:px-6 md:py-24">
       <div className="mx-auto flex max-w-6xl flex-col gap-12">
-        <SectionHeading id="features-title" eyebrow={features.eyebrow} title={features.title} subtitle={features.subtitle} />
+        <SectionHeading id="features-title" eyebrow={features.eyebrow} title={features.title} highlight={features.highlight} subtitle={features.subtitle} />
         <ul className="grid gap-4 md:grid-cols-3">
           <li className="relative flex min-h-72 flex-col justify-end gap-3 overflow-hidden rounded-xl bg-inverse p-6 text-inverse-foreground md:col-span-2 md:p-8">
             <div aria-hidden="true" className="absolute top-6 right-6 flex gap-3">

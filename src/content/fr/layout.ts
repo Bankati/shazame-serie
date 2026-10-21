@@ -12,7 +12,7 @@ export const LAYOUT_TEXT = {
       { href: "/#tarifs", label: "Tarifs" },
       { href: "/#faq", label: "FAQ" },
     ],
-    cta: { href: "/#identifier", label: "Identifier un clip" },
+    cta: { href: "/#identifier", label: "Identifier un titre" },
     openMenu: "Ouvrir le menu",
     menuTitle: "Menu",
   },

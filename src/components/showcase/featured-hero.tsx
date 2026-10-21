@@ -17,6 +17,8 @@ import { cn } from "@/lib/utils";
 import { titlePath } from "@/lib/title-url";
 import type { ShowcaseTitle } from "@/server/catalog/catalog-provider";
 
+import { TwoTone } from "@/components/layout/two-tone";
+
 import { RowButton } from "./poster-row";
 import { StarRating } from "./star-rating";
 
@@ -186,9 +188,9 @@ export function FeaturedHero({ titles, children }: { titles: readonly ShowcaseTi
         {/* Action principale : identifier un clip. */}
         <div className="order-1 flex min-w-0 flex-col gap-4 md:order-2">
           <m.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="flex flex-col gap-2">
-            <p className="text-sm font-semibold text-brand-strong">{hero.eyebrow}</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-brand-strong">{hero.eyebrow}</p>
             <h1 id="hero-title" className="font-display text-display font-extrabold md:text-display-lg">
-              {hero.title}
+              <TwoTone text={hero.title} highlight={hero.highlight} />
             </h1>
           </m.div>
           <m.div initial={{ opacity: 0, y: 32, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.7, delay: 0.15 }}>

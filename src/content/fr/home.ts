@@ -4,21 +4,23 @@ export const HOME_TEXT = {
   hero: {
     eyebrow: "Gratuit, 15 identifications par jour",
     title: "Quel est ce film ?",
+    highlight: "film",
     subtitle:
-      "Vous avez vu un extrait sur TikTok, YouTube ou Instagram sans connaître son titre ? Envoyez le clip : nous retrouvons le film ou la série, sa fiche complète et où le regarder.",
+      "Vous avez vu un extrait sur TikTok, YouTube ou Instagram sans connaître son titre ? Envoyez la vidéo, une capture, le lien, ou décrivez la scène : nous retrouvons le film ou la série, sa fiche complète et où le regarder.",
   },
   howItWorks: {
     eyebrow: "Comment ça marche",
     title: "Trois étapes, quelques secondes",
+    highlight: "quelques secondes",
     subtitle: "Pas d'application à installer : tout se passe dans votre navigateur, sur téléphone comme sur ordinateur.",
     steps: [
       {
-        title: "Choisissez un clip",
-        description: "Un extrait enregistré sur votre appareil, au format MP4, MOV ou WebM, jusqu'à 60 secondes.",
+        title: "Montrez-nous l'extrait",
+        description: "Une vidéo de votre téléphone, 1 à 5 captures d'écran, le lien YouTube ou TikTok, ou quelques mots pour décrire la scène.",
       },
       {
-        title: "Nous analysons quelques images",
-        description: "Votre navigateur extrait 3 à 5 images nettes du clip. La vidéo elle-même n'est jamais envoyée.",
+        title: "Nous analysons les indices",
+        description: "Votre navigateur tire quelques images nettes de la vidéo, qui n'est jamais envoyée. L'IA reconnaît la scène, puis nous vérifions le titre.",
       },
       {
         title: "Découvrez le titre",
@@ -29,6 +31,7 @@ export const HOME_TEXT = {
   features: {
     eyebrow: "Fonctionnalités",
     title: "Bien plus qu'un titre",
+    highlight: "qu'un titre",
     subtitle: "Une fois le titre trouvé, tout ce qu'il faut pour le regarder et ne plus l'oublier.",
     sheet: {
       title: "La fiche complète",
@@ -51,10 +54,11 @@ export const HOME_TEXT = {
   privacy: {
     eyebrow: "Confidentialité",
     title: "Votre vidéo ne quitte pas votre appareil",
+    highlight: "ne quitte pas votre appareil",
     points: [
       {
         title: "Extraction dans le navigateur",
-        description: "Seules 3 à 5 images sont envoyées pour l'analyse, jamais la vidéo.",
+        description: "Seules quelques images (5 au plus) sont envoyées pour l'analyse, jamais la vidéo.",
       },
       {
         title: "Images supprimées",
@@ -69,6 +73,7 @@ export const HOME_TEXT = {
   pricing: {
     eyebrow: "Tarifs",
     title: "Commencez gratuitement",
+    highlight: "gratuitement",
     subtitle: "Une identification n'est décomptée que si un résultat d'au moins 50 % de confiance s'affiche.",
     perMonth: "par mois",
     free: {
@@ -99,16 +104,17 @@ export const HOME_TEXT = {
   faq: {
     eyebrow: "Questions fréquentes",
     title: "Vous vous demandez peut-être…",
+    highlight: "peut-être…",
     items: [
       {
         question: "Comment fonctionne l'identification ?",
         answer:
-          "Votre navigateur extrait quelques images nettes de votre clip. Un modèle d'analyse d'images les compare à ce qu'il connaît, puis nous vérifions le titre dans une grande base de films et de séries avant d'afficher le résultat avec son niveau de confiance.",
+          "Envoyez une vidéo, des captures d'écran, un lien YouTube ou TikTok, ou décrivez la scène. Pour une vidéo, votre navigateur en extrait quelques images nettes. Une IA analyse ces indices, puis nous vérifions le titre dans une grande base de films et de séries avant d'afficher le résultat avec son niveau de confiance.",
       },
       {
         question: "Ma vidéo est-elle envoyée sur vos serveurs ?",
         answer:
-          "Non. Seules 3 à 5 images extraites dans votre navigateur sont transmises, puis supprimées au plus tard 24 heures après l'analyse. Elles ne sont conservées que si vous signalez une erreur et l'acceptez explicitement.",
+          "Non. Seules quelques images (5 au plus) extraites dans votre navigateur sont transmises, puis supprimées au plus tard 24 heures après l'analyse. Elles ne sont conservées que si vous signalez une erreur et l'acceptez explicitement.",
       },
       {
         question: "Combien d'identifications gratuites ai-je ?",
@@ -121,9 +127,9 @@ export const HOME_TEXT = {
           "Utilisez le bouton « Ce n'est pas le bon titre » sous le résultat et indiquez le bon titre. Vous pouvez aussi accepter que vos images servent à améliorer l'identification ; c'est facultatif.",
       },
       {
-        question: "Quels clips puis-je envoyer ?",
+        question: "Que puis-je envoyer ?",
         answer:
-          "Des fichiers MP4, MOV ou WebM enregistrés sur votre appareil, de 60 secondes et 50 Mo au maximum. Choisissez de préférence un passage où l'image est nette et où l'on voit les personnages.",
+          "Une vidéo MP4, MOV, WebM, M4V, 3GP, MKV ou AVI de 500 Mo au plus (pour une vidéo longue, vous choisissez le passage de 60 secondes à analyser), 1 à 5 captures d'écran, un lien YouTube ou TikTok, ou une description de 10 à 500 caractères. Choisissez de préférence un passage où l'image est nette et où l'on voit les personnages.",
       },
       {
         question: "Combien coûte le Premium et puis-je résilier ?",
@@ -139,7 +145,8 @@ export const HOME_TEXT = {
   },
   finalCta: {
     title: "Un extrait vous intrigue ?",
+    highlight: "vous intrigue ?",
     subtitle: "Retrouvez son titre en quelques secondes.",
-    button: "Identifier un clip",
+    button: "Identifier un titre",
   },
 } as const;

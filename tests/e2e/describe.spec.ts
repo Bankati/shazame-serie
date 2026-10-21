@@ -94,7 +94,7 @@ test("quota épuisé : message clair, champ conservé", async ({ page }) => {
 test("onglets au clavier : flèches pour changer de mode", async ({ page }) => {
   await simulateServer(page, { status: 200, body: {} });
   await page.goto("/");
-  const media = page.getByRole("tab", { name: "Vidéo ou captures" });
+  const media = page.getByRole("tab", { name: "Vidéo, image" });
   await expect(media).toHaveAttribute("aria-selected", "true");
   await expect(async () => {
     await media.focus();

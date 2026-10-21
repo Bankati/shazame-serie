@@ -2,6 +2,8 @@
 
 ## Theme
 
+**Mise à jour du 21 octobre 2026 (AD-45, U37) : accent unique, le vert du logo.** `--primary` vaut désormais #10B981 avec un texte foncé (`--primary-foreground` #05080E, 7,9:1) ; survol #34D399 ; `--ring` et `--link` #34D399. Le bleu n'est plus utilisé. Grands titres en deux tons avec le composant `TwoTone` (mot clé en `text-brand-strong`, ou `text-brand` sur `bg-inverse`) ; sur-titres en `text-xs font-semibold uppercase tracking-widest text-brand-strong`. Un bouton d'action est toujours le bouton principal shadcn (`bg-primary`), jamais un `bg-brand` composé à la main.
+
 **Mise à jour du 16 octobre 2026 (AD-35, maquette du fondateur de type plateforme de streaming) : thème sombre unique**, classe `.dark` posée sur `<html>`. Les valeurs à jour des jetons sont dans `src/app/globals.css` (contrastes mesurés en commentaire) ; le tableau « Colors » ci-dessous garde les noms et les usages, ses valeurs hexadécimales claires sont historiques. Nouveau jeton `--link` (`text-link`, `#60A5FA`) : tout lien texte l'utilise, `text-primary` (bleu des boutons, 3,7:1 sur le fond) n'est plus utilisé pour du texte. Le produit s'adresse à des cinéphiles : ce sont les **affiches** qui apportent la couleur.
 
 Texte d'origine (U02, remplacé) : thème clair uniquement en V1, interface sobre et blanche.

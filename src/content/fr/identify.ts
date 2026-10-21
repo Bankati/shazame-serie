@@ -24,7 +24,7 @@ export const IDENTIFY_TEXT = {
   // Onglets du mode d'identification (U35).
   tabs: {
     label: "Comment identifier le titre",
-    media: "Vidéo ou captures",
+    media: "Vidéo, image",
     description: "Description",
     link: "Lien",
   },
@@ -128,11 +128,11 @@ export const IDENTIFY_TEXT = {
     frames: "Ces images n'ont pas pu être analysées. Choisissez un autre extrait.",
     text: "Cette description n'a pas pu être analysée. Écrivez entre 10 et 500 caractères.",
     link_instagram:
-      "Les liens Instagram ne sont pas encore pris en charge. Enregistrez le clip ou faites une capture d'écran, puis envoyez-la dans « Vidéo ou captures ».",
+      "Les liens Instagram ne sont pas encore pris en charge. Enregistrez le clip ou faites une capture d'écran, puis envoyez-la dans « Vidéo, image ».",
     link_unsupported: "Ce lien n'est pas pris en charge. Collez le lien d'une vidéo YouTube ou TikTok.",
     link_not_found: "Cette publication est introuvable ou n'est pas publique. Vérifiez le lien.",
     link_no_clues:
-      "Cette publication ne donne pas assez d'indices. Envoyez plutôt le clip ou une capture d'écran dans « Vidéo ou captures ».",
+      "Cette publication ne donne pas assez d'indices. Envoyez plutôt le clip ou une capture d'écran dans « Vidéo, image ».",
     paused:
       "L'identification de nouveaux extraits est en pause pour aujourd'hui, en raison d'une forte affluence. Les extraits déjà connus restent reconnus ; réessayez demain.",
     suspended: "Votre compte est suspendu : l'identification n'est pas disponible.",

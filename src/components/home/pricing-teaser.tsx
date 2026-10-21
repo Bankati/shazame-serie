@@ -24,7 +24,7 @@ export function PricingTeaser() {
   return (
     <section id="tarifs" aria-labelledby="pricing-title" className="scroll-mt-16 bg-card px-4 py-16 sm:px-6 md:py-24">
       <div className="mx-auto flex max-w-4xl flex-col gap-12">
-        <SectionHeading id="pricing-title" eyebrow={pricing.eyebrow} title={pricing.title} subtitle={pricing.subtitle} />
+        <SectionHeading id="pricing-title" eyebrow={pricing.eyebrow} title={pricing.title} highlight={pricing.highlight} subtitle={pricing.subtitle} />
         <ul className="grid gap-4 md:grid-cols-2">
           {plans.map((plan) => (
             <li

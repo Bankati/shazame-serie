@@ -3,6 +3,7 @@ import { Sparkles } from "lucide-react";
 import { CurvedFilmBand } from "@/components/decor/curved-film-band";
 import { FilmStripDecor } from "@/components/decor/film-strip-decor";
 import { IdentifyPanel } from "@/components/identify/identify-panel";
+import { TwoTone } from "@/components/layout/two-tone";
 import { HOME_TEXT } from "@/content/fr/home";
 
 // Photos d'ambiance Unsplash (licence Unsplash), hébergées par le site : aucune affiche de film réelle
@@ -36,7 +37,7 @@ export function Hero() {
             {hero.eyebrow}
           </p>
           <h1 id="hero-title" className="font-display text-display-lg font-extrabold md:text-display-xl">
-            {hero.title}
+            <TwoTone text={hero.title} highlight={hero.highlight} tone="inverse" />
           </h1>
           <p className="max-w-prose text-base text-inverse-muted md:text-lg">{hero.subtitle}</p>
         </div>

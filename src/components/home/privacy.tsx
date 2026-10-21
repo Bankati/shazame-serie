@@ -13,7 +13,7 @@ export function Privacy() {
   return (
     <section id="confidentialite" aria-labelledby="privacy-title" className="scroll-mt-16 px-4 py-16 sm:px-6 md:py-24">
       <div className="mx-auto flex max-w-6xl flex-col gap-10 rounded-2xl bg-inverse p-6 text-inverse-foreground md:p-12">
-        <SectionHeading id="privacy-title" eyebrow={privacy.eyebrow} title={privacy.title} align="start" tone="inverse" />
+        <SectionHeading id="privacy-title" eyebrow={privacy.eyebrow} title={privacy.title} highlight={privacy.highlight} align="start" tone="inverse" />
         <ul className="grid gap-8 md:grid-cols-3">
           {privacy.points.map((point, index) => {
             const Icon = POINT_ICONS[index] ?? ShieldCheck;

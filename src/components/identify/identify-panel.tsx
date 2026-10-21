@@ -22,7 +22,7 @@ import { type IdentifyTab, IdentifyTabs } from "./identify-tabs";
 import { LinkForm } from "./link-form";
 import { ResultDialog } from "./result-dialog";
 
-// Carte d'identification de l'accueil : onglets « Vidéo ou captures » (extraction locale U06, U33, U34),
+// Carte d'identification de l'accueil : onglets « Vidéo, image » (extraction locale U06, U33, U34),
 // « Description » (U35) et « Lien » (U36). Résultat dans une fenêtre (U12). Le compteur de l'en-tête suit le quota.
 export function IdentifyPanel() {
   // Changement d'onglet : le focus reste sur l'onglet (modèle WAI-ARIA) ; Tab mène ensuite au contenu.

@@ -13,7 +13,7 @@ export default function NotFound() {
       title={notFound.title}
       description={notFound.description}
       actions={
-        <Button asChild className="h-11 bg-brand px-6 text-base text-inverse hover:bg-brand/85">
+        <Button asChild className="h-11 px-6 text-base hover:bg-primary-hover">
           <Link href="/">{notFound.back}</Link>
         </Button>
       }

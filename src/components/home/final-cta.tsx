@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { FilmStripDecor } from "@/components/decor/film-strip-decor";
+import { TwoTone } from "@/components/layout/two-tone";
 import { HOME_TEXT } from "@/content/fr/home";
 
 export function FinalCta() {
@@ -11,11 +12,11 @@ export function FinalCta() {
         <FilmStripDecor />
         <div className="flex flex-col items-center gap-4 px-6 py-12 text-center md:py-16">
           <h2 id="final-cta-title" className="font-display text-display font-bold md:text-display-lg">
-            {finalCta.title}
+            <TwoTone text={finalCta.title} highlight={finalCta.highlight} tone="inverse" />
           </h2>
           <p className="text-inverse-muted md:text-lg">{finalCta.subtitle}</p>
-          {/* Vert de marque sur surface sombre, texte foncé : 5,8:1 (ui-context.md). */}
-          <Button asChild className="h-11 bg-brand px-6 text-base text-inverse hover:bg-brand/85">
+          {/* Bouton d'accent unique (AD-45) : vert, texte foncé 7,9:1. */}
+          <Button asChild className="h-11 px-6 text-base hover:bg-primary-hover">
             <a href="#identifier">{finalCta.button}</a>
           </Button>
         </div>

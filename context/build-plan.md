@@ -214,6 +214,48 @@ Ajout de périmètre décidé par le fondateur (AD-37 à AD-40) : le cahier des 
 
 ---
 
+## Sprint 3 ter — Refonte de l'expérience (demande du fondateur, 21 octobre 2026)
+
+Refonte inspirée d'un site de référence analysé le 21 octobre 2026 (analyse et captures : AD-45). Objectif : une plateforme moderne, intuitive et cohérente, au niveau de finition de la référence, **sans retirer aucune fonctionnalité**, dans notre identité. Choix du fondateur : accent unique vert du logo, vitrine et application séparées, calendrier des sorties et connexion en fenêtre ajoutés (AD-45 à AD-47). À ne pas reprendre de la référence : faux chiffres et faux avis, bandeau de logos de marques, textes mêlant anglais et français.
+
+### U37 — Identité visuelle unifiée
+- **Objectif** : une seule couleur d'accent (vert du logo) et un langage visuel constant sur tout le site.
+- **Périmètre** : jetons de couleur revus dans `globals.css` (bouton principal vert à texte foncé, contrastes AA mesurés) ; grands titres en deux tons (mot clé en accent) ; petits titres de section uniformes ; boutons, onglets, puces et focus alignés ; `ui-context.md` et `ui-registry.md` mis à jour ; textes périmés corrigés (formats et durées depuis U33, modes d'identification). AD-45.
+- **Fin** : aucune couleur hors jetons (`check:design`) ; contrastes AA vérifiés et consignés ; captures avant/après des pages principales, ordinateur et mobile ; parcours Playwright existants verts.
+- **Dépend de** : U36.
+
+### U38 — Vitrine et application séparées
+- **Objectif** : une vitrine qui présente et convertit, une application qui sert à identifier et à retrouver ses titres.
+- **Périmètre** : la vitrine (`/`) garde la présentation, les tarifs, la FAQ, avec un champ d'identification en vedette qui mène à l'application ; l'application (adresse à décider en `/architect`) regroupe l'identification (4 modes en icônes), les identifications récentes, les tendances, l'historique, la liste, le compte et le calendrier ; navigation propre à l'application ; barre d'onglets en bas sur mobile ; bouton flottant « Identifier » sur les pages secondaires ; redirections et liens internes à jour (partage, courriels, plan du site). AD-46.
+- **Fin** : Playwright : vitrine → identification → résultat ; navigation mobile au clavier et au toucher ; aucun lien mort (contrôle des liens) ; captures.
+- **Dépend de** : U37.
+
+### U39 — Vitrine refondue
+- **Objectif** : montrer le produit plutôt que le décrire.
+- **Périmètre** : hero centré sur l'identification ; 3 étapes avec durées réelles ; sections illustrées par des maquettes de nos vrais écrans (résultat, analyse, où regarder) ; chiffres seulement s'ils sont réels et sourcés ; tarifs avec réassurance ; FAQ centrée ; appel final ; pied de page en colonnes. Animations sobres (Motion, `prefers-reduced-motion`).
+- **Fin** : Lighthouse mobile ≥ 90 (performance, accessibilité) ; captures ; aucun contenu inventé.
+- **Dépend de** : U38.
+
+### U40 — Fiche titre et états de l'application
+- **Objectif** : une fiche titre claire et des pages sans « trou ».
+- **Périmètre** : fiche en deux colonnes (titre, actions, synopsis, distribution à gauche ; où regarder avec choix du pays et détails à droite) ; titres similaires ; états vides, de chargement et « connexion requise » soignés sur historique, liste et compte.
+- **Fin** : Playwright fiche titre et pages vides ; captures ordinateur et mobile.
+- **Dépend de** : U38.
+
+### U41 — Connexion en fenêtre
+- **Objectif** : se connecter sans quitter la page en cours.
+- **Périmètre** : connexion, inscription et mot de passe oublié dans une fenêtre (Google en premier) ouverte depuis l'en-tête, la liste, le signalement ; retour à l'action d'origine après connexion ; les pages `/connexion` et `/inscription` restent pour les liens directs et les courriels ; mêmes Server Actions et contrôles qu'en U04. AD-47.
+- **Fin** : Playwright : connexion en fenêtre puis action reprise (ajout à la liste) ; Google ; clavier et focus piégé dans la fenêtre.
+- **Dépend de** : U38.
+
+### U42 — Calendrier des sorties
+- **Objectif** : voir les films à venir et les séries en cours de diffusion.
+- **Périmètre** : page Calendrier dans l'application (TMDB : films à venir, séries en diffusion, région de l'utilisateur), cartes avec date de sortie, lien vers la fiche, ajout à la liste ; cache et mention TMDB. Fonctionnalité absente du cahier des charges, ajoutée par le fondateur (AD-47).
+- **Fin** : tests du catalogue simulé ; Playwright calendrier → fiche ; captures.
+- **Dépend de** : U38.
+
+---
+
 ## Sprint 4 — Pilotage, conformité, lancement (13 au 31 décembre)
 
 ### U25 — Back-office : tableau de bord
@@ -254,7 +296,7 @@ Ajout de périmètre décidé par le fondateur (AD-37 à AD-40) : le cahier des 
 ### U32 — Bêta fermée et lancement
 - **Périmètre** : 20 à 50 testeurs, collecte des signalements, `npm run eval` final ≥ 85 %, test de charge k6 (500 simultanés), checklist de mise en production, gel au 20 décembre.
 - **Fin** : lancement doux le 31 décembre 2026, surveillance renforcée la première semaine.
-- **Dépend de** : U01 à U31, U33 à U36.
+- **Dépend de** : U01 à U31, U33 à U42.
 
 ---
 

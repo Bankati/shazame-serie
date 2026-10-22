@@ -1,4 +1,4 @@
-import { Clapperboard, Film, ScanSearch } from "lucide-react";
+import { CircleCheck, Clapperboard, Film, ScanSearch } from "lucide-react";
 
 import { HOME_TEXT } from "@/content/fr/home";
 
@@ -19,7 +19,7 @@ export function HowItWorks() {
             return (
               <li key={step.title} className="flex flex-col gap-4 rounded-xl border border-border bg-card p-6">
                 <div className="flex items-center justify-between">
-                  <span className="font-display text-display-lg font-extrabold text-link" aria-hidden="true">
+                  <span className="font-display text-display-lg font-extrabold text-brand-strong" aria-hidden="true">
                     {String(index + 1).padStart(2, "0")}
                   </span>
                   <span className="flex size-11 items-center justify-center rounded-lg bg-muted">
@@ -28,6 +28,11 @@ export function HowItWorks() {
                 </div>
                 <h3 className="text-xl font-semibold">{step.title}</h3>
                 <p className="text-muted-foreground">{step.description}</p>
+                {/* Pastille factuelle (U39) : ce que fait l'étape, pas une durée non mesurée. */}
+                <span className="mt-auto inline-flex w-fit items-center gap-1.5 rounded-full bg-brand-subtle px-3 py-1 text-sm font-medium text-brand-subtle-foreground">
+                  <CircleCheck className="size-4" aria-hidden="true" />
+                  {step.chip}
+                </span>
               </li>
             );
           })}

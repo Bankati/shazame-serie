@@ -25,14 +25,13 @@ async function simulateServer(page: Page) {
 
 test("vitrine : lien collé → application, identifié une seule fois, adresse nettoyée", async ({ page }) => {
   const links = await simulateServer(page);
-  await page.goto("/");
+  // Page chargée et hydratée avant d'agir : un seul clic, puis on attend la nouvelle adresse (recliquer pendant une
+  // navigation en cours la perturbait sur un poste chargé).
+  await page.goto("/", { waitUntil: "networkidle" });
 
-  const field = page.getByLabel("Lien de la publication YouTube ou TikTok");
-  await expect(async () => {
-    await field.fill(TIKTOK);
-    await page.getByRole("button", { name: "Identifier", exact: true }).click();
-    await expect(page).toHaveURL(/\/identifier/, { timeout: 3_000 });
-  }).toPass({ timeout: 20_000 });
+  await page.getByLabel("Lien de la publication YouTube ou TikTok").fill(TIKTOK);
+  await page.getByRole("button", { name: "Identifier", exact: true }).click();
+  await page.waitForURL(/\/identifier/, { timeout: 20_000 });
 
   await expect(page.getByRole("heading", { name: "Matrix" })).toBeVisible({ timeout: 30_000 });
   expect(links).toEqual([{ url: TIKTOK }]);
@@ -42,11 +41,9 @@ test("vitrine : lien collé → application, identifié une seule fois, adresse 
 
 test("vitrine : « Décrire la scène » ouvre l'application sur l'onglet Description", async ({ page }) => {
   await simulateServer(page);
-  await page.goto("/");
-  await expect(async () => {
-    await page.getByRole("link", { name: "Décrire la scène" }).first().click();
-    await expect(page).toHaveURL(/\/identifier\?mode=description/, { timeout: 3_000 });
-  }).toPass({ timeout: 20_000 });
+  await page.goto("/", { waitUntil: "networkidle" });
+  await page.getByRole("link", { name: "Décrire la scène" }).first().click();
+  await page.waitForURL(/\/identifier\?mode=description/, { timeout: 20_000 });
   await expect(page.getByRole("tab", { name: "Description" })).toHaveAttribute("aria-selected", "true");
   await expect(page.getByLabel("Décrire le film ou la série")).toBeVisible();
 });

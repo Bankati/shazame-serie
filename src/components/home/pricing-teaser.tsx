@@ -1,4 +1,4 @@
-import { Check } from "lucide-react";
+import { Check, ShieldCheck } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -57,7 +57,14 @@ export function PricingTeaser() {
             </li>
           ))}
         </ul>
-        <p className="text-center text-sm text-muted-foreground">{pricing.free.footnote}</p>
+        <div className="flex flex-col items-center gap-2 text-center text-sm text-muted-foreground">
+          {/* Réassurance (U39) : seulement ce qui est vrai aujourd'hui (paiement pas encore ouvert, D1). */}
+          <p className="flex items-start gap-2">
+            <ShieldCheck className="mt-0.5 size-4 shrink-0 text-brand-strong" aria-hidden="true" />
+            {pricing.reassurance}
+          </p>
+          <p>{pricing.free.footnote}</p>
+        </div>
       </div>
     </section>
   );

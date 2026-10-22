@@ -16,14 +16,17 @@ export const HOME_TEXT = {
     steps: [
       {
         title: "Montrez-nous l'extrait",
+        chip: "Sur votre appareil",
         description: "Une vidéo de votre téléphone, 1 à 5 captures d'écran, le lien YouTube ou TikTok, ou quelques mots pour décrire la scène.",
       },
       {
         title: "Nous analysons les indices",
+        chip: "Analyse par IA",
         description: "Votre navigateur tire quelques images nettes de la vidéo, qui n'est jamais envoyée. L'IA reconnaît la scène, puis nous vérifions le titre.",
       },
       {
         title: "Découvrez le titre",
+        chip: "Fiche et où regarder",
         description: "Le film ou la série, son niveau de confiance, trois alternatives et la fiche complète.",
       },
     ],
@@ -33,22 +36,51 @@ export const HOME_TEXT = {
     title: "Bien plus qu'un titre",
     highlight: "qu'un titre",
     subtitle: "Une fois le titre trouvé, tout ce qu'il faut pour le regarder et ne plus l'oublier.",
-    sheet: {
-      title: "La fiche complète",
-      description: "Affiche, synopsis, distribution, bande-annonce et titres similaires, avec la raison de chaque suggestion.",
-    },
-    watch: {
-      title: "Où le regarder",
-      description: "Les services disponibles dans votre pays, en abonnement, en location ou à l'achat.",
-    },
-    confidence: {
-      title: "Une confiance affichée",
-      description: "Chaque résultat indique son niveau de certitude et propose trois alternatives.",
-      sample: "Très probable",
-    },
-    watchlist: {
-      title: "Votre liste de suivi",
-      description: "Gardez de côté les titres à voir : 100 titres avec le compte gratuit, sans limite en Premium.",
+    // Trois sections illustrées par des maquettes de nos vrais écrans (U39). Exemples, pas de chiffres inventés.
+    showcase: [
+      {
+        eyebrow: "Identification",
+        title: "Montrez. Identifié.",
+        highlight: "Identifié.",
+        description:
+          "Une vidéo, une capture, un lien ou quelques mots. Le résultat s'affiche avec son niveau de confiance, et jusqu'à trois autres pistes si l'IA hésite.",
+      },
+      {
+        eyebrow: "Intelligence artificielle",
+        title: "L'IA analyse. Vous découvrez.",
+        highlight: "Vous découvrez.",
+        description:
+          "Votre navigateur extrait quelques images nettes, l'IA reconnaît la scène, puis nous vérifions le titre dans la base TMDB avant de vous le montrer.",
+      },
+      {
+        eyebrow: "Où regarder",
+        title: "Trouvé ? Maintenant, regardez-le.",
+        highlight: "regardez-le.",
+        description:
+          "Les services qui le proposent dans votre pays, en abonnement, en location ou à l'achat. Ajoutez-le à votre liste pour ne pas l'oublier.",
+      },
+    ],
+    mock: {
+      window: "Résultat",
+      analysisWindow: "Analyse en cours",
+      watchWindow: "Où regarder",
+      exampleTitle: "Interstellar",
+      exampleMeta: "2014, Film",
+      exampleGenres: ["Science-fiction", "Drame", "Aventure"],
+      confidence: "Très probable, 94 %",
+      sheet: "Voir la fiche",
+      watchlist: "Ajouter à ma liste",
+      steps: [
+        { title: "Extraction des images", detail: "Dans votre navigateur, la vidéo reste sur l'appareil" },
+        { title: "Analyse par l'IA", detail: "Décors, visages, textes visibles, style" },
+        { title: "Titre vérifié", detail: "Rapproché de la base TMDB" },
+      ],
+      services: [
+        { name: "Netflix", kind: "Abonnement", status: "Disponible" },
+        { name: "Prime Video", kind: "Abonnement", status: "Disponible" },
+        { name: "Canal+", kind: "Location", status: "Location" },
+      ],
+      note: "Exemple d'affichage. Disponibilités réelles fournies par JustWatch.",
     },
   },
   privacy: {
@@ -100,6 +132,7 @@ export const HOME_TEXT = {
       ],
     },
     comingSoon: "Bientôt disponible",
+    reassurance: "Aucune carte bancaire pour commencer. Premium résiliable à tout moment, actif jusqu'à la fin de la période payée.",
   },
   faq: {
     eyebrow: "Questions fréquentes",

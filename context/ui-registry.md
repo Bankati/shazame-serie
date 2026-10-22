@@ -167,6 +167,25 @@ Dernière mise à jour : 21 octobre 2026 (U38)
 
 **Notes de pattern :** champ lien en vedette (icône à gauche), raccourcis en icône + texte dessous (« ou »), comme la référence ; l'identification se fait toujours dans l'application.
 
+### Fonctionnalités illustrées : Features, MockWindow
+
+Fichiers : `src/components/home/features.tsx`, `mock-window.tsx`
+Dernière mise à jour : 22 octobre 2026 (U39)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | section `bg-card` ; fenêtre `bg-card` ; lignes de maquette `border border-border`, ligne finale `bg-brand-subtle` |
+| Bordure | fenêtre `border border-border`, barre de titre `border-b border-border` |
+| Radius | fenêtre `rounded-xl`, lignes `rounded-lg`, pastilles `rounded-sm`, points de fenêtre `rounded-full` |
+| Texte principal | sur-titre `text-xs font-semibold uppercase tracking-widest text-brand-strong` ; titre `font-display text-display font-bold` en deux tons |
+| Texte secondaire | description `text-base md:text-lg text-muted-foreground` ; barre de titre `text-xs text-muted-foreground` |
+| Espacement | sections `gap-16 md:gap-24`, colonnes `md:grid-cols-2 gap-8 md:gap-16` ; fenêtre `p-4 md:p-5` |
+| Hover / focus | none (maquettes non interactives, `aria-hidden`) |
+| Ombre | fenêtre `shadow-lg` |
+| Accent | points de fenêtre `bg-destructive`, `bg-warning`, `bg-success` ; barre de progression `bg-primary` |
+
+**Notes de pattern :** texte et maquette alternent de côté (`md:order-*`) ; maquettes fidèles à nos écrans réels, sans affiche réelle ni logo de marque, avec une mention « Exemple d'affichage ». Étapes : pastille factuelle `rounded-full bg-brand-subtle text-brand-subtle-foreground` en bas de carte.
+
 ### TwoTone (grand titre en deux tons)
 
 Fichier : `src/components/layout/two-tone.tsx`

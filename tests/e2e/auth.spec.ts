@@ -136,7 +136,9 @@ test("inscription → confirmation → déconnexion → connexion, puis lien de 
   // Liste de suivi (U18) : ajout depuis le résultat (IA simulée), page « Ma liste », retrait.
   await page.route("**/api/identify", (route) => route.fulfill({ json: IDENTIFY_RESULT }));
   await page.route("https://image.tmdb.org/**", (route) => route.fulfill({ body: POSTER, contentType: "image/jpeg" }));
-  // Juste après la connexion, la page peut ne pas encore écouter le champ de fichier : on renvoie le clip
+  // L'identification se fait dans l'application depuis U38 (la vitrine n'a qu'un lanceur).
+  await page.goto("/identifier");
+  // Juste après l'arrivée, la page peut ne pas encore écouter le champ de fichier : on renvoie le clip
   // jusqu'à ce que l'extraction démarre (pellicule affichée).
   await expect(async () => {
     await page.locator('input[type="file"]').setInputFiles(CLIP);

@@ -77,7 +77,7 @@ jobs:
           # Lecture de secours des vidéos (U33) : ffmpeg.wasm copié dans public/ffmpeg/ par le postinstall. Sans
           # ces fichiers, le secours échoue pour tout le monde. Versions alignées sur
           # src/client/frames/ffmpeg-source.ts (vérifié par ffmpeg-source.test.ts).
-          for path in ffmpeg/core-0.12.10/ffmpeg-core.wasm ffmpeg/core-0.12.10/ffmpeg-core.js ffmpeg/worker-0.12.15/worker.js; do
+          for path in ffmpeg/core-0.12.10/ffmpeg-core.wasm ffmpeg/core-0.12.10/ffmpeg-core.js ffmpeg/worker-0.12.15/index.js ffmpeg/worker-0.12.15/worker.js; do
             status=$(curl --silent --head --output /dev/null --write-out '%{http_code}' --max-time 20 \
               -H "x-vercel-protection-bypass: $BYPASS_SECRET" "${DEPLOYMENT_URL%/}/$path" || true)
             if [ "$status" != "200" ]; then

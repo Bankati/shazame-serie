@@ -15,7 +15,7 @@ Relevées sur le registre npm le **4 octobre 2026**, révisées en U01 le **7 oc
 
 | Paquet | Version | Rôle |
 | --- | --- | --- |
-| `next` | 16.3.8 | Framework |
+| `next` / `eslint-config-next` | 16.4.2 (installé le 22 octobre 2026 : correctif de sécurité GHSA-2464-fhr4-w9xw, GHSA-673q-mjm6-r5xr, GHSA-p3m5-59mp-jv5r ; 16.3.x non corrigée) | Framework |
 | `react` / `react-dom` | 19.3.0 (installé) | UI |
 | `typescript` | 6.0.3 (installé, AD-21) | Typage (voir note) |
 | `tailwindcss` | 4.3.3 | Styles |
@@ -248,6 +248,7 @@ Plans d'hébergement : **Vercel Pro** obligatoire (le plan Hobby est réservé �
 - Cœur mono-thread (`@ffmpeg/core`, wasm de 32 Mo) : pas besoin de `SharedArrayBuffer` ni des en-têtes COOP/COEP. Servi par le site depuis `public/ffmpeg/core-<version>/` (copie par `scripts/copy-ffmpeg-core.mjs` au `postinstall`, dossier ignoré par git, `Cache-Control: immutable` dans `next.config.ts`).
 - Pièges vérifiés le 20 octobre 2026 :
   - **Turbopack casse le worker empaqueté** : son `import(coreURL)` dynamique devient « Cannot find module as expression is too dynamic ». Passer `classWorkerURL` vers la copie servie telle quelle (`public/ffmpeg/worker-<version>/worker.js`, avec `const.js` et `errors.js`).
+  - **Depuis Next 16.4, Turbopack refuse aussi d'empaqueter la classe** (`new Worker(new URL(classWorkerURL, import.meta.url))` : « Can't resolve (<dynamic> | 'undefined') », le build échoue). Toute la bibliothèque `@ffmpeg/ffmpeg` (`index.js`, `classes.js`, `types.js`, `utils.js`, `worker.js`, `const.js`, `errors.js`) est servie depuis `public/ffmpeg/worker-<version>/` et chargée par `import(/* webpackIgnore: true */ /* turbopackIgnore: true */ url)` ; seuls les types viennent du paquet.
   - **`ffprobe()` renvoie -1 même en cas de succès** (0.12.10) : lire le fichier produit par `-o` au lieu du code de retour.
   - Monter la vidéo en `WORKERFS` (`mount(FFFSType.WORKERFS, { files: [file] }, dir)`, après `createDir`) : lecture par morceaux, pas de copie de 500 Mo en mémoire. Ne pas utiliser `writeFile` pour la vidéo.
   - `-ss t` **avant** `-i` (déplacement rapide sur image clé), `-frames:v 1` ; une commande par image.

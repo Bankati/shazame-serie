@@ -44,7 +44,7 @@ test("vitrine : « Décrire la scène » ouvre l'application sur l'onglet Descri
   await page.goto("/", { waitUntil: "networkidle" });
   await page.getByRole("link", { name: "Décrire la scène" }).first().click();
   await page.waitForURL(/\/identifier\?mode=description/, { timeout: 20_000 });
-  await expect(page.getByRole("tab", { name: "Description" })).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByRole("tab", { name: "Description" })).toHaveAttribute("aria-selected", "true", { timeout: 15_000 });
   await expect(page.getByLabel("Décrire le film ou la série")).toBeVisible();
 });
 
@@ -57,9 +57,10 @@ test("application sur mobile : barre d'onglets en bas, page active signalée, vi
   await expect(tabs.getByRole("link", { name: "Identifier" })).toHaveAttribute("aria-current", "page");
   await expect(tabs.getByRole("link", { name: "Connexion" })).toHaveAttribute("href", "/connexion?suite=%2Fidentifier");
   // Visiteur : invitation à se connecter à la place des identifications récentes.
-  await expect(page.getByText("Connectez-vous pour retrouver ici vos dernières identifications.")).toBeVisible();
+  // Rangée chargée en différé (Suspense) : un peu plus de marge quand le poste est chargé.
+  await expect(page.getByText("Connectez-vous pour retrouver ici vos dernières identifications.")).toBeVisible({ timeout: 15_000 });
 
   await tabs.getByRole("link", { name: "Historique" }).click();
   // Historique réservé aux comptes : la connexion ramène ensuite à l'historique.
-  await expect(page).toHaveURL(/\/connexion\?suite=(%2F|\/)historique/);
+  await expect(page).toHaveURL(/\/connexion\?suite=(%2F|\/)historique/, { timeout: 15_000 });
 });

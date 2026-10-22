@@ -33,6 +33,18 @@ export const TITLE_TEXT = {
     attribution: "Disponibilités fournies par JustWatch.",
     logo: (name: string) => `Logo de ${name}`,
   },
+  // Carte « Détails » de la colonne latérale (U40).
+  details: {
+    title: "Détails",
+    type: "Type",
+    originalTitle: "Titre original",
+    directors: { movie: "Réalisation", tv: "Création" },
+    writers: "Scénario",
+    rating: "Note TMDB",
+    ratingValue: (average: number, votes: number) =>
+      `${average.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} / 10 (${votes.toLocaleString("fr-FR")} votes)`,
+  },
+  genresLabel: "Genres",
   sections: {
     watch: "Où regarder",
     trailer: "Bande-annonce",

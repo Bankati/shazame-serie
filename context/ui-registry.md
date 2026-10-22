@@ -186,6 +186,44 @@ Dernière mise à jour : 22 octobre 2026 (U39)
 
 **Notes de pattern :** texte et maquette alternent de côté (`md:order-*`) ; maquettes fidèles à nos écrans réels, sans affiche réelle ni logo de marque, avec une mention « Exemple d'affichage ». Étapes : pastille factuelle `rounded-full bg-brand-subtle text-brand-subtle-foreground` en bas de carte.
 
+### EmptyState (état vide de l'application)
+
+Fichier : `src/components/layout/empty-state.tsx`
+Dernière mise à jour : 22 octobre 2026 (U40)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | `bg-card` ; pastille d'icône `bg-brand-subtle` |
+| Bordure | `border border-border` |
+| Radius | carte `rounded-xl`, pastille `rounded-full` |
+| Texte principal | `font-display text-xl font-bold text-foreground` |
+| Texte secondaire | `text-sm md:text-base text-muted-foreground` |
+| Espacement | `px-6 py-10 md:py-14 gap-4` ; pastille `size-14`, icône `size-7` |
+| Hover / focus | bouton principal shadcn `h-11 hover:bg-primary-hover` |
+| Ombre | none |
+| Accent | icône `text-brand-strong` |
+
+**Notes de pattern :** une seule action, vers l'identification en général. Utilisé par l'historique et la liste.
+
+### Fiche titre en deux colonnes (TitleView)
+
+Fichier : `src/components/title/title-view.tsx`
+Dernière mise à jour : 22 octobre 2026 (U40)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | cartes latérales `bg-card` |
+| Bordure | cartes `border border-border` |
+| Radius | cartes `rounded-xl` ; genres `rounded-sm border border-border` |
+| Texte principal | sections `font-display text-display font-bold` ; cartes `font-display text-xl font-bold` ; valeurs `text-foreground` |
+| Texte secondaire | libellés `dt` et genres `text-muted-foreground`, `text-sm` |
+| Espacement | grille `lg:grid-cols-3 gap-10` ; cartes `p-5 gap-4` ; lignes `gap-3` |
+| Hover / focus | celui des composants internes |
+| Ombre | none |
+| Accent | none |
+
+**Notes de pattern :** colonne latérale `lg:sticky lg:top-24 lg:self-start`, placée en premier dans le document (ordre mobile de la fiche) et à droite sur ordinateur (`lg:order-2`).
+
 ### TwoTone (grand titre en deux tons)
 
 Fichier : `src/components/layout/two-tone.tsx`

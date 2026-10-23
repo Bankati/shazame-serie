@@ -17,7 +17,7 @@
 | IA | OpenAI (modèle de vision) derrière l'interface `VisionProvider` | Identification à partir des images |
 | Métadonnées | TMDB API v3 | Fiches, affiches, distribution, similaires, bandes-annonces |
 | Où regarder | TMDB `watch/providers` (données JustWatch) **(proposé)**, Watchmode en secours | Disponibilité par pays |
-| Paiement | Prestataire derrière l'interface `BillingProvider` **(à décider : Stripe si l'entité est éligible, sinon Paddle ou Lemon Squeezy)** | Abonnements, page de paiement hébergée, factures |
+| Paiement | Stripe (AD-50) derrière l'interface `BillingProvider` : Checkout hébergé, portail client, webhooks signés | Abonnements, page de paiement hébergée, factures |
 | Emails | Supabase Auth (emails d'authentification via SMTP Resend) + Resend / React Email (autres emails) | Emails transactionnels en français |
 | Observabilité | PostHog région UE, sans cookie (suivi des erreurs + analytique, AD-28), sonde externe de disponibilité | Alertes et mesures |
 | Hébergement | Vercel **plan Pro** (le plan Hobby interdit l'usage commercial) | Déploiement continu, crons |
@@ -158,7 +158,7 @@ Signalement : les images ne sont jamais écrites sur disque ou en stockage penda
 | `VisionProvider.identify(frames, ctx) → Result<VisionResult>` | `OpenAIVisionProvider` | Changer de fournisseur (Gemini, Claude, DeepCine en V2) sans toucher au pipeline |
 | `CatalogProvider` | `TmdbCatalog` | Plan B si la licence TMDB n'est pas obtenue |
 | `WatchProvider` | `TmdbWatchProviders` | Basculer vers Watchmode si nécessaire |
-| `BillingProvider` (createCheckout, createPortalSession, verifyAndParseWebhook) | Selon D1 | Les statuts propres au prestataire sont convertis en statut normalisé à la frontière |
+| `BillingProvider` (createCheckout, createPortalSession, parseWebhook, getSubscription, listInvoices) | Stripe (AD-50) | Les statuts propres au prestataire sont convertis en statut normalisé à la frontière |
 | `Mailer` | `ResendMailer` | Changer de fournisseur d'emails |
 
 Chaque appel externe : délai maximal, journalisation sans donnée personnelle, comportement de secours défini.
@@ -166,7 +166,7 @@ Chaque appel externe : délai maximal, journalisation sans donnée personnelle, 
 ## Environnements et secrets
 
 - `development` (local, Supabase dans Docker), `preview` (préproduction), `production`. **Un seul projet Supabase en ligne** (`shazam_serie`) sert à la préproduction et à la production (AD-27) : la préproduction travaille sur les données réelles, et seules les migrations fusionnées dans `main` y sont appliquées. Plan payant avant le lancement (le plan gratuit met les projets en pause après une période d'inactivité). Fonctions Vercel en région `dub1` (Dublin, `vercel.json`), à côté de la base Supabase `eu-west-1`. Chaque requête applicative passe par `withQueryTimeout` (délai de 5 s).
-- Variables serveur : `DATABASE_URL`, `SUPABASE_SECRET_KEY` (clé « secret » des nouvelles clés Supabase, remplace `service_role`), `OPENAI_API_KEY`, `OPENAI_VISION_MODEL`, `TMDB_API_TOKEN`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `BILLING_*`, `RESEND_API_KEY`, `CRON_SECRET`, `VISITOR_COOKIE_SECRET`, `ADMIN_ALERT_EMAIL`.
+- Variables serveur : `DATABASE_URL`, `SUPABASE_SECRET_KEY` (clé « secret » des nouvelles clés Supabase, remplace `service_role`), `OPENAI_API_KEY`, `OPENAI_VISION_MODEL`, `TMDB_API_TOKEN`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_YEARLY` (facultatifs : sans eux, pas de paiement), `RESEND_API_KEY`, `CRON_SECRET`, `VISITOR_COOKIE_SECRET`, `ADMIN_ALERT_EMAIL`.
 - Variables publiques (`NEXT_PUBLIC_*`) : URL du site, `NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (clé « publishable », ex-« anon »), `NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN` (clé de projet PostHog, publique par nature) et `NEXT_PUBLIC_POSTHOG_HOST`. Rien d'autre.
 - Fiches titre : pages ISR (générées à la première visite, revalidées chaque jour), sans Redis (`getStaticPageCatalog`, voir `library-docs.md`). Adresse publique : `NEXT_PUBLIC_SITE_URL` (domaine définitif, D8), sinon l'adresse de production Vercel.
 - `src/server/env.ts` valide les variables au démarrage : l'application refuse de démarrer si l'une manque. Les variables sont ajoutées au fil des unités ; celles des services externes sont obligatoires quand `VERCEL_ENV` vaut `production`, facultatives en preview, en local et en CI (AD-28 ; chaque unité qui ajoute une variable précise si la preview l'exige). Liste à jour : `.env.example`.

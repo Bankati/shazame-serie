@@ -8,12 +8,6 @@ import { HOME_TEXT } from "@/content/fr/home";
 import { PRICING_TEXT } from "@/content/fr/pricing";
 import { cn } from "@/lib/utils";
 
-/**
- * Paiement Premium ouvert (U22). Tant que le prestataire n'est pas choisi (D1), le bouton reste désactivé et
- * annonce « Bientôt disponible » ; aucune page ne simule un paiement.
- */
-export const PREMIUM_CHECKOUT_OPEN = false;
-
 type Plan = {
   name: string;
   price: string;
@@ -24,8 +18,15 @@ type Plan = {
 };
 
 // Les deux offres (U21) : utilisées par l'aperçu de la vitrine et par la page /tarifs. Gratuit : on commence tout
-// de suite ; Premium : désactivé jusqu'à l'ouverture du paiement.
-export function PricingPlans({ headingLevel = "h3" }: { headingLevel?: "h2" | "h3" }) {
+// de suite. Premium (U22) : `checkout` est la Server Action de paiement, fournie seulement quand Stripe est
+// configuré ; sans elle, le bouton reste désactivé (« Bientôt disponible ») et rien ne simule un paiement.
+export function PricingPlans({
+  headingLevel = "h3",
+  checkout,
+}: {
+  headingLevel?: "h2" | "h3";
+  checkout?: (form: FormData) => Promise<never>;
+}) {
   const { pricing } = HOME_TEXT;
   const plans: Plan[] = [{ ...pricing.free }, { ...pricing.premium, highlighted: true }];
   const Heading = headingLevel;
@@ -58,12 +59,25 @@ export function PricingPlans({ headingLevel = "h3" }: { headingLevel?: "h2" | "h
             ))}
           </ul>
           {plan.highlighted ? (
-            <div className="mt-auto flex flex-col gap-2">
-              <Button disabled={!PREMIUM_CHECKOUT_OPEN} className="h-11 w-full text-base">
-                {PRICING_TEXT.premiumSoon}
-              </Button>
-              <p className="text-center text-sm text-muted-foreground">{PRICING_TEXT.premiumSoonNote}</p>
-            </div>
+            checkout ? (
+              // Un seul formulaire, deux boutons : le bouton choisi envoie la formule (mensuelle ou annuelle).
+              <form action={checkout} className="mt-auto flex flex-col gap-2">
+                <Button type="submit" name="plan" value="monthly" className="h-11 w-full text-base hover:bg-primary-hover">
+                  {PRICING_TEXT.subscribeMonthly}
+                </Button>
+                <Button type="submit" name="plan" value="yearly" variant="outline" className="h-11 w-full text-base">
+                  {PRICING_TEXT.subscribeYearly}
+                </Button>
+                <p className="text-center text-sm text-muted-foreground">{PRICING_TEXT.checkoutNote}</p>
+              </form>
+            ) : (
+              <div className="mt-auto flex flex-col gap-2">
+                <Button disabled className="h-11 w-full text-base">
+                  {PRICING_TEXT.premiumSoon}
+                </Button>
+                <p className="text-center text-sm text-muted-foreground">{PRICING_TEXT.premiumSoonNote}</p>
+              </div>
+            )
           ) : (
             <Button asChild variant="outline" className="mt-auto h-11 w-full text-base">
               <Link href={IDENTIFY_PATH}>{PRICING_TEXT.freeCta}</Link>

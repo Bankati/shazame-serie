@@ -12,7 +12,10 @@ import { Reveal } from "@/components/showcase/reveal";
 import { ShowcaseBoundary } from "@/components/showcase/showcase-boundary";
 import { SHOWCASE_TEXT } from "@/content/fr/showcase";
 import { loadHomeShowcase } from "@/server/catalog/home-showcase";
+import { isBillingConfigured } from "@/server/billing/stripe/stripe-billing";
 import { getStaticPageCatalog, isCatalogConfigured } from "@/server/catalog/tmdb/tmdb-catalog";
+
+import { checkoutAction } from "./tarifs/actions";
 
 // Vitrine (U38, AD-46 ; refonte U43, AD-48) : hero avec le lanceur d'identification et le téléphone animé, puis
 // « Comment ça marche » qui rejoue une identification au défilement, les rangées d'affiches TMDB, les genres et
@@ -55,7 +58,7 @@ export default async function Home() {
         <Privacy />
       </Reveal>
       <Reveal>
-        <PricingTeaser />
+        <PricingTeaser checkout={isBillingConfigured() ? checkoutAction : undefined} />
       </Reveal>
       <Reveal>
         <Faq />

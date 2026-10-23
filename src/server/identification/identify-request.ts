@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 
 import { getGuardedVisionProviderOrNull } from "@/server/ai/vision";
 import { getCurrentAccount } from "@/server/auth/guards";
+import { getEntitlement } from "@/server/billing/entitlement";
 import { newVisitorId, signVisitorId, VISITOR_COOKIE, VISITOR_COOKIE_OPTIONS, verifyVisitorCookie } from "@/server/auth/visitor";
 import { getRedis } from "@/server/cache/redis";
 import { getCatalog } from "@/server/catalog/tmdb/tmdb-catalog";
@@ -61,13 +62,14 @@ function getQuotaService(): QuotaService {
 type Requester = { identity: QuotaIdentity; suspended: boolean };
 
 /**
- * Compte connecté (quota gratuit ; Premium en U22), sinon visiteur du cookie signé, créé s'il est absent ou
- * invalide. Un email non confirmé n'ouvre pas de session : il reste visiteur (Q14).
+ * Compte connecté (quota gratuit, ou Premium selon l'abonnement relu en base : U22), sinon visiteur du cookie
+ * signé, créé s'il est absent ou invalide. Un email non confirmé n'ouvre pas de session : il reste visiteur (Q14).
  */
 async function currentRequester(): Promise<Requester> {
   const account = await getCurrentAccount();
   if (account) {
-    return { identity: { kind: "user", id: account.id, plan: "free" }, suspended: account.status === "suspended" };
+    const plan = await getEntitlement(account.id);
+    return { identity: { kind: "user", id: account.id, plan }, suspended: account.status === "suspended" };
   }
   return { identity: await visitorIdentity(), suspended: false };
 }

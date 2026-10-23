@@ -1,4 +1,4 @@
-import { Check, Minus, ShieldCheck } from "lucide-react";
+import { Check, CircleAlert, Minus, ShieldCheck } from "lucide-react";
 import type { Metadata } from "next";
 
 import { TwoTone } from "@/components/layout/two-tone";
@@ -6,14 +6,22 @@ import { PricingPlans } from "@/components/pricing/pricing-plans";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { HOME_TEXT } from "@/content/fr/home";
 import { PRICING_TEXT } from "@/content/fr/pricing";
+import { isBillingConfigured } from "@/server/billing/stripe/stripe-billing";
+
+import { checkoutAction } from "./actions";
 
 export const metadata: Metadata = { title: PRICING_TEXT.metaTitle, description: PRICING_TEXT.metaDescription };
 
+const NOTICES = ["indisponible", "refuse", "trop"] as const;
+
 // Page des tarifs (U21, CDC 12.8) : les deux offres, la comparaison avec l'usage sans compte et les questions
-// sur le décompte et la résiliation. Statique. Le Premium reste « bientôt disponible » jusqu'au paiement (U22, D1).
-export default function PricingPage() {
+// sur le décompte et la résiliation. Abonnement Premium par Stripe (U22) dès que le paiement est configuré ;
+// `?paiement=` : motif d'un échec du paiement, renvoyé par la Server Action.
+export default async function PricingPage({ searchParams }: PageProps<"/tarifs">) {
   const text = PRICING_TEXT;
   const { comparison } = text;
+  const { paiement } = await searchParams;
+  const notice = NOTICES.find((code) => code === paiement);
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-12 px-4 py-10 sm:px-6 md:py-16">
@@ -24,7 +32,14 @@ export default function PricingPage() {
         <p className="text-base text-muted-foreground md:text-lg">{text.subtitle}</p>
       </div>
 
-      <PricingPlans headingLevel="h2" />
+      {notice ? (
+        <p role="alert" className="flex items-start gap-2 rounded-lg border border-border bg-card p-4 text-sm font-medium text-destructive">
+          <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+          {text.checkoutNotice[notice]}
+        </p>
+      ) : null}
+
+      <PricingPlans headingLevel="h2" checkout={isBillingConfigured() ? checkoutAction : undefined} />
 
       <p className="flex items-start justify-center gap-2 text-center text-sm text-muted-foreground">
         <ShieldCheck className="mt-0.5 size-4 shrink-0 text-brand-strong" aria-hidden="true" />

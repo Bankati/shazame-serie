@@ -14,7 +14,7 @@ Pas de code. Chaque décision est consignée dans `progress-tracker.md`.
 
 | ID | Décision | Bloque |
 | --- | --- | --- |
-| D1 | Entité juridique qui encaisse + prestataire de paiement (Stripe / Paddle / Lemon Squeezy) | U22 |
+| D1 | Entité juridique qui encaisse + prestataire de paiement — **prestataire : Stripe (AD-50, 23 octobre 2026)** ; entité : Q1 | U22 (mise en production) |
 | D2 | Demande de licence commerciale TMDB envoyée ; plan B noté | U08, U15 |
 | D3 | Source « où regarder » : TMDB watch/providers (attribution JustWatch) ou Watchmode | U16 |
 | D4 | Compte OpenAI, modèle de vision retenu, accord de traitement des données (transfert hors UE) | U07 |

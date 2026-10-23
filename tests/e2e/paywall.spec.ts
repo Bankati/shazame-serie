@@ -88,3 +88,14 @@ test("Premium à sa limite : prévenu, sans invitation à payer", async ({ page 
   await expect(paywall).toContainText("jusqu'à 100 identifications par jour");
   await expect(paywall.getByRole("link", { name: /Premium|tarifs|compte/ })).toHaveCount(0);
 });
+
+test("abonnement (U22) : page réservée aux comptes ; sans Stripe configuré, Premium reste annoncé", async ({ page }) => {
+  await page.route(/posthog/, (route) => route.abort());
+  await page.goto("/compte/abonnement");
+  await page.waitForURL(/\/connexion\?suite=%2Fcompte%2Fabonnement/, { timeout: 15_000 });
+
+  // Environnement de test sans clés Stripe : aucun bouton de paiement, aucune simulation.
+  await page.goto("/tarifs");
+  await expect(page.getByRole("button", { name: "Bientôt disponible" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: /S'abonner/ })).toHaveCount(0);
+});

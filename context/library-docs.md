@@ -204,6 +204,14 @@ Plans d'hébergement : **Vercel Pro** obligatoire (le plan Hobby est réservé �
 - Installé en U11 : `@upstash/ratelimit` 2.2.0 (`src/server/http/rate-limit.ts` : `slidingWindow(10, "1 m")` et `fixedWindow(60, "1 d")` par IP, `analytics: false`, `timeout`, `await result.pending`). Quota : script Lua via `redis.eval(script, [clé], [args])` (`src/server/quota/quota-store.ts`) ; vérifié en direct (`npm run test:quota`) : 20 réservations simultanées pour une limite de 3 → exactement 3.
 - Quota : `INCR` + `EXPIREAT` sur la clé du jour (minuit Europe/Paris), réservation puis confirmation/libération (`DECR`) pour éviter les dépassements en cas de requêtes simultanées.
 
+## Stripe (paiement, U22, AD-50)
+
+- Installé le 23 octobre 2026 : `stripe` **22.6.2** (septembre 2026 ; la 23.0.0 d'octobre venait de recevoir un correctif, non retenue). Version d'API figée par le SDK : **2026-08-26.dahlia** (`node_modules/stripe/cjs/apiVersion.js`).
+- API vérifiées dans les types installés : `new Stripe(clé, { timeout, maxNetworkRetries })` (import par défaut), `checkout.sessions.create` (`mode: "subscription"`, `line_items`, `client_reference_id`, `subscription_data.metadata`, `customer` ou `customer_email`, `locale: "fr"`, `success_url`, `cancel_url`), `billingPortal.sessions.create({ customer, return_url })`, `subscriptions.retrieve`, `invoices.list({ customer, limit })`, `webhooks.constructEvent(corpsBrut, signature, secret)`, `webhooks.generateTestHeaderString` (tests).
+- **Piège** : depuis l'API 2025-03-31, `current_period_end` n'est plus sur l'abonnement mais sur chaque ligne (`items.data[].current_period_end`).
+- Statuts : `active`, `trialing` → actif ; `past_due`, `unpaid`, `paused` → retard ; `canceled` → résilié ; `incomplete_expired` → expiré ; `incomplete` → rien n'est accordé.
+- Webhook : corps brut (`await request.text()`), en-tête `stripe-signature`, route exclue du proxy ; l'ordre des événements n'est pas garanti, d'où la relecture de l'abonnement à chaque événement. Événements à cocher dans Stripe : `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`. En local : `stripe listen --forward-to localhost:3000/api/billing/webhook`.
+
 ## Paiement (selon D1)
 
 - Stripe Billing : https://docs.stripe.com/billing/subscriptions/overview — Checkout : https://docs.stripe.com/payments/checkout — Webhooks : https://docs.stripe.com/webhooks — Portail client : https://docs.stripe.com/customer-management — pays pris en charge : https://stripe.com/global

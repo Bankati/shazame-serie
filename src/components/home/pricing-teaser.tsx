@@ -8,14 +8,14 @@ import { PRICING_TEXT } from "@/content/fr/pricing";
 import { SectionHeading } from "./section-heading";
 
 // Aperçu des tarifs sur la vitrine (U39) ; le détail et la comparaison sont sur /tarifs (U21).
-export function PricingTeaser() {
+export function PricingTeaser({ checkout }: { checkout?: (form: FormData) => Promise<never> }) {
   const { pricing } = HOME_TEXT;
 
   return (
     <section id="tarifs" aria-labelledby="pricing-title" className="scroll-mt-16 bg-card px-4 py-16 sm:px-6 md:py-24">
       <div className="mx-auto flex max-w-4xl flex-col gap-12">
         <SectionHeading id="pricing-title" eyebrow={pricing.eyebrow} title={pricing.title} highlight={pricing.highlight} subtitle={pricing.subtitle} />
-        <PricingPlans />
+        <PricingPlans checkout={checkout} />
         <div className="flex flex-col items-center gap-2 text-center text-sm text-muted-foreground">
           {/* Réassurance (U39) : seulement ce qui est vrai aujourd'hui (paiement pas encore ouvert, D1). */}
           <p className="flex items-start gap-2">

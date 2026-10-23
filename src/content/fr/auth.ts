@@ -118,6 +118,7 @@ export const AUTH_TEXT = {
     history: "Historique",
     watchlist: "Ma liste",
     profile: "Mon compte",
+    subscription: "Mon abonnement",
     fallbackName: "Mon compte",
   },
 } as const;

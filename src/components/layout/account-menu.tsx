@@ -1,6 +1,6 @@
 "use client";
 
-import { History, ListVideo, LogOut, UserRound } from "lucide-react";
+import { Crown, History, ListVideo, LogOut, UserRound } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { AUTH_TEXT } from "@/content/fr/auth";
+import { SUBSCRIPTION_PATH } from "@/shared/billing";
 
 /** Déconnexion : formulaire HTML vers POST /auth/deconnexion, puis rechargement complet de l'accueil. */
 export const SIGN_OUT_PATH = "/auth/deconnexion";
@@ -60,6 +61,12 @@ export function AccountMenu() {
           <Link href={ACCOUNT_PATH}>
             <UserRound className="size-4" aria-hidden="true" />
             {text.profile}
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild className="min-h-11 gap-2 text-sm">
+          <Link href={SUBSCRIPTION_PATH}>
+            <Crown className="size-4" aria-hidden="true" />
+            {text.subscription}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild className="min-h-11 gap-2 text-sm">

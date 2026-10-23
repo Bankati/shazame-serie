@@ -91,6 +91,25 @@ Fichier : `src/components/home/section-heading.tsx`
 | Accent | sur-titre `text-sm font-semibold text-brand-strong` (fond clair) ou `text-brand` (fond sombre) |
 | Espacement | `gap-3`, `max-w-2xl` |
 
+### Page Mon abonnement (U22)
+
+Fichiers : `src/app/(app)/compte/abonnement/page.tsx`, `src/components/account/activation-watcher.tsx`
+Dernière mise à jour : 23 octobre 2026 (U22)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | sections `bg-card` ; messages d'activation `bg-brand-subtle` |
+| Bordure | `border border-border` |
+| Radius | `rounded-lg` (sections, messages) ; pastille `rounded-full` |
+| Texte principal | `text-lg font-semibold text-foreground` |
+| Texte secondaire | `text-sm text-muted-foreground` ; retard de paiement `text-warning` ; erreur `text-destructive` |
+| Espacement | `p-4 md:p-6 gap-4` ; factures `divide-y divide-border py-3` |
+| Hover / focus | boutons shadcn `h-11` ; lien facture `text-link hover:underline`, `min-h-11` |
+| Ombre | none |
+| Accent | couronne `text-brand-strong` sur `bg-brand-subtle` |
+
+**Notes de pattern :** une seule action principale : « Gérer mon abonnement » (portail Stripe) pour un abonné, « Découvrir Premium » sinon. Lien de facture externe : nouvel onglet annoncé dans le libellé. Offres de `/tarifs` : deux boutons dans un seul formulaire (`name="plan"`), le mensuel en principal.
+
 ### Paywall et PricingPlans (U21)
 
 Fichiers : `src/components/pricing/paywall.tsx`, `pricing-plans.tsx` ; page `src/app/(vitrine)/tarifs/page.tsx`

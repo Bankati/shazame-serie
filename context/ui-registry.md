@@ -186,6 +186,44 @@ Dernière mise à jour : 22 octobre 2026 (U39)
 
 **Notes de pattern :** texte et maquette alternent de côté (`md:order-*`) ; maquettes fidèles à nos écrans réels, sans affiche réelle ni logo de marque, avec une mention « Exemple d'affichage ». Étapes : pastille factuelle `rounded-full bg-brand-subtle text-brand-subtle-foreground` en bas de carte.
 
+### ReleaseCard (carte du calendrier)
+
+Fichier : `src/components/calendar/release-card.tsx`
+Dernière mise à jour : 23 octobre 2026 (U42)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | `bg-card` ; affiche `bg-muted` ; pastille de type `bg-muted` |
+| Bordure | `border border-border` |
+| Radius | carte `rounded-lg`, affiche `rounded-poster`, pastille `rounded-sm` |
+| Texte principal | `font-display text-lg font-bold text-foreground` |
+| Texte secondaire | résumé `text-sm text-muted-foreground line-clamp-3` ; date `text-sm font-medium text-brand-strong` |
+| Espacement | `p-3 md:p-4 gap-4` ; affiche `w-24 md:w-28` |
+| Hover / focus | titre `hover:text-link` ; liens `focus-visible:outline-2 outline-ring` ; zones `h-11` |
+| Ombre | none |
+| Accent | date et icône `text-brand-strong` ; « Voir la fiche » `text-link` |
+
+**Notes de pattern :** affiche et titre mènent à la fiche (l'affiche est retirée de l'ordre de tabulation, doublon). Onglets de la page : liens segmentés `rounded-lg border-border bg-card p-1`, actif `bg-primary text-primary-foreground` comme les onglets d'identification. Intertitres de mois `font-display text-xl font-bold`.
+
+### ReleaseCard (carte du calendrier)
+
+Fichier : `src/components/calendar/release-card.tsx`
+Dernière mise à jour : 23 octobre 2026 (U42)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | `bg-card` ; affiche `bg-muted` ; pastille de type `bg-muted` |
+| Bordure | `border border-border` |
+| Radius | carte `rounded-lg`, affiche `rounded-poster`, pastille `rounded-sm` |
+| Texte principal | `font-display text-lg font-bold text-foreground` |
+| Texte secondaire | résumé `text-sm text-muted-foreground line-clamp-3` ; date `text-sm font-medium text-brand-strong` |
+| Espacement | `p-3 md:p-4 gap-4` ; affiche `w-24 md:w-28` |
+| Hover / focus | titre `hover:text-link` ; liens `focus-visible:outline-2 outline-ring` ; zones `h-11` |
+| Ombre | none |
+| Accent | date et icône `text-brand-strong` ; « Voir la fiche » `text-link` |
+
+**Notes de pattern :** affiche et titre mènent à la fiche (l'affiche est retirée de l'ordre de tabulation, doublon). Onglets de la page : liens segmentés `rounded-lg border-border bg-card p-1`, actif `bg-primary text-primary-foreground` comme les onglets d'identification. Intertitres de mois `font-display text-xl font-bold`.
+
 ### EmptyState (état vide de l'application)
 
 Fichier : `src/components/layout/empty-state.tsx`

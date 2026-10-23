@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 
 import { ACCOUNT_NAV, APP_NAV, isActive } from "./app-nav";
 
-// Barre d'onglets du bas (U38, AD-46), mobile seulement : Identifier, Historique, Ma liste, Compte (ou Connexion
+// Barre d'onglets du bas (U38, AD-46), mobile seulement : Identifier, Calendrier, Historique, Ma liste, Compte (ou Connexion
 // pour un visiteur). Zones tactiles de 56 px de haut ; marge du bas pour la barre système des iPhone.
 export function AppTabBar() {
   const pathname = usePathname();
@@ -28,7 +28,7 @@ export function AppTabBar() {
       // Barre système des iPhone (encoche du bas) : valeur fournie par le navigateur, hors échelle d'espacement.
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      <ul className="grid grid-cols-4">
+      <ul className="grid grid-cols-5">
         {[...APP_NAV, last].map(({ href, label, icon: Icon }) => {
           const active = isActive(pathname, href.split("?")[0] ?? href);
           return (

@@ -56,6 +56,7 @@ function setup(
     getTrending: async () => [],
     getTopRatedMovies: async () => [],
     getGenres: async () => [],
+    getReleases: async () => [],
   };
   const deps: IdentifyDeps = {
     quota,

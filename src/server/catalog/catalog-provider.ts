@@ -100,7 +100,14 @@ export interface CatalogProvider {
   /** Films les mieux notés (accueil). */
   getTopRatedMovies(): Promise<ShowcaseTitle[]>;
   getGenres(mediaType: MediaType): Promise<CatalogGenre[]>;
+  /** Calendrier (U42) : films à venir en France ou séries en cours de diffusion, avec leur date. */
+  getReleases(kind: ReleaseKind): Promise<ReleaseTitle[]>;
 }
+
+export type ReleaseKind = "upcoming_movies" | "airing_series";
+
+/** Titre du calendrier : sortie en salle (film) ou première diffusion (série), date complète AAAA-MM-JJ. */
+export type ReleaseTitle = ShowcaseTitle & { releaseDate: string | null };
 
 /** Échec du catalogue (indisponible, réponse invalide) : jamais le détail technique côté utilisateur. */
 export class CatalogError extends Error {

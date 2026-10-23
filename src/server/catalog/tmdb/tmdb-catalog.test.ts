@@ -66,3 +66,78 @@ describe("TmdbCatalog.getTitleDetails", () => {
     await expect(new TmdbCatalog(invalid).getTitleDetails(1, "tv")).rejects.toMatchObject({ reason: "invalid_response" });
   });
 });
+
+describe("TmdbCatalog.getReleases (U42)", () => {
+  const UPCOMING = {
+    results: [
+      {
+        id: 10,
+        title: "Plus tard",
+        release_date: "2026-12-18",
+        overview: "",
+        poster_path: "/p.jpg",
+        vote_average: 0,
+        genre_ids: [],
+      },
+      {
+        id: 11,
+        title: "Bientôt",
+        release_date: "2026-11-04",
+        overview: "",
+        poster_path: null,
+        vote_average: 0,
+        genre_ids: [],
+      },
+      {
+        id: 12,
+        title: "Date inconnue",
+        release_date: "",
+        overview: "",
+        poster_path: null,
+        vote_average: 0,
+        genre_ids: [],
+      },
+    ],
+  };
+
+  function recordingGet(body: unknown) {
+    const requests: Parameters<TmdbGet>[0][] = [];
+    const get = (async (request, schema) => {
+      requests.push(request);
+      return schema.parse(body);
+    }) as TmdbGet;
+    return { get, requests };
+  }
+
+  it("films à venir : région France, dates complètes, triés par date (inconnues à la fin)", async () => {
+    const { get, requests } = recordingGet(UPCOMING);
+    const releases = await new TmdbCatalog(get).getReleases("upcoming_movies");
+    expect(requests[0]).toMatchObject({ path: "/movie/upcoming", params: { region: "FR", language: "fr-FR" } });
+    expect(releases.map((release) => [release.title, release.releaseDate, release.mediaType])).toEqual([
+      ["Bientôt", "2026-11-04", "movie"],
+      ["Plus tard", "2026-12-18", "movie"],
+      ["Date inconnue", null, "movie"],
+    ]);
+  });
+
+  it("séries en diffusion : date de première diffusion, type série", async () => {
+    const { get, requests } = recordingGet({
+      results: [
+        {
+          id: 20,
+          name: "Série C",
+          first_air_date: "2024-03-01",
+          overview: "",
+          poster_path: null,
+          vote_average: 7,
+          genre_ids: [],
+        },
+      ],
+    });
+    const releases = await new TmdbCatalog(get).getReleases("airing_series");
+    expect(requests[0]).toMatchObject({ path: "/tv/on_the_air" });
+    expect(releases).toEqual([
+      expect.objectContaining({ title: "Série C", mediaType: "tv", releaseDate: "2024-03-01" }),
+    ]);
+  });
+});

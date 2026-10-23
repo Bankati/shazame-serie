@@ -21,6 +21,7 @@ export const LAYOUT_TEXT = {
     label: "Navigation de l'application",
     tabsLabel: "Navigation principale",
     identify: "Identifier",
+    calendar: "Calendrier",
     history: "Historique",
     watchlist: "Ma liste",
     account: "Compte",

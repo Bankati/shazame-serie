@@ -75,11 +75,26 @@ const TITLE_PAGE = {
 const ROUTES = {
   "/3/movie/9001": TITLE_PAGE,
   "/3/movie/9001/watch/providers": { id: 9001, results: {} },
+  // Fiche ouverte depuis le calendrier (U42).
+  "/3/movie/9302": { ...TITLE_PAGE, id: 9302, title: "Nuit Polaire", original_title: "Polar Night", release_date: "2026-11-04", poster_path: "/affiche-9302.jpg", tagline: null },
+  "/3/movie/9302/watch/providers": { id: 9302, results: {} },
   "/health": { ok: true },
   "/3/trending/movie/week": { page: 1, results: MOVIES },
   "/3/trending/tv/week": { page: 1, results: SHOWS },
   "/3/movie/top_rated": { page: 1, results: TOP_RATED },
   "/3/genre/movie/list": { genres: GENRES },
+  // Calendrier (U42) : sorties à venir (dates volontairement dans le désordre) et séries en diffusion.
+  "/3/movie/upcoming": {
+    page: 1,
+    results: [
+      { id: 9301, title: "Le Phare Lointain", release_date: "2026-12-18", overview: "Synopsis de test.", poster_path: "/affiche-9301.jpg", vote_average: 0, genre_ids: [18] },
+      { id: 9302, title: "Nuit Polaire", release_date: "2026-11-04", overview: "Synopsis de test.", poster_path: "/affiche-9302.jpg", vote_average: 0, genre_ids: [878] },
+    ],
+  },
+  "/3/tv/on_the_air": {
+    page: 1,
+    results: [{ id: 9401, name: "Les Veilleurs du Quai", first_air_date: "2026-09-01", overview: "Synopsis de test.", poster_path: "/affiche-9401.jpg", vote_average: 7.1, genre_ids: [80] }],
+  },
 };
 
 export function startTmdbMock(port = TMDB_MOCK_PORT) {

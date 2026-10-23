@@ -1,0 +1,7 @@
+{
+  "clips": [
+    { "file": "matrix-toit.mp4", "tmdbId": 603, "mediaType": "movie", "difficulty": "facile", "note": "scène célèbre, image nette" },
+    { "file": "casa-de-papel-masques.mp4", "tmdbId": 71446, "mediaType": "tv", "difficulty": "moyen", "note": "filmé à l'écran avec un téléphone" },
+    { "file": "film-rare-dialogue.mov", "tmdbId": 77338, "mediaType": "movie", "difficulty": "difficile", "startS": 95, "note": "vidéo longue : passage choisi à 1 min 35" }
+  ]
+}

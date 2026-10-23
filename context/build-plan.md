@@ -268,6 +268,34 @@ Refonte inspirée d'un site de référence analysé le 21 octobre 2026 (analyse 
 
 ---
 
+## Sprint 3 quater — Identification v2 (demande du fondateur, 23 octobre 2026)
+
+Constat du fondateur : l'identification d'une vidéo n'est pas assez fiable. Règle (AD-52) : chaque technique est mesurée par l'eval (U13) et gardée seulement si elle améliore « bon titre en premier » sans augmenter « mauvais titre affiché ». La vidéo ne quitte jamais le navigateur ; seul un extrait audio est permis (AD-51).
+
+### U45 — Dialogues : extrait audio et transcription
+- **Objectif** : se servir de ce qui est dit dans l'extrait.
+- **Périmètre** : le navigateur extrait jusqu'à 30 s d'audio du passage analysé (mono, compressé) et l'envoie avec les images ; transcription par la couche `server/ai` (garde de dépense, coût enregistré) ; texte transmis au modèle avec les images (répliques, noms), puis supprimé ; aucun stockage ni journal du son ou du texte ; vidéo sans son : comportement actuel. AD-51.
+- **Fin** : eval avant / après sur le jeu complet ; aucune trace audio en base ni dans les journaux (test).
+- **Dépend de** : U13, D5.
+
+### U46 — Meilleur choix des images
+- **Objectif** : envoyer les images qui portent le plus d'indices.
+- **Périmètre** : détection des changements de plan dans le navigateur (différence de dHash), une image nette par plan, jusqu'à 8 candidates ; texte à l'écran (générique, incrustations, pseudonymes) signalé au modèle ; recadrage des bandes noires et des filigranes fixes testé en variantes.
+- **Fin** : eval avant / après.
+- **Dépend de** : U13.
+
+### U47 — Reconnaissance musicale
+- **Objectif** : reconnaître la musique de l'extrait (bande originale), puis les titres qui l'utilisent.
+- **Périmètre** : service tiers de reconnaissance musicale (à choisir et chiffrer : décision du fondateur), sur l'extrait audio d'U45 ; la musique devient un indice, jamais une preuve seule.
+- **Fin** : eval avant / après, coût par identification.
+- **Dépend de** : U45.
+
+### U48 — Index des images publiques (TMDB)
+- **Objectif** : comparer les images de l'extrait à des images de référence légales.
+- **Périmètre** : vecteurs d'images (type SigLIP ou SSCD) des images publiques TMDB (affiches, images de fond, photos de tournage) des titres les plus populaires, stockés dans pgvector ; recherche des plus proches, proposés au modèle comme candidats puis vérifiés. Dépend de la licence TMDB (Q2) et d'un service de calcul des vecteurs (à chiffrer).
+- **Fin** : eval avant / après ; coût et temps de réponse dans le budget.
+- **Dépend de** : U13, Q2.
+
 ## Sprint 4 — Pilotage, conformité, lancement (13 au 31 décembre)
 
 ### U25 — Back-office : tableau de bord

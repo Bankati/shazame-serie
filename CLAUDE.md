@@ -41,7 +41,7 @@ Invocation par `/nom` (ex. `/audit`). Si la commande n'est pas reconnue par votr
 
 ## Règles non négociables
 
-- Le serveur ne reçoit **jamais** la vidéo, seulement 2 à 5 images extraites dans le navigateur (le navigateur en extrait 3 à 5 et en écarte les inexploitables).
+- Le serveur ne reçoit **jamais** la vidéo, seulement 2 à 5 images extraites dans le navigateur (le navigateur en extrait 3 à 5 et en écarte les inexploitables) et, depuis AD-51, un extrait audio de 30 s au plus, transcrit puis supprimé aussitôt. Aucun téléchargement depuis une plateforme (AD-52).
 - Tout appel IA passe par la couche `server/ai` (abstraction + plafond de dépense). Jamais d'import direct du SDK OpenAI ailleurs.
 - Les empreintes du cache sont calculées par le serveur, jamais reprises du client.
 - Une identification n'est décomptée que si un résultat ≥ 50 % de confiance est affiché, hors cache et hors échec (RG3, RG6, RG16).

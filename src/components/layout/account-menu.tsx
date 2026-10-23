@@ -97,7 +97,7 @@ export function AccountBadge({ initial, avatarUrl }: { initial: string; avatarUr
   return (
     <span
       aria-hidden="true"
-      className="flex size-9 items-center justify-center rounded-full bg-brand text-sm font-bold text-inverse"
+      className="flex size-9 items-center justify-center rounded-full bg-brand text-sm font-bold text-primary-foreground"
     >
       {initial}
     </span>

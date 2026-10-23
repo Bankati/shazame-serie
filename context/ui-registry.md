@@ -91,6 +91,25 @@ Fichier : `src/components/home/section-heading.tsx`
 | Accent | sur-titre `text-sm font-semibold text-brand-strong` (fond clair) ou `text-brand` (fond sombre) |
 | Espacement | `gap-3`, `max-w-2xl` |
 
+### Paywall et PricingPlans (U21)
+
+Fichiers : `src/components/pricing/paywall.tsx`, `pricing-plans.tsx` ; page `src/app/(vitrine)/tarifs/page.tsx`
+Dernière mise à jour : 23 octobre 2026 (U21)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | paywall `bg-brand-subtle` ; offres `bg-background` ; tableau et questions `bg-card` |
+| Bordure | paywall `border-2 border-primary` ; offre mise en avant `border-2 border-primary`, autre `border border-border` |
+| Radius | `rounded-xl` (paywall, offres, tableau) ; pastille d'icône `rounded-full` |
+| Texte principal | titre du paywall `font-display text-xl font-bold text-foreground` ; prix `font-display text-display-lg font-extrabold` |
+| Texte secondaire | paywall `text-brand-subtle-foreground` puis `text-sm text-muted-foreground` |
+| Espacement | paywall `p-4 md:p-6 gap-4` ; cellules `p-4` |
+| Hover / focus | boutons shadcn `h-11` ; liens `text-link hover:underline` |
+| Ombre | none |
+| Accent | pastille `bg-primary text-primary-foreground` (couronne) ; coches `text-brand-strong` |
+
+**Notes de pattern :** une seule action principale par profil (visiteur : compte gratuit ; gratuit : Premium ; Premium : aucune). Tableau : `th scope`, légende masquée, coche et tiret doublés d'un texte pour les lecteurs d'écran, défilement horizontal sur mobile (`overflow-x-auto`, `min-w-lg`).
+
 ### ThemeToggle (U44, AD-49)
 
 Fichier : `src/components/layout/theme-toggle.tsx` (fournisseur : `theme-provider.tsx`)

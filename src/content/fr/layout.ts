@@ -9,7 +9,7 @@ export const LAYOUT_TEXT = {
       { href: "/#tendances", label: "Tendances" },
       { href: "/#genres", label: "Genres" },
       { href: "/#comment-ca-marche", label: "Comment ça marche" },
-      { href: "/#tarifs", label: "Tarifs" },
+      { href: "/tarifs", label: "Tarifs" },
       { href: "/#faq", label: "FAQ" },
     ],
     cta: { href: "/identifier", label: "Identifier un titre" },

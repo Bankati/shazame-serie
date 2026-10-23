@@ -300,7 +300,7 @@ describe("identifyClip", () => {
 
     const outcome = await identifyClip(deps, { identity: VISITOR, images: IMAGES });
 
-    expect(outcome).toEqual({ ok: false, code: "QUOTA_EXCEEDED", quota: { limit: 3, remaining: 0, resetAt: "2026-07-14T22:00:00.000Z" } });
+    expect(outcome).toEqual({ ok: false, code: "QUOTA_EXCEEDED", quota: { plan: "visitor", limit: 3, remaining: 0, resetAt: "2026-07-14T22:00:00.000Z" } });
     expect(identify).not.toHaveBeenCalled();
   });
 

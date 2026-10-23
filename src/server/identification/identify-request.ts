@@ -17,7 +17,7 @@ import { createQuotaService, type QuotaIdentity, type QuotaService } from "@/ser
 import { createMemoryQuotaStore, createRedisQuotaStore } from "@/server/quota/quota-store";
 import { loadQuotaLimits } from "@/server/quota/settings";
 import { describeRequestSchema } from "@/schemas/describe";
-import { frameModeSchema, type QuotaInfo } from "@/schemas/identify";
+import { frameModeSchema } from "@/schemas/identify";
 import { linkRequestSchema } from "@/schemas/link";
 import { env } from "@/server/env";
 import {
@@ -35,6 +35,7 @@ import {
   identifyLink,
   type IdentifyOutcome,
   type LinkSources,
+  toQuotaInfo,
 } from "./identify";
 import { persistIdentification } from "./persist";
 import { findCachedResult, prepareCacheLookup, recordCacheHit, storeCachedResult } from "./result-cache";
@@ -280,8 +281,7 @@ export async function handleQuotaRequest(): Promise<Response> {
     log.warn("quota.status_unavailable", { code: errorCode(error) });
     return jsonError("UPSTREAM_ERROR", undefined, { headers: { "Cache-Control": "no-store" } });
   }
-  const quota: QuotaInfo = { limit: status.limit, remaining: status.remaining, resetAt: status.resetAt.toISOString() };
-  return jsonOk(quota, { headers: { "Cache-Control": "no-store" } });
+  return jsonOk(toQuotaInfo(status), { headers: { "Cache-Control": "no-store" } });
 }
 
 function retryAfterSeconds(retryAt: Date): string {

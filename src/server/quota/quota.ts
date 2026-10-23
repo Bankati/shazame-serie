@@ -15,7 +15,10 @@ export type QuotaIdentity = { kind: "visitor"; id: string } | { kind: "user"; id
 
 export type QuotaLimits = { visitorDaily: number; freeDaily: number; premiumDailyCap: number };
 
-export type QuotaStatus = { limit: number; used: number; remaining: number; resetAt: Date };
+/** Profil du quota (U21) : le paywall n'invite pas un visiteur, un compte gratuit et un Premium à la même chose. */
+export type QuotaPlan = "visitor" | "free" | "premium";
+
+export type QuotaStatus = { plan: QuotaPlan; limit: number; used: number; remaining: number; resetAt: Date };
 
 export type Reservation = {
   /** Résultat affiché ≥ 50 % issu de l'IA : l'unité reste décomptée (RG3). */
@@ -39,6 +42,10 @@ export function limitFor(identity: QuotaIdentity, limits: QuotaLimits): number {
   return identity.plan === "premium" ? limits.premiumDailyCap : limits.freeDaily;
 }
 
+export function planOf(identity: QuotaIdentity): QuotaPlan {
+  return identity.kind === "visitor" ? "visitor" : identity.plan;
+}
+
 export function quotaKey(identity: QuotaIdentity, day: string): string {
   return `quota:${identity.kind}:${identity.id}:${day}`;
 }
@@ -56,21 +63,21 @@ export function createQuotaService(deps: {
     return { key: quotaKey(identity, parisDay(instant)), resetAt, limit: limitFor(identity, await deps.limits()) };
   }
 
-  function statusOf(limit: number, used: number, resetAt: Date): QuotaStatus {
-    return { limit, used, remaining: Math.max(0, limit - used), resetAt };
+  function statusOf(identity: QuotaIdentity, limit: number, used: number, resetAt: Date): QuotaStatus {
+    return { plan: planOf(identity), limit, used, remaining: Math.max(0, limit - used), resetAt };
   }
 
   return {
     async status(identity) {
       const { key, resetAt, limit } = await context(identity);
-      return statusOf(limit, await deps.store.used(key), resetAt);
+      return statusOf(identity, limit, await deps.store.used(key), resetAt);
     },
 
     async reserve(identity) {
       const { key, resetAt, limit } = await context(identity);
       const result = await deps.store.reserve(key, limit, resetAt.getTime() + KEY_EXPIRY_MARGIN_MS);
       if (!result.reserved) {
-        return { ok: false, status: statusOf(limit, result.used, resetAt) };
+        return { ok: false, status: statusOf(identity, limit, result.used, resetAt) };
       }
 
       let state: Reservation["state"] = "pending";

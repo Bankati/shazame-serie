@@ -96,7 +96,7 @@ Navigateur                                   Serveur (POST /api/identify)
                                              16. Ajuste la dépense au coût réel
                                              17. Écrit l'identification ; écrit le cache si confiance ≥ seuil
                                              18. Images gardées en mémoire seulement (RG7)
-◀──────────────────────────────────────────  19. Réponse : résultat, alternatives, quota restant, resetAt
+◀──────────────────────────────────────────  19. Réponse : résultat, alternatives, quota restant, resetAt, profil du quota (plan, U21)
 ```
 
 Choix assumés de ce flux **(proposé, AD-12 et AD-13)** :

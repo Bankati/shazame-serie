@@ -336,7 +336,7 @@ function toIdentifiedTitle(title: ScoredTitle): IdentifiedTitle {
   return { tmdbId: title.tmdbId, mediaType: title.mediaType, title: title.title, year: title.year, posterPath: title.posterPath, confidence: title.confidence };
 }
 
-function toQuotaInfo(status: QuotaStatus): QuotaInfo {
-  return { limit: status.limit, remaining: status.remaining, resetAt: status.resetAt.toISOString() };
+export function toQuotaInfo(status: QuotaStatus): QuotaInfo {
+  return { plan: status.plan, limit: status.limit, remaining: status.remaining, resetAt: status.resetAt.toISOString() };
 }
 

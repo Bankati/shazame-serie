@@ -127,6 +127,10 @@ Mettre à jour ce fichier après chaque changement d'implémentation significati
   - Vérifié : `test:db` (critères de fin : sans consentement aucune image ; avec consentement images privées, illisibles avec la clé publique), unitaires (route, recherche, accès admin), Playwright (signalement sans puis avec consentement : images absentes puis 2 à 5). Rendu contrôlé sur mobile.
   - Reste : purge des images de signalement selon Q16 (U30) ; revue des signalements dans le back-office (U24).
 
+- U21 — Tarifs et paywall (plan : `context/plans/U21.md`, 23 octobre 2026).
+  - Fait : page `/tarifs` (offres, comparaison sans compte / gratuit / Premium, questions) ; paywall dans le panneau d'identification selon le profil renvoyé par le quota (`plan`) ; Premium « Bientôt disponible » tant que D1 n'est pas fermée (`PREMIUM_CHECKOUT_OPEN`, à ouvrir en U22).
+  - Vérifié : Vitest 567, Playwright mobile 47 dont `paywall.spec.ts` (critère de fin : quota épuisé → paywall, fiche accessible).
+
 - Vérifications de production (20 octobre 2026), à la demande du fondateur :
   - Test de fumée en échec sur `main` (« Domaine de déploiement non autorisé : github.com ») : le job de migration, lié à l'environnement GitHub « production », crée lui aussi un « déploiement » (page du workflow). Corrigé : le test de fumée ne vise plus que les déploiements Vercel. Le vrai déploiement de production avait réussi.
   - **`/api/quota` répondait 502 en production et en préproduction** (résolu le 20 octobre 2026) : le code journalisé, une fois la cause Drizzle déroulée, était **`3D000`** (base inexistante) : `DATABASE_URL` dans Vercel ne visait pas la base `postgres` (fin d'URL `/postgres` absente ou erronée). Corrigé par le fondateur dans Vercel ; production vérifiée (`/api/quota` 200, compteur et session affichés). Leçon : toujours vérifier une URL de base sur ses trois parties (utilisateur `postgres.<ref>`, port 6543, `/postgres`) ; le test de fumée vérifie désormais `/api/quota`.
@@ -161,7 +165,7 @@ Mettre à jour ce fichier après chaque changement d'implémentation significati
 
 - **Sprint 3 bis (ajout du fondateur, 20 octobre 2026)** : U33 en cours, puis U34 identification par image, U35 par description, U36 par lien (D10 : clé YouTube Data API ; Q23).
 - **Tests avant déploiement** (demandés par le fondateur le 20 octobre 2026) : `SUPABASE_SECRET_KEY` dans Vercel, CI verte sur GitHub, PR `dev` → `staging` → `main`, migration `0004`, essais en production (inscription email, Google, liste, profil, partage).
-- U20 — Signalement d'erreur ; U22 — Premium (décision D1 : prestataire de paiement) ; U13 — Eval (D5 : clips de test).
+- U22 — Premium (bloquée par D1 : prestataire de paiement et entité qui encaisse) ; U13 — Eval (bloquée par D5 : clips de test). Unités suivantes sans blocage : U27 (pages légales et consentements), U28 (durcissement sécurité), U29 (observabilité), U31 (performance et accessibilité).
 - Audit U04 + U17 (19 octobre 2026) : corrigé côté code. Restent des actions du fondateur : réglages Supabase Auth en ligne, vérification de la CI, Resend + domaine (Q11).
 
 ## Open Questions

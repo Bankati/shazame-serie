@@ -154,7 +154,6 @@ export const HOME_TEXT = {
         "Résiliable à tout moment, actif jusqu'à la fin de la période payée",
       ],
     },
-    comingSoon: "Bientôt disponible",
     reassurance: "Aucune carte bancaire pour commencer. Premium résiliable à tout moment, actif jusqu'à la fin de la période payée.",
   },
   faq: {

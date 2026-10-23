@@ -5,10 +5,11 @@ import { useEffect, useId, useRef, useState } from "react";
 
 import { type ExtractionState, useFrameExtraction } from "@/client/frames/use-frame-extraction";
 import { useDescriptionIdentification, useLinkIdentification } from "@/client/identify/use-description";
-import { publishQuota } from "@/client/identify/quota";
+import { publishQuota, useQuota } from "@/client/identify/quota";
 import type { IdentifyFailure } from "@/client/identify/send-frames";
 import { type IdentificationState, useIdentification } from "@/client/identify/use-identification";
 import { PAUSE_ATTRIBUTE } from "@/components/decor/pause-motion";
+import { Paywall } from "@/components/pricing/paywall";
 import { Button } from "@/components/ui/button";
 import { IDENTIFY_TEXT } from "@/content/fr/identify";
 import type { IdentifyResponse, QuotaInfo } from "@/schemas/identify";
@@ -30,10 +31,14 @@ export function IdentifyPanel({ initialTab = "media", initialLink }: { initialTa
   const [tab, setTab] = useState<IdentifyTab>(initialTab);
   const panelId = useId();
   const { dropzone, description, link } = IDENTIFY_TEXT;
+  // Quota du jour épuisé (connu au chargement ou par un refus du serveur) : paywall en tête du panneau (U21).
+  // Le panneau reste en dessous, pour revoir le dernier résultat.
+  const quota = useQuota();
 
   return (
     // min-w-0 : élément de grille du hero, il ne doit pas s'élargir pour contenir la pellicule.
     <div className="flex min-w-0 flex-col gap-4 rounded-xl bg-card p-4 text-card-foreground shadow-lg md:p-6">
+      {quota && quota.remaining === 0 ? <Paywall quota={quota} /> : null}
       <IdentifyTabs value={tab} panelId={panelId} onChange={setTab} />
       <div role="tabpanel" id={panelId} aria-labelledby={`${panelId}-${tab}`}>
         {tab === "media" ? (

@@ -4,7 +4,7 @@ import { LAYOUT_TEXT } from "@/content/fr/layout";
 import { Logo } from "./logo";
 
 const linkClass =
-  "inline-flex min-h-11 items-center text-sm text-inverse-muted underline-offset-4 hover:text-inverse-foreground hover:underline focus-visible:outline-2 focus-visible:outline-brand";
+  "inline-flex min-h-11 items-center text-sm text-inverse-muted underline-offset-4 hover:text-inverse-foreground hover:underline focus-visible:outline-2 focus-visible:outline-brand-light";
 
 // Pied de page sur surface inversée, avec la mention obligatoire des sources (invariant 12). `compact` (application,
 // U38) : seulement les sources et le copyright, la navigation passant par l'en-tête et la barre d'onglets.

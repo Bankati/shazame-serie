@@ -91,6 +91,25 @@ Fichier : `src/components/home/section-heading.tsx`
 | Accent | sur-titre `text-sm font-semibold text-brand-strong` (fond clair) ou `text-brand` (fond sombre) |
 | Espacement | `gap-3`, `max-w-2xl` |
 
+### Hero animé + DemoPhone (U43, AD-48) — remplace « Hero + IdentifyPanel » (fond), « CurvedFilmBand » et la vedette
+
+Fichiers : `src/components/home/hero.tsx`, `demo-phone.tsx`, `demo-timeline.ts`, `how-it-works.tsx`
+Dernière mise à jour : 23 octobre 2026 (U43)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | hero `bg-background` avec halos `bg-inverse/15` et `bg-brand/10 blur-3xl` ; étapes : carte `bg-inverse` |
+| Bordure | pastilles `border border-border` ; téléphone `ring-1 ring-foreground/20` |
+| Radius | coque `rounded-phone`, écran `rounded-phone-screen`, pastilles `rounded-xl`, carte des étapes `rounded-3xl` |
+| Texte principal | titre `font-display text-display-lg md:text-display-xl font-extrabold` avec `TwoTone` |
+| Texte secondaire | `text-muted-foreground` ; sur violet `text-inverse-muted` |
+| Espacement | hero `gap-12 pt-8 md:pt-16` ; carte des étapes `p-6 md:p-12 gap-10` ; téléphone `w-64 md:w-72 aspect-[9/19]` |
+| Hover / focus | lanceur inchangé ; sur violet focus rose clair (`.bg-inverse` redéfinit `--ring`) |
+| Ombre | téléphone `shadow-2xl`, pastilles `shadow-lg` (objets flottants, pas des cartes) |
+| Accent | pastille d'icône `bg-brand-subtle` + `text-brand-strong` ; numéros d'étape `text-brand-light` |
+
+**Notes de pattern :** animations GSAP seulement via `gsap.matchMedia` + `prefers-reduced-motion: no-preference` ; l'écran du résultat est l'état rendu par le serveur. Pastilles `hidden lg:flex` (sur mobile elles masqueraient l'écran). Classes `demo-*` réservées à la séquence de `demo-timeline.ts`. FilmStripDecor accepte `images` (défilement `animate-film-scroll`, mis en pause par `data-pause-motion`).
+
 ### Hero + IdentifyPanel
 
 Fichiers : `src/components/home/hero.tsx`, `src/components/identify/identify-panel.tsx`

@@ -18,7 +18,7 @@ export function TwoTone({ text, highlight, tone = "default" }: TwoToneProps) {
   return (
     <>
       {text.slice(0, index)}
-      <span className={cn(tone === "inverse" ? "text-brand" : "text-brand-strong")}>{highlight}</span>
+      <span className={cn(tone === "inverse" ? "text-brand-light" : "text-brand-strong")}>{highlight}</span>
       {text.slice(index + highlight.length)}
     </>
   );

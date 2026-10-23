@@ -16,7 +16,7 @@ export function ErrorScreen({ eyebrow, title, description, actions }: ErrorScree
       <div className="mx-auto flex max-w-2xl flex-col overflow-hidden rounded-2xl bg-inverse text-inverse-foreground">
         <FilmStripDecor />
         <div className="flex flex-col items-center gap-4 px-6 py-12 text-center">
-          {eyebrow ? <p className="text-sm font-semibold text-brand">{eyebrow}</p> : null}
+          {eyebrow ? <p className="text-sm font-semibold text-brand-light">{eyebrow}</p> : null}
           <h1 id="error-title" className="font-display text-display font-bold md:text-display-lg">
             {title}
           </h1>

@@ -19,7 +19,7 @@ export function Privacy() {
             const Icon = POINT_ICONS[index] ?? ShieldCheck;
             return (
               <li key={point.title} className="flex flex-col gap-3 border-t border-inverse-foreground/15 pt-6">
-                <Icon className="size-6 text-brand" aria-hidden="true" />
+                <Icon className="size-6 text-brand-light" aria-hidden="true" />
                 <h3 className="text-lg font-semibold">{point.title}</h3>
                 <p className="text-inverse-muted">{point.description}</p>
               </li>

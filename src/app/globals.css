@@ -3,9 +3,9 @@
 @import "shadcn/tailwind.css";
 
 /*
- * Thème sombre unique (AD-35, 16 octobre 2026, remplace AD-08) : la classe `.dark` est posée sur <html>
- * (layout), ce qui active aussi les variantes `dark:` des composants shadcn, prévues pour un fond sombre.
- * La variante reste liée à cette classe, jamais au réglage du système.
+ * Thème clair unique (AD-48, 23 octobre 2026, remplace AD-35) : palette du fondateur, framboise #9e0059,
+ * violet #390099, blanc cassé #f8f9fa. Les variantes `dark:` des composants shadcn restent liées à la classe
+ * `.dark`, qui n'est plus posée : elles ne s'appliquent pas.
  */
 @custom-variant dark (&:is(.dark *));
 
@@ -36,6 +36,7 @@
   --color-inverse-muted: var(--inverse-muted);
   --color-brand: var(--brand);
   --color-brand-strong: var(--brand-strong);
+  --color-brand-light: var(--brand-light);
   --color-brand-subtle: var(--brand-subtle);
   --color-brand-subtle-foreground: var(--brand-subtle-foreground);
   --color-warning: var(--warning);
@@ -63,6 +64,21 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
   --radius-poster: 2px;
+  /* Téléphone de démonstration (U43) : coque et écran. */
+  --radius-phone: 2.75rem;
+  --radius-phone-screen: 2.25rem;
+
+  /* Défilement continu de la pellicule (U43) : la liste d'images est doublée, -50 % boucle sans à-coup. */
+  --animate-film-scroll: film-scroll 60s linear infinite;
+
+  @keyframes film-scroll {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
 
   /* Zoom lent des images de la vedette (effet « Ken Burns »). */
   --animate-ken-burns: ken-burns 12s ease-out both;
@@ -79,46 +95,53 @@
 
 :root {
   --radius: 0.625rem;
-  /* Palette sombre (AD-35). Contrastes mesurés sur --background #0B0F17 et --card #141A24. */
-  --background: #0b0f17;
-  --foreground: #f3f4f6;
-  --card: #141a24;
-  --card-foreground: #f3f4f6;
-  --popover: #182030;
-  --popover-foreground: #f3f4f6;
-  /* Accent unique (AD-45, U37) : vert du logo. Bouton 7,6:1 sur le fond ; texte foncé dessus 7,9:1. */
-  --primary: #10b981;
-  --primary-foreground: #05080e;
-  --secondary: #1c2433;
-  --secondary-foreground: #f3f4f6;
-  --muted: #1c2433;
-  /* 7,5:1 sur le fond, 6,9:1 sur une carte */
-  --muted-foreground: #9ca3af;
-  --accent: #1c2433;
-  --accent-foreground: #f3f4f6;
-  /* Texte d'erreur 6,9:1 */
-  --destructive: #f87171;
-  --border: #263042;
-  /* Contour de champ 4:1 (WCAG 1.4.11 : 3:1 minimum) */
-  --input: #6b7280;
-  /* Anneau de focus et liens texte : vert clair, 9:1 sur une carte, 10:1 sur le fond */
-  --ring: #34d399;
+  color-scheme: light;
+  /* Palette claire (AD-48). Contrastes mesurés sur --background #F8F9FA et --card #FFFFFF. */
+  --background: #f8f9fa;
+  /* Texte 17:1 */
+  --foreground: #1a1325;
+  --card: #ffffff;
+  --card-foreground: #1a1325;
+  --popover: #ffffff;
+  --popover-foreground: #1a1325;
+  /* Accent d'action (AD-48) : framboise. Texte blanc dessus 8,1:1. */
+  --primary: #9e0059;
+  --primary-foreground: #ffffff;
+  --secondary: #eef0f4;
+  --secondary-foreground: #1a1325;
+  --muted: #eef0f4;
+  /* 5,9:1 sur le fond, 6,2:1 sur une carte, 5,4:1 sur --muted */
+  --muted-foreground: #5b6170;
+  --accent: #f1ecfb;
+  --accent-foreground: #1a1325;
+  /* Texte d'erreur 5,7:1 */
+  --destructive: #c81e1e;
+  --border: #e3e5ea;
+  /* Contour de champ 3,3:1 (WCAG 1.4.11 : 3:1 minimum) */
+  --input: #8a8f98;
+  /* Anneau de focus et liens texte : violet, 12:1 sur le fond */
+  --ring: #390099;
 
-  /* Survol : plus clair (texte foncé 10,4:1) */
-  --primary-hover: #34d399;
-  --link: #34d399;
-  /* Surface plus profonde que le fond : hero, blocs de contraste, pied de page */
-  --inverse: #05080e;
+  /* Survol : framboise plus foncée (texte blanc 10,7:1) */
+  --primary-hover: #7d0047;
+  --link: #390099;
+  /* Surface de contraste : violet de la marque (hero animé, pellicule, pied de page). Texte blanc 12,9:1. */
+  --inverse: #390099;
   --inverse-foreground: #ffffff;
-  --inverse-muted: #d1d5db;
-  --brand: #10b981;
-  /* Vert lisible sur fond sombre (texte, icônes) : 10:1 */
-  --brand-strong: #34d399;
-  --brand-subtle: #052e22;
-  --brand-subtle-foreground: #6ee7b7;
-  /* Avertissement 11:1 */
-  --warning: #fbbf24;
-  --success: #34d399;
+  /* 10,3:1 sur --inverse */
+  --inverse-muted: #e9e3ff;
+  /* Framboise de la marque (logo, décors) */
+  --brand: #9e0059;
+  /* Framboise lisible sur fond clair (texte, icônes) : 7,7:1 */
+  --brand-strong: #9e0059;
+  /* Rose lisible sur --inverse (mot en accent, icônes) : 7,8:1 */
+  --brand-light: #ffb3d6;
+  --brand-subtle: #fbe7f1;
+  /* 6,9:1 sur --brand-subtle */
+  --brand-subtle-foreground: #7d0047;
+  /* Avertissement 5:1 */
+  --warning: #b45309;
+  --success: #047857;
 }
 
 @layer base {
@@ -136,8 +159,14 @@
   [role="button"]:not(:disabled) {
     cursor: pointer;
   }
+  /* Sur les surfaces violettes, focus et liens passent au rose clair : le violet y serait invisible. */
+  .bg-inverse {
+    --ring: var(--brand-light);
+    --link: var(--brand-light);
+  }
   /* Animations décoratives en pause pendant l'analyse d'un clip (attribut posé par IdentifyPanel). */
-  :root:has([data-pause-motion]) .animate-ken-burns {
+  :root:has([data-pause-motion]) .animate-ken-burns,
+  :root:has([data-pause-motion]) .animate-film-scroll {
     animation-play-state: paused;
   }
   @media (prefers-reduced-motion: reduce) {

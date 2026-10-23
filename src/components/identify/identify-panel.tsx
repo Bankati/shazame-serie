@@ -8,7 +8,7 @@ import { useDescriptionIdentification, useLinkIdentification } from "@/client/id
 import { publishQuota } from "@/client/identify/quota";
 import type { IdentifyFailure } from "@/client/identify/send-frames";
 import { type IdentificationState, useIdentification } from "@/client/identify/use-identification";
-import { PAUSE_ATTRIBUTE } from "@/components/decor/curved-film-band";
+import { PAUSE_ATTRIBUTE } from "@/components/decor/pause-motion";
 import { Button } from "@/components/ui/button";
 import { IDENTIFY_TEXT } from "@/content/fr/identify";
 import type { IdentifyResponse, QuotaInfo } from "@/schemas/identify";

@@ -16,6 +16,7 @@ Relevées sur le registre npm le **4 octobre 2026**, révisées en U01 le **7 oc
 | Paquet | Version | Rôle |
 | --- | --- | --- |
 | `next` / `eslint-config-next` | 16.4.2 (installé le 22 octobre 2026 : correctif de sécurité GHSA-2464-fhr4-w9xw, GHSA-673q-mjm6-r5xr, GHSA-p3m5-59mp-jv5r ; 16.3.x non corrigée) | Framework |
+| `gsap` / `@gsap/react` | 3.15.0 / 2.1.2 (installés le 23 octobre 2026, U43) | Animations du hero et des étapes |
 | `react` / `react-dom` | 19.3.0 (installé) | UI |
 | `typescript` | 6.0.3 (installé, AD-21) | Typage (voir note) |
 | `tailwindcss` | 4.3.3 | Styles |
@@ -76,6 +77,12 @@ Plans d'hébergement : **Vercel Pro** obligatoire (le plan Hobby est réservé �
 - Motion : importer depuis `motion/react`. On utilise `LazyMotion features={domAnimation} strict` (dans `MotionProvider`) : seuls les composants `m.*` sont autorisés, `motion.*` lèverait une erreur. `MotionConfig reducedMotion="user"`. API vérifiées dans les types installés : `AnimatePresence`, `useReducedMotion`, `whileInView` + `viewport`, variantes, `layout`.
 - Embla : `useEmblaCarousel(options, plugins)` renvoie `[ref, api]` ; l'événement `init` est déjà passé quand `api` arrive (lire l'état à l'image suivante). Greffon `Autoplay` : ne jamais appeler `play()` / `stop()` avant que `api` existe (erreur « reading 'internalEngine' », rencontrée). `Fade()` pour la vedette ; les diapositives restent empilées, donc monter les images au fur et à mesure (sinon toutes se chargent).
 - Les composants clients peuvent importer des **types** depuis `src/server/**` (`import type`, effacé à la compilation), jamais des valeurs.
+
+## GSAP (hero animé, U43, AD-48)
+
+- Installés le 23 octobre 2026 : `gsap` **3.15.0** (avril 2026) et `@gsap/react` **2.1.2**. Licence « Standard » sans frais, ScrollTrigger compris.
+- API vérifiées dans les types installés : `useGSAP(callback, { scope })` (nettoyage automatique, sélecteurs limités au `scope`), `gsap.matchMedia().add(conditions, ctx => cleanup)` (les animations d'une condition sont annulées quand elle cesse), `gsap.quickTo(cible, propriété, vars)`, `ScrollTrigger` (`pin`, `scrub`, `onToggle`), `gsap.registerPlugin(useGSAP, ScrollTrigger)` au niveau du module client.
+- Règles du projet : toute animation passe par `gsap.matchMedia` avec `(prefers-reduced-motion: no-preference)` ; l'état affiché par le serveur doit être un état final lisible (écran du résultat), la boucle part de lui (`timeline.seek("result")`) pour éviter un saut au chargement. Composants `"use client"` seulement.
 
 ## React 19
 

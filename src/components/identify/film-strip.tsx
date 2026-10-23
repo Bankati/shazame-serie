@@ -55,7 +55,7 @@ function FrameStatus({ frame }: { frame: CandidateFrame | undefined }) {
   if (frame.verdict.kept) {
     return (
       <span className="flex items-center gap-0.5 text-xs leading-tight font-medium">
-        <Check className="size-3 shrink-0 text-brand" aria-hidden="true" />
+        <Check className="size-3 shrink-0 text-brand-light" aria-hidden="true" />
         {strip.kept}
       </span>
     );

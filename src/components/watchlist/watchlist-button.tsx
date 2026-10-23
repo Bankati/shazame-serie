@@ -59,7 +59,7 @@ export function WatchlistButton({
       aria-pressed={inList}
       disabled={state.status !== "ready" || pending}
       onClick={onClick}
-      className={cn(base, inList && "border-brand-strong text-brand-strong")}
+      className={cn(base, inList && (tone === "inverse" ? "border-brand-light text-brand-light" : "border-brand-strong text-brand-strong"))}
     >
       <AnimatePresence mode="wait" initial={false}>
         <m.span

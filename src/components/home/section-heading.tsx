@@ -18,7 +18,7 @@ export function SectionHeading({ id, eyebrow, title, highlight, subtitle, align 
 
   return (
     <div className={cn("flex max-w-2xl flex-col gap-3", align === "center" && "mx-auto items-center text-center")}>
-      <p className={cn("text-xs font-semibold uppercase tracking-widest", inverse ? "text-brand" : "text-brand-strong")}>{eyebrow}</p>
+      <p className={cn("text-xs font-semibold uppercase tracking-widest", inverse ? "text-brand-light" : "text-brand-strong")}>{eyebrow}</p>
       <h2 id={id} className="font-display text-display font-bold md:text-display-lg">
         <TwoTone text={title} highlight={highlight} tone={tone} />
       </h2>

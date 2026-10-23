@@ -254,6 +254,12 @@ Refonte inspirée d'un site de référence analysé le 21 octobre 2026 (analyse 
 - **Fin** : tests du catalogue simulé ; Playwright calendrier → fiche ; captures.
 - **Dépend de** : U38.
 
+### U43 — Nouvelle identité et hero animé
+- **Objectif** : une première impression qui montre le produit en action, aux couleurs choisies par le fondateur.
+- **Périmètre** : thème clair (framboise #9E0059, violet #390099, blanc cassé #F8F9FA) sur toute la plateforme ; hero avec téléphone animé (GSAP) rejouant une identification ; « Comment ça marche » animé au défilement ; pellicule de la dernière section avec les images des titres en tendance. AD-48.
+- **Fin** : contrastes mesurés ; Playwright accueil (lanceur au premier écran, démonstration, étapes, pellicule) et suite complète ; captures ordinateur et mobile.
+- **Dépend de** : U38, U39.
+
 ---
 
 ## Sprint 4 — Pilotage, conformité, lancement (13 au 31 décembre)

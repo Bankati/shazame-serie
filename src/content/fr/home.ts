@@ -8,6 +8,29 @@ export const HOME_TEXT = {
     subtitle:
       "Vous avez vu un extrait sur TikTok, YouTube ou Instagram sans connaître son titre ? Envoyez la vidéo, une capture, le lien, ou décrivez la scène : nous retrouvons le film ou la série, sa fiche complète et où le regarder.",
   },
+  // Démonstration animée du téléphone (U43, AD-48) : un exemple d'identification, pas un chiffre mesuré.
+  demo: {
+    label: "Démonstration : un extrait identifié en quatre étapes",
+    clip: { source: "Extrait partagé", duration: "0:12", action: "Identifier" },
+    extract: { title: "Images extraites", note: "La vidéo reste sur votre téléphone" },
+    analyse: { title: "Analyse de la scène…", note: "Reconnaissance, puis vérification du titre" },
+    result: {
+      eyebrow: "Résultat",
+      confidence: "Confiance 94 %",
+      watchTitle: "Où regarder",
+      offers: ["Abonnement", "Location", "Achat"],
+      add: "Ajouter à ma liste",
+    },
+    checklist: ["Vidéo lue sur votre appareil", "Images nettes choisies", "Seules les images sont analysées"],
+    overview: "Synopsis, distribution, bande-annonce et titres similaires sur la fiche.",
+    open: "Voir la fiche",
+    fallbackTitle: "Votre film",
+    badges: {
+      privacy: { title: "Vidéo jamais envoyée", text: "Seules quelques images partent" },
+      modes: { title: "4 façons d'identifier", text: "Vidéo, image, description, lien" },
+      sheet: { title: "Fiche complète", text: "Et où le regarder" },
+    },
+  },
   howItWorks: {
     eyebrow: "Comment ça marche",
     title: "Trois étapes, quelques secondes",

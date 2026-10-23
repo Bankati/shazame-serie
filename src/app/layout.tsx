@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children, modal }: LayoutProps<"/">) {
   return (
-    <html lang="fr" className={cn("dark", archivo.variable, publicSans.variable)}>
+    <html lang="fr" className={cn(archivo.variable, publicSans.variable)}>
       <body className="flex min-h-dvh flex-col">
         <a
           href="#contenu"
@@ -41,8 +41,8 @@ export default function RootLayout({ children, modal }: LayoutProps<"/">) {
           {/* Fenêtre de connexion ouverte depuis le site (routes interceptées, U41). */}
           {modal}
         </MotionProvider>
-        {/* Thème sombre imposé (AD-35) : le Toaster shadcn suivrait sinon le thème du système. */}
-        <Toaster theme="dark" />
+        {/* Thème clair imposé (AD-48) : le Toaster shadcn suivrait sinon le thème du système. */}
+        <Toaster theme="light" />
       </body>
     </html>
   );

@@ -224,6 +224,25 @@ Dernière mise à jour : 22 octobre 2026 (U40)
 
 **Notes de pattern :** colonne latérale `lg:sticky lg:top-24 lg:self-start`, placée en premier dans le document (ordre mobile de la fiche) et à droite sur ordinateur (`lg:order-2`).
 
+### AuthDialog (connexion en fenêtre)
+
+Fichier : `src/components/auth/auth-dialog.tsx`
+Dernière mise à jour : 22 octobre 2026 (U41)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | Dialog shadcn (`bg-background`) |
+| Bordure | celle du Dialog shadcn |
+| Radius | celui du Dialog shadcn ; bouton de fermeture `rounded-md` |
+| Texte principal | titre `font-display text-display font-bold` |
+| Texte secondaire | description `text-base text-muted-foreground` |
+| Espacement | `p-6 gap-6 sm:max-w-md`, `max-h-[90dvh] overflow-y-auto` (comme `ResultDialog`) |
+| Hover / focus | fermeture `size-11 hover:bg-muted`, `focus-visible:outline-2 outline-ring` |
+| Ombre | celle du Dialog shadcn |
+| Accent | none (le contenu porte les boutons) |
+
+**Notes de pattern :** même contenu que la page (`SignInPanel`, `SignUpPanel`) ; fermer = retour arrière dans l'historique.
+
 ### TwoTone (grand titre en deux tons)
 
 Fichier : `src/components/layout/two-tone.tsx`

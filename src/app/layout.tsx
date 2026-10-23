@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   description: APP_TEXT.tagline,
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children, modal }: LayoutProps<"/">) {
   return (
     <html lang="fr" className={cn("dark", archivo.variable, publicSans.variable)}>
       <body className="flex min-h-dvh flex-col">
@@ -36,7 +36,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <style>{"[data-reveal]{opacity:1!important;transform:none!important}"}</style>
         </noscript>
         {/* En-tête, contenu et pied de page : coquille de la vitrine ou de l'application (U38, AD-46). */}
-        <MotionProvider>{children}</MotionProvider>
+        <MotionProvider>
+          {children}
+          {/* Fenêtre de connexion ouverte depuis le site (routes interceptées, U41). */}
+          {modal}
+        </MotionProvider>
         {/* Thème sombre imposé (AD-35) : le Toaster shadcn suivrait sinon le thème du système. */}
         <Toaster theme="dark" />
       </body>

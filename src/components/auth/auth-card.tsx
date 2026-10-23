@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 // Carte des pages de compte : colonne unique et étroite (ui-context.md, « Compte »).
 export function AuthCard({
   title,
@@ -34,12 +36,12 @@ export function AuthFooterLink({ prompt, href, label }: { prompt?: string; href:
   return (
     <p className="text-sm text-muted-foreground">
       {prompt ? `${prompt} ` : null}
-      <a
+      <Link
         href={href}
         className="font-medium text-link underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-ring"
       >
         {label}
-      </a>
+      </Link>
     </p>
   );
 }

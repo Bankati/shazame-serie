@@ -67,6 +67,8 @@ export const AUTH_TEXT = {
     unavailable: "La connexion avec Google n'est pas disponible pour le moment.",
   },
   divider: "ou",
+  // Fenêtre de connexion (U41).
+  dialog: { close: "Fermer" },
   forgotPassword: {
     metaTitle: "Mot de passe oublié",
     title: "Mot de passe oublié",

@@ -2,6 +2,7 @@
 
 import { History, ListVideo, LogOut, UserRound } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 import { accountInitial, useAccount } from "@/client/account/account";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ export const ACCOUNT_PATH = "/compte";
 // Sur mobile, les mêmes entrées sont dans le menu (MobileNav).
 export function AccountMenu() {
   const state = useAccount();
+  const pathname = usePathname();
   const { account: text } = AUTH_TEXT;
 
   if (state.status === "loading") {
@@ -33,7 +35,8 @@ export function AccountMenu() {
   if (!state.account) {
     return (
       <Button asChild variant="ghost" className="hidden h-11 px-3 text-sm lg:inline-flex">
-        <a href="/connexion">{text.signIn}</a>
+        {/* Link : ouvre la connexion en fenêtre par-dessus la page (U41), retour à la page ensuite. */}
+        <Link href={`/connexion?suite=${encodeURIComponent(pathname)}`}>{text.signIn}</Link>
       </Button>
     );
   }

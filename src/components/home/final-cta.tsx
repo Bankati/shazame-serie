@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { Button } from "@/components/ui/button";
 import { FilmStripDecor } from "@/components/decor/film-strip-decor";
 import { TwoTone } from "@/components/layout/two-tone";
@@ -17,7 +19,7 @@ export function FinalCta() {
           <p className="text-inverse-muted md:text-lg">{finalCta.subtitle}</p>
           {/* Bouton d'accent unique (AD-45) : vert, texte foncé 7,9:1. */}
           <Button asChild className="h-11 px-6 text-base hover:bg-primary-hover">
-            <a href="/identifier">{finalCta.button}</a>
+            <Link href="/identifier">{finalCta.button}</Link>
           </Button>
         </div>
       </div>

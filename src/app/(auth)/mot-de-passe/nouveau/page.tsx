@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { AuthCard, AuthNotice } from "@/components/auth/auth-card";
 import { NewPasswordForm } from "@/components/auth/new-password-form";
@@ -23,7 +24,7 @@ export default async function NewPasswordPage() {
         <>
           <AuthNotice message={newPassword.expired} />
           <Button asChild variant="outline" className="h-11 w-full text-base">
-            <a href="/mot-de-passe-oublie">{newPassword.requestLink}</a>
+            <Link href="/mot-de-passe-oublie">{newPassword.requestLink}</Link>
           </Button>
         </>
       )}

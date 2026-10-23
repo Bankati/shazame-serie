@@ -5,6 +5,7 @@ import { AccountMenu } from "./account-menu";
 import { Logo } from "./logo";
 import { MobileNav } from "./mobile-nav";
 import { QuotaCounter } from "./quota-counter";
+import { ThemeToggle } from "./theme-toggle";
 
 // Barre supérieure fine (ui-context.md) : logo, ancres de l'accueil et compteur de quota (U12).
 // Compte (U04) : chargé côté navigateur pour garder les pages statiques. Liste / Historique : U18, U19.
@@ -31,6 +32,7 @@ export function SiteHeader() {
         </nav>
         <div className="flex items-center gap-3">
           <QuotaCounter />
+          <ThemeToggle />
           <Button asChild className="hidden h-11 px-5 text-sm hover:bg-primary-hover lg:inline-flex">
             <a href={nav.cta.href}>{nav.cta.label}</a>
           </Button>

@@ -3,9 +3,10 @@
 @import "shadcn/tailwind.css";
 
 /*
- * Thème clair unique (AD-48, 23 octobre 2026, remplace AD-35) : palette du fondateur, framboise #9e0059,
- * violet #390099, blanc cassé #f8f9fa. Les variantes `dark:` des composants shadcn restent liées à la classe
- * `.dark`, qui n'est plus posée : elles ne s'appliquent pas.
+ * Thème clair par défaut (AD-48, 23 octobre 2026) : palette du fondateur, framboise #9e0059, violet #390099,
+ * blanc cassé #f8f9fa. Thème sombre au choix (AD-49, bouton de l'en-tête) : gris très foncé façon plateforme de
+ * streaming, pas du noir. next-themes pose la classe `.dark` sur <html>, ce qui active aussi les variantes
+ * `dark:` des composants shadcn ; la variante reste liée à cette classe, jamais au réglage du système.
  */
 @custom-variant dark (&:is(.dark *));
 
@@ -142,6 +143,51 @@
   /* Avertissement 5:1 */
   --warning: #b45309;
   --success: #047857;
+}
+
+/* Thème sombre (AD-49) : gris très foncé #141414 et cartes #1F1F1F. Contrastes mesurés sur ces deux fonds. */
+.dark {
+  color-scheme: dark;
+  /* Texte 16,9:1 */
+  --background: #141414;
+  --foreground: #f5f5f5;
+  --card: #1f1f1f;
+  --card-foreground: #f5f5f5;
+  --popover: #262626;
+  --popover-foreground: #f5f5f5;
+  /* Framboise éclaircie : 3,1:1 sur le fond (élément d'interface), texte blanc dessus 5,9:1 */
+  --primary: #c2185b;
+  --primary-foreground: #ffffff;
+  --primary-hover: #ad1457;
+  --secondary: #2a2a2a;
+  --secondary-foreground: #f5f5f5;
+  --muted: #2a2a2a;
+  /* 7,3:1 sur le fond, 6,5:1 sur une carte, 5,7:1 sur --muted */
+  --muted-foreground: #a3a3a3;
+  --accent: #262033;
+  --accent-foreground: #f5f5f5;
+  /* Texte d'erreur 6:1 */
+  --destructive: #f87171;
+  --border: #2e2e2e;
+  /* Contour de champ 3,8:1 */
+  --input: #7a7a7a;
+  /* Focus et liens : violet clair, 8,6:1 sur le fond, 7,7:1 sur une carte */
+  --ring: #b9a3ff;
+  --link: #b9a3ff;
+  /* Surfaces violettes inchangées (texte blanc 12,9:1) */
+  --inverse: #390099;
+  --inverse-foreground: #ffffff;
+  --inverse-muted: #e9e3ff;
+  --brand: #c2185b;
+  /* Rose lisible sur fond sombre : 8,8:1 sur le fond, 7,8:1 sur une carte */
+  --brand-strong: #ff8fc4;
+  --brand-light: #ffb3d6;
+  --brand-subtle: #3d0a26;
+  /* 10:1 sur --brand-subtle */
+  --brand-subtle-foreground: #ffb3d6;
+  /* 11:1 et 9,6:1 sur le fond */
+  --warning: #fbbf24;
+  --success: #34d399;
 }
 
 @layer base {

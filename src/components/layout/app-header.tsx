@@ -10,6 +10,7 @@ import { AccountMenu } from "./account-menu";
 import { APP_NAV, isActive } from "./app-nav";
 import { Logo } from "./logo";
 import { QuotaCounter } from "./quota-counter";
+import { ThemeToggle } from "./theme-toggle";
 
 // En-tête de l'application (U38, AD-46) : logo, navigation (ordinateur), compteur de quota et compte. Sur mobile,
 // la navigation passe par la barre d'onglets du bas ; l'en-tête garde le logo et le compteur.
@@ -44,6 +45,7 @@ export function AppHeader() {
         </nav>
         <div className="flex items-center gap-3">
           <QuotaCounter />
+          <ThemeToggle />
           <AccountMenu />
         </div>
       </div>

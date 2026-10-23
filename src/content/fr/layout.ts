@@ -17,6 +17,10 @@ export const LAYOUT_TEXT = {
     menuTitle: "Menu",
   },
   // Navigation de l'application (U38, AD-46) : en-tête sur ordinateur, barre d'onglets en bas sur mobile.
+  theme: {
+    toDark: "Passer au thème sombre",
+    toLight: "Passer au thème clair",
+  },
   app: {
     label: "Navigation de l'application",
     tabsLabel: "Navigation principale",

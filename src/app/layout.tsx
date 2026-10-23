@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Archivo, Public_Sans } from "next/font/google";
 
+import { ThemeProvider } from "@/components/layout/theme-provider";
 import { MotionProvider } from "@/components/showcase/motion-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { APP_TEXT } from "@/content/fr/app";
@@ -23,7 +24,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children, modal }: LayoutProps<"/">) {
   return (
-    <html lang="fr" className={cn(archivo.variable, publicSans.variable)}>
+    // suppressHydrationWarning : next-themes pose la classe du thème sur <html> avant l'hydratation.
+    <html lang="fr" className={cn(archivo.variable, publicSans.variable)} suppressHydrationWarning>
       <body className="flex min-h-dvh flex-col">
         <a
           href="#contenu"
@@ -35,14 +37,16 @@ export default function RootLayout({ children, modal }: LayoutProps<"/">) {
         <noscript>
           <style>{"[data-reveal]{opacity:1!important;transform:none!important}"}</style>
         </noscript>
-        {/* En-tête, contenu et pied de page : coquille de la vitrine ou de l'application (U38, AD-46). */}
-        <MotionProvider>
-          {children}
-          {/* Fenêtre de connexion ouverte depuis le site (routes interceptées, U41). */}
-          {modal}
-        </MotionProvider>
-        {/* Thème clair imposé (AD-48) : le Toaster shadcn suivrait sinon le thème du système. */}
-        <Toaster theme="light" />
+        <ThemeProvider>
+          {/* En-tête, contenu et pied de page : coquille de la vitrine ou de l'application (U38, AD-46). */}
+          <MotionProvider>
+            {children}
+            {/* Fenêtre de connexion ouverte depuis le site (routes interceptées, U41). */}
+            {modal}
+          </MotionProvider>
+          {/* Le Toaster suit le thème choisi (next-themes). */}
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );

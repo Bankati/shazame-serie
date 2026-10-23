@@ -38,21 +38,22 @@ const THUMB_POSITIONS = ["object-top", "object-center", "object-bottom"] as cons
 // Téléphone de démonstration (U43, AD-48) : quatre écrans superposés (extrait, images extraites, analyse,
 // résultat), animés par GSAP depuis le composant parent (demo-timeline.ts). Sans JavaScript ou avec
 // « moins d'animations », seul l'écran du résultat est visible. Décoratif : un libellé résume la scène.
+// Thème sombre (AD-49) : coque gris foncé, sinon elle prendrait la couleur du texte (blanc).
 export function DemoPhone({ title, className }: { title: DemoTitle; className?: string }) {
   const { demo } = HOME_TEXT;
 
   return (
     <div role="img" aria-label={demo.label} className={cn("demo-phone relative aspect-[9/19] w-64 md:w-72", className)}>
       {/* Boutons latéraux de la coque */}
-      <span aria-hidden="true" className="absolute top-24 -left-1 h-8 w-1 rounded-l-sm bg-foreground" />
-      <span aria-hidden="true" className="absolute top-36 -left-1 h-12 w-1 rounded-l-sm bg-foreground" />
-      <span aria-hidden="true" className="absolute top-32 -right-1 h-16 w-1 rounded-r-sm bg-foreground" />
+      <span aria-hidden="true" className="absolute top-24 -left-1 h-8 w-1 rounded-l-sm bg-foreground dark:bg-secondary" />
+      <span aria-hidden="true" className="absolute top-36 -left-1 h-12 w-1 rounded-l-sm bg-foreground dark:bg-secondary" />
+      <span aria-hidden="true" className="absolute top-32 -right-1 h-16 w-1 rounded-r-sm bg-foreground dark:bg-secondary" />
       <div
         aria-hidden="true"
-        className="relative h-full rounded-phone bg-foreground p-2 shadow-2xl ring-1 ring-foreground/20"
+        className="relative h-full rounded-phone bg-foreground p-2 shadow-2xl ring-1 ring-foreground/20 dark:bg-secondary dark:ring-border"
       >
         <div className="relative h-full overflow-hidden rounded-phone-screen bg-background text-foreground">
-          <span className="absolute top-2 left-1/2 z-20 h-6 w-24 -translate-x-1/2 rounded-full bg-foreground" />
+          <span className="absolute top-2 left-1/2 z-20 h-6 w-24 -translate-x-1/2 rounded-full bg-foreground dark:bg-background" />
           <div className="absolute inset-x-0 top-0 z-10 flex items-center gap-2 px-5 pt-10">
             <span className="flex size-6 items-center justify-center rounded-sm bg-brand text-primary-foreground">
               <Clapperboard className="size-4" />

@@ -91,6 +91,25 @@ Fichier : `src/components/home/section-heading.tsx`
 | Accent | sur-titre `text-sm font-semibold text-brand-strong` (fond clair) ou `text-brand` (fond sombre) |
 | Espacement | `gap-3`, `max-w-2xl` |
 
+### ThemeToggle (U44, AD-49)
+
+Fichier : `src/components/layout/theme-toggle.tsx` (fournisseur : `theme-provider.tsx`)
+Dernière mise à jour : 23 octobre 2026 (U44)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | bouton shadcn `variant="ghost" size="icon"` |
+| Bordure | none |
+| Radius | `rounded-md` (bouton shadcn) |
+| Texte principal | icône `size-5 text-muted-foreground hover:text-foreground` |
+| Texte secondaire | none |
+| Espacement | `size-11` (zone tactile 44 px) |
+| Hover / focus | shadcn ghost ; focus `ring` |
+| Ombre | none |
+| Accent | none |
+
+**Notes de pattern :** lune en clair, soleil en sombre, par CSS (`dark:hidden` / `hidden dark:block`) pour éviter tout écart d'hydratation ; libellé « Passer au thème sombre / clair » fixé après l'hydratation. Placé avant le compte dans `SiteHeader` et `AppHeader`.
+
 ### Hero animé + DemoPhone (U43, AD-48) — remplace « Hero + IdentifyPanel » (fond), « CurvedFilmBand » et la vedette
 
 Fichiers : `src/components/home/hero.tsx`, `demo-phone.tsx`, `demo-timeline.ts`, `how-it-works.tsx`

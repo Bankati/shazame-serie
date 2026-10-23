@@ -260,6 +260,12 @@ Refonte inspirée d'un site de référence analysé le 21 octobre 2026 (analyse 
 - **Fin** : contrastes mesurés ; Playwright accueil (lanceur au premier écran, démonstration, étapes, pellicule) et suite complète ; captures ordinateur et mobile.
 - **Dépend de** : U38, U39.
 
+### U44 — Thème sombre au choix
+- **Objectif** : laisser chacun passer du fond clair à un fond sombre façon plateforme de streaming.
+- **Périmètre** : bouton dans les en-têtes, jetons sombres mesurés, choix conservé sans flash au chargement. AD-49.
+- **Fin** : Playwright bascule, rechargement et navigation ; captures des deux thèmes.
+- **Dépend de** : U43.
+
 ---
 
 ## Sprint 4 — Pilotage, conformité, lancement (13 au 31 décembre)

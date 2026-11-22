@@ -893,3 +893,22 @@ Dernière mise à jour : 20 octobre 2026
 | Accent | coche `text-brand-strong` sur le titre choisi |
 
 **Notes de pattern :** lien d'entrée discret sous le résultat (`text-sm text-muted-foreground underline`, `min-h-11`). Résultat choisi porté par `aria-pressed` ; recherche après 350 ms, annonces dans une région `aria-live`. Case de consentement non cochée par défaut avec son explication (`aria-describedby`), affichée seulement si des images sont encore en mémoire. Confirmation par `toast.success`, puis retour au résultat sans le lien (un seul signalement).
+
+### AdminShell, StatTile, DailyTable (back-office)
+
+Fichiers : `src/components/admin/admin-shell.tsx`, `stat-tile.tsx`, `daily-table.tsx`, page `src/app/admin/page.tsx` (U25)
+Dernière mise à jour : 22 novembre 2026
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | barre latérale `bg-card` ; tuiles et tableau `bg-card` ; survol des liens `hover:bg-accent` |
+| Bordure | barre latérale `md:border-r border-border` (mobile : `border-b`) ; tuiles et tableau `border border-border` ; lignes `border-b border-border` |
+| Radius | tuiles et tableau `rounded-lg` ; liens `rounded-md` |
+| Texte principal | titre de page `font-display text-display font-bold` ; valeur de tuile `font-display text-2xl font-bold tabular-nums` ; cellules `text-sm tabular-nums` |
+| Texte secondaire | libellés, précisions, en-têtes de colonnes `text-sm text-muted-foreground` |
+| Espacement | barre latérale `p-4 gap-4 md:w-60` ; contenu `px-4 sm:px-6 md:px-8 py-8`, `max-w-6xl gap-8` ; tuiles `p-4 gap-1`, grille `gap-4 sm:grid-cols-2 xl:grid-cols-5` ; cellules `px-3 py-2` |
+| Hover / focus | `focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring` |
+| Ombre | none |
+| Accent | aucun (ui-context : admin sans effet décoratif) |
+
+**Notes de pattern :** barre latérale collante (`md:sticky md:top-0 md:h-dvh`), lien « Retour à l'application » en bas. Tuiles dans un `<dl>` (`dt` libellé, `dd` valeur et précision). Tableau avec `caption` masquée, en-têtes `scope`, jour en `<time>`, défilement horizontal sous 40 rem. Aucune couleur sémantique sur les chiffres.

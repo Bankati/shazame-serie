@@ -127,6 +127,11 @@ Mettre à jour ce fichier après chaque changement d'implémentation significati
   - Vérifié : `test:db` (critères de fin : sans consentement aucune image ; avec consentement images privées, illisibles avec la clé publique), unitaires (route, recherche, accès admin), Playwright (signalement sans puis avec consentement : images absentes puis 2 à 5). Rendu contrôlé sur mobile.
   - Reste : purge des images de signalement selon Q16 (U30) ; revue des signalements dans le back-office (U24).
 
+- U25 — Back-office : tableau de bord (plan : `context/plans/U25.md`, 22 novembre 2026, mode accéléré choisi par le fondateur : plan court puis implémentation).
+  - Fait : page `/admin` (rôle admin relu en base ; visiteur → connexion, non-admin ou suspendu → 404), coquille `AdminShell` ; indicateurs sur 30 jours de Paris : utilisateurs (total, nouveaux), identifications par jour (affichées, décomptées, cache), taux de réussite, coût IA du jour et plafond, revenu mensuel estimé (abonnements donnant droit au Premium, prix `src/server/billing/prices.ts`) ; tableau jour par jour ; `formatMicroEur`.
+  - Vérifié : unitaires (calculs, décision d'accès, format), `tests/db/admin-dashboard.test.ts` (jours de Paris aux bornes, règle Premium, totaux).
+  - Hors périmètre, noté : pas de lien « Back-office » dans le menu du compte (le rôle n'est pas exposé au navigateur) ; à ajouter en U26 si utile.
+
 - U13 — Harnais du jeu de test (23 octobre 2026, priorité « mesurer d'abord » choisie par le fondateur, AD-52).
   - Fait : `npm run eval` (`tests/live/clip-eval.test.ts`) : extraction des images avec ffmpeg-static aux mêmes instants et avec la même sélection que le navigateur (vérifiée sur les 12 vidéos de test), pipeline réel sans cache, sans quota ni écriture en base, coût relevé ; rapport (bon titre en premier, bon titre visible, mauvais titre affiché, abstention, erreurs, latence médiane et p95, coût moyen, par difficulté, liste des échecs) écrit dans `eval-results/` ; logique de score testée (`src/server/eval/clip-eval.ts`) ; modèle de manifeste et mode d'emploi dans `eval/`.
   - Corrigé tiré du nom des fichiers : `npm run eval:prepare` retrouve les fiches TMDB et écrit `manifest.json` à vérifier.

@@ -912,3 +912,22 @@ Dernière mise à jour : 22 novembre 2026
 | Accent | aucun (ui-context : admin sans effet décoratif) |
 
 **Notes de pattern :** barre latérale collante (`md:sticky md:top-0 md:h-dvh`), lien « Retour à l'application » en bas. Tuiles dans un `<dl>` (`dt` libellé, `dd` valeur et précision). Tableau avec `caption` masquée, en-têtes `scope`, jour en `<time>`, défilement horizontal sous 40 rem. Aucune couleur sémantique sur les chiffres.
+
+### AdminNav, UserStatusForm, SettingForm (back-office, actions)
+
+Fichiers : `src/components/admin/admin-nav.tsx`, `user-status-form.tsx`, `setting-form.tsx`, pages `src/app/admin/utilisateurs`, `reglages`, `journal` (U26)
+Dernière mise à jour : 23 novembre 2026
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | entrée active de la navigation `bg-accent` ; formulaires de réglage et tableaux `bg-card` |
+| Bordure | formulaires de réglage et tableaux `border border-border rounded-lg` ; liens de pagination `border border-border rounded-md` |
+| Radius | `rounded-lg` (cartes, tableaux) ; `rounded-md` (liens) |
+| Texte principal | cellules `text-sm` ; changement du journal `font-mono text-xs break-all` |
+| Texte secondaire | email, statut d'abonnement, date de modification `text-muted-foreground` (`text-xs` sous les champs) |
+| Espacement | page `max-w-6xl gap-6` (réglages `max-w-3xl`) ; réglage `p-4 md:p-6 gap-3` ; cellules `px-3 py-2 align-top` |
+| Hover / focus | `focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring` ; boutons shadcn |
+| Ombre | none |
+| Accent | statut « Suspendu » en `Badge variant="destructive"`, bouton « Suspendre » `Button variant="destructive" size="sm"` ; « Réactiver » en `outline` |
+
+**Notes de pattern :** navigation en composant client (`usePathname`, `aria-current="page"`), défilement horizontal sur mobile. Recherche en `<form role="search">` GET (`?q=`), nombre de résultats annoncé (`role="status"`). Une action par ligne : formulaire de Server Action avec champs cachés, message sous le bouton (`role="alert"` / `role="status"`), liste relue par `revalidatePath`. Un formulaire par réglage (une erreur n'en bloque pas d'autres) ; la clé React inclut la valeur pour reprendre la valeur relue après enregistrement. Pagination du journal par liens `?page=`.

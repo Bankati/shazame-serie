@@ -1,7 +1,8 @@
-import { ArrowLeft, LayoutDashboard } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { AdminNav } from "@/components/admin/admin-nav";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { ADMIN_TEXT } from "@/content/fr/admin";
 import { cn } from "@/lib/utils";
@@ -10,7 +11,7 @@ const LINK =
   "flex min-h-11 items-center gap-2 rounded-md px-3 text-sm font-medium text-foreground hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 
 // Coquille du back-office (U25, ui-context.md) : barre latérale fixe sur desktop, barre du haut sur mobile,
-// aucun effet décoratif. Les entrées des actions (U26) s'ajoutent à la navigation.
+// aucun effet décoratif. Navigation : `AdminNav` (U26).
 export function AdminShell({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-dvh flex-col md:flex-row">
@@ -19,12 +20,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
           <span className="font-display text-lg font-bold text-foreground">{ADMIN_TEXT.shellLabel}</span>
           <ThemeToggle />
         </div>
-        <nav aria-label={ADMIN_TEXT.nav.label} className="flex gap-1 md:flex-col">
-          <Link href="/admin" className={LINK} aria-current="page">
-            <LayoutDashboard className="size-4" aria-hidden="true" />
-            {ADMIN_TEXT.nav.dashboard}
-          </Link>
-        </nav>
+        <AdminNav />
         <Link href="/identifier" className={cn(LINK, "text-muted-foreground md:mt-auto")}>
           <ArrowLeft className="size-4" aria-hidden="true" />
           {ADMIN_TEXT.backToApp}

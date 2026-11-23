@@ -15,7 +15,7 @@ Relevées sur le registre npm le **4 octobre 2026**, révisées en U01 le **7 oc
 
 | Paquet | Version | Rôle |
 | --- | --- | --- |
-| `next` / `eslint-config-next` | 16.4.2 (installé le 22 octobre 2026 : correctif de sécurité GHSA-2464-fhr4-w9xw, GHSA-673q-mjm6-r5xr, GHSA-p3m5-59mp-jv5r ; 16.3.x non corrigée) | Framework |
+| `next` / `eslint-config-next` | 16.4.6 (installé le 22 novembre 2026 : correctifs de sécurité de cache et de cookies, dont GHSA-f3mh-rxg3-f5g2 et GHSA-rhh4-g77r-r9qj ; le build de Next 16.4.2 s'arrêtait sur une alerte de sécurité. Avant : 16.4.2 le 22 octobre 2026) | Framework |
 | `gsap` / `@gsap/react` | 3.15.0 / 2.1.2 (installés le 23 octobre 2026, U43) | Animations du hero et des étapes |
 | `react` / `react-dom` | 19.3.0 (installé) | UI |
 | `typescript` | 6.0.3 (installé, AD-21) | Typage (voir note) |
@@ -24,7 +24,7 @@ Relevées sur le registre npm le **4 octobre 2026**, révisées en U01 le **7 oc
 | `lucide-react` | 1.52.0 | Icônes |
 | `react-hook-form` | 7.89.0 | Formulaires |
 | `@hookform/resolvers` | 5.9.1 | Pont zod ↔ react-hook-form |
-| `zod` | 4.6.5 (installé) | Validation |
+| `zod` | 4.6.7 (installé le 22 novembre 2026 : correctif de sécurité, < 4.6.6 vulnérable) | Validation |
 | `drizzle-orm` / `drizzle-kit` | 0.45.3 / 0.31.11 | ORM et migrations |
 | `postgres` | 3.4.9 | Pilote PostgreSQL pour Drizzle |
 | `@supabase/supabase-js` | 2.117.3 | Auth, Storage |

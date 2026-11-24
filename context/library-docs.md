@@ -8,6 +8,7 @@ Référence des librairies et services utilisés, de leurs versions et des pièg
 2. Versions **exactes** dans `package.json` (pas de `^`), mises à jour volontairement, une librairie à la fois, avec la CI verte.
 3. Toute nouvelle dépendance est ajoutée à ce fichier avec : rôle, raison, alternative écartée.
 4. Les points marqués « À vérifier » doivent être confirmés dans la doc officielle au moment de l'unité concernée, puis ce fichier est mis à jour.
+5. **Piège npm sous Windows (24 novembre 2026)** : un `npm install` lancé sous Windows peut retirer de `package-lock.json` des dépendances optionnelles embarquées des versions wasm32 (`@emnapi/core`, `@emnapi/runtime`, utilisées par `sharp` et `@tailwindcss/oxide`) ; `npm ci` échoue alors sur la CI Linux (« Missing: @emnapi/... from lock file »), même si tout marche en local. Après toute mise à jour, vérifier que `git diff package-lock.json` ne supprime pas ces entrées ; si c'est le cas, les restaurer depuis la version précédente du fichier (correctif `45d1ec8`).
 
 ## Versions de référence
 

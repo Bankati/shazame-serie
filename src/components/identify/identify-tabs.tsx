@@ -5,7 +5,7 @@ import { type KeyboardEvent, useRef } from "react";
 import { IDENTIFY_TEXT } from "@/content/fr/identify";
 import { cn } from "@/lib/utils";
 
-export const IDENTIFY_TABS = ["media", "description"] as const;
+export const IDENTIFY_TABS = ["media", "description", "link"] as const;
 export type IdentifyTab = (typeof IDENTIFY_TABS)[number];
 
 type IdentifyTabsProps = {
@@ -15,8 +15,8 @@ type IdentifyTabsProps = {
   panelId: string;
 };
 
-// Choix du mode d'identification (U35, AD-43) : onglets accessibles (flèches, Début, Fin ; un seul arrêt de
-// tabulation). U36 ajoutera « Lien ».
+// Choix du mode d'identification (U35, AD-43 ; « Lien » U36) : onglets accessibles (flèches, Début, Fin ; un seul
+// arrêt de tabulation).
 export function IdentifyTabs({ value, onChange, panelId }: IdentifyTabsProps) {
   const { tabs } = IDENTIFY_TEXT;
   const refs = useRef<Partial<Record<IdentifyTab, HTMLButtonElement | null>>>({});
@@ -57,8 +57,9 @@ export function IdentifyTabs({ value, onChange, panelId }: IdentifyTabsProps) {
             tabIndex={selected ? 0 : -1}
             onClick={() => onChange(tab)}
             className={cn(
-              "h-11 flex-1 rounded-md px-3 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-              selected ? "bg-background text-foreground" : "text-muted-foreground hover:text-foreground",
+              "h-11 flex-1 whitespace-nowrap rounded-md px-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+              // Onglet actif en accent plein (AD-45) : repère immédiat du mode choisi.
+              selected ? "bg-primary font-semibold text-primary-foreground" : "text-muted-foreground hover:text-foreground",
             )}
           >
             {tabs[tab]}

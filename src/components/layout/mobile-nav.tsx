@@ -1,6 +1,8 @@
 "use client";
 
 import { Menu, X } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 import { accountInitial, useAccount } from "@/client/account/account";
@@ -14,6 +16,7 @@ import { ACCOUNT_PATH, AccountBadge, HISTORY_PATH, SIGN_OUT_PATH, WATCHLIST_PATH
 // Menu mobile : le Sheet se ferme après un choix pour laisser défiler la page vers l'ancre.
 export function MobileNav() {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
   const { nav } = LAYOUT_TEXT;
   const account = useAccount();
   const { account: text } = AUTH_TEXT;
@@ -84,11 +87,16 @@ export function MobileNav() {
           ) : null}
           {account.status === "ready" && !account.account ? (
             <div className="grid grid-cols-2 gap-3">
+              {/* Link : connexion et inscription en fenêtre (U41) ; le menu se ferme pour la laisser apparaître. */}
               <Button asChild variant="outline" className="h-11 text-base">
-                <a href="/connexion">{text.signIn}</a>
+                <Link href={`/connexion?suite=${encodeURIComponent(pathname)}`} onClick={() => setOpen(false)}>
+                  {text.signIn}
+                </Link>
               </Button>
               <Button asChild variant="outline" className="h-11 text-base">
-                <a href="/inscription">{text.signUp}</a>
+                <Link href={`/inscription?suite=${encodeURIComponent(pathname)}`} onClick={() => setOpen(false)}>
+                  {text.signUp}
+                </Link>
               </Button>
             </div>
           ) : null}

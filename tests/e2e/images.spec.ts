@@ -37,7 +37,7 @@ type Upload = { name: string; mimeType: string; buffer: Buffer };
 const capture = (name: string): Upload => ({ name, mimeType: "image/jpeg", buffer: POSTER });
 
 async function choose(page: Page, files: Upload[]) {
-  await page.goto("/");
+  await page.goto("/identifier");
   const input = page.locator('input[type="file"]');
   // Sous charge, l'envoi peut précéder l'hydratation : on recommence jusqu'à voir la sélection prise en compte.
   await expect(async () => {
@@ -75,7 +75,7 @@ for (const [label, files, message] of [
 ] as const) {
   test(`${label} : refus clair, rien n'est envoyé`, async ({ page }) => {
     const sent = await simulateServer(page);
-    await page.goto("/");
+    await page.goto("/identifier");
     const input = page.locator('input[type="file"]');
     await expect(async () => {
       await input.setInputFiles([...files]);

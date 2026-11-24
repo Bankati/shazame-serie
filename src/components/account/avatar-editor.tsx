@@ -75,7 +75,7 @@ export function AvatarEditor({ initialUrl, initial }: { initialUrl: string | nul
             <m.span
               key="initiale"
               aria-hidden="true"
-              className="flex size-full items-center justify-center font-display text-display font-bold text-inverse"
+              className="flex size-full items-center justify-center font-display text-display font-bold text-primary-foreground"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}

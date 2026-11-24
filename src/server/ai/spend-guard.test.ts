@@ -24,7 +24,11 @@ function result(costMicroEur: number): VisionResult {
 
 function setup(cap: number, identify: VisionProvider["identify"] = async () => result(1_800)) {
   const store = createMemorySpendStore(() => NOW.getTime());
-  const inner = { identify: vi.fn(identify), identifyFromText: vi.fn(async () => result(300)) };
+  const inner = {
+    identify: vi.fn(identify),
+    identifyFromText: vi.fn(async () => result(300)),
+    identifyFromLink: vi.fn(async () => result(900)),
+  };
   const recordSpend = vi.fn(async () => {});
   const onCapReached = vi.fn(async () => {});
   const guard = new SpendGuardedVisionProvider({
@@ -71,6 +75,17 @@ describe("SpendGuardedVisionProvider", () => {
     expect(inner.identifyFromText).toHaveBeenCalledWith("un homme revit la même journée", undefined);
     expect(recordSpend).toHaveBeenCalledWith(DAY, 300);
     expect(estimateMaxCostMicroEur(MODEL, 0)).toBeLessThan(estimateMaxCostMicroEur(MODEL, 1));
+  });
+
+  it("lien (U36) : même plafond, estimation à une image si vignette", async () => {
+    const paused = setup(0);
+    const clues = { platform: "youtube" as const, title: "Extrait", description: "", author: "", tags: [], thumbnail: Buffer.from("x") };
+    await expect(paused.guard.identifyFromLink(clues)).rejects.toMatchObject({ reason: "paused" });
+    expect(paused.inner.identifyFromLink).not.toHaveBeenCalled();
+
+    const { guard, recordSpend } = setup(1_000_000);
+    await guard.identifyFromLink(clues);
+    expect(recordSpend).toHaveBeenCalledWith(DAY, 900);
   });
 
   it("plafond à 0 : aucun appel au modèle, pause, alerte envoyée une seule fois", async () => {

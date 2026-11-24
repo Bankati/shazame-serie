@@ -30,7 +30,7 @@ export function TrailerPlayer({ youtubeKey, title }: { youtubeKey: string; title
         className="flex aspect-video w-full items-center justify-center rounded-lg bg-inverse text-inverse-foreground hover:bg-inverse/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
       >
         <span className="flex items-center gap-3 text-base font-medium">
-          <span className="flex size-14 items-center justify-center rounded-full bg-brand text-inverse">
+          <span className="flex size-14 items-center justify-center rounded-full bg-brand text-primary-foreground">
             <Play className="size-6" aria-hidden="true" />
           </span>
           {trailer.play(title)}

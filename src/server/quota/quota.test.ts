@@ -31,8 +31,15 @@ describe("quota", () => {
     const sixteenth = await quota.reserve(FREE_USER);
     expect(sixteenth).toEqual({
       ok: false,
-      status: { limit: 15, used: 15, remaining: 0, resetAt: new Date("2026-07-14T22:00:00.000Z") },
+      status: { plan: "free", limit: 15, used: 15, remaining: 0, resetAt: new Date("2026-07-14T22:00:00.000Z") },
     });
+  });
+
+  it("indique le profil du quota (U21 : choix de l'invitation du paywall)", async () => {
+    const { quota } = service();
+    expect((await quota.status(VISITOR)).plan).toBe("visitor");
+    expect((await quota.status(FREE_USER)).plan).toBe("free");
+    expect((await quota.status({ ...FREE_USER, plan: "premium" })).plan).toBe("premium");
   });
 
   it("refuse la 4e identification d'un visiteur (RG2 : 3 par jour)", async () => {

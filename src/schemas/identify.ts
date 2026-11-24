@@ -21,6 +21,8 @@ export const identifiedTitleSchema = z.object({
 });
 
 export const quotaInfoSchema = z.object({
+  // Profil (U21) : choisit l'invitation du paywall. Facultatif pour rester lisible si l'information manque.
+  plan: z.enum(["visitor", "free", "premium"]).optional(),
   limit: z.number().int().nonnegative(),
   remaining: z.number().int().nonnegative(),
   resetAt: z.iso.datetime(),

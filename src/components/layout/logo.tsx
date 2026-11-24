@@ -21,7 +21,7 @@ export function Logo({ tone = "default", className }: LogoProps) {
         className,
       )}
     >
-      <span className="flex size-8 items-center justify-center rounded-md bg-brand text-inverse">
+      <span className="flex size-8 items-center justify-center rounded-md bg-brand text-primary-foreground">
         <Clapperboard className="size-5" aria-hidden="true" />
       </span>
       <span

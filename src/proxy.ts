@@ -9,6 +9,6 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Ni les fichiers statiques ni les images : ils n'ont pas besoin de la session.
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|brand/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|txt|xml)$).*)"],
+  // Ni les fichiers statiques ni les images, ni le webhook de paiement (appelé par Stripe, sans session).
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|brand/|api/billing/webhook|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|txt|xml)$).*)"],
 };

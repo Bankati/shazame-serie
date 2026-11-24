@@ -14,7 +14,7 @@ Pas de code. Chaque décision est consignée dans `progress-tracker.md`.
 
 | ID | Décision | Bloque |
 | --- | --- | --- |
-| D1 | Entité juridique qui encaisse + prestataire de paiement (Stripe / Paddle / Lemon Squeezy) | U22 |
+| D1 | Entité juridique qui encaisse + prestataire de paiement — **prestataire : Stripe (AD-50, 23 octobre 2026)** ; entité : Q1 | U22 (mise en production) |
 | D2 | Demande de licence commerciale TMDB envoyée ; plan B noté | U08, U15 |
 | D3 | Source « où regarder » : TMDB watch/providers (attribution JustWatch) ou Watchmode | U16 |
 | D4 | Compte OpenAI, modèle de vision retenu, accord de traitement des données (transfert hors UE) | U07 |
@@ -23,7 +23,8 @@ Pas de code. Chaque décision est consignée dans `progress-tracker.md`.
 | D7 | Valeurs RG2 (visiteur), RG4 (plafond Premium), plafond IA quotidien initial | U11, U14 |
 | D8 | Nom commercial provisoire et domaine (pour emails, OAuth Google, mentions légales) | U04, U23 |
 | D9 | Plans payants Vercel Pro et Supabase (production) intégrés au budget | U01 |
-| D10 | Clé YouTube Data API (Google Cloud, gratuite dans la limite du quota) pour l'identification par lien | U36 |
+| D10 | Clé YouTube Data API (Google Cloud, gratuite dans la limite du quota) pour l'identification par lien — **fermée le 20 octobre 2026** | U36 |
+| D11 | Application Meta (Facebook for Developers) avec la fonction « oEmbed Read », validée par Meta, et son jeton : seul accès public aux publications Instagram | U36 (Instagram) |
 
 ---
 
@@ -213,6 +214,88 @@ Ajout de périmètre décidé par le fondateur (AD-37 à AD-40) : le cahier des 
 
 ---
 
+## Sprint 3 ter — Refonte de l'expérience (demande du fondateur, 21 octobre 2026)
+
+Refonte inspirée d'un site de référence analysé le 21 octobre 2026 (analyse et captures : AD-45). Objectif : une plateforme moderne, intuitive et cohérente, au niveau de finition de la référence, **sans retirer aucune fonctionnalité**, dans notre identité. Choix du fondateur : accent unique vert du logo, vitrine et application séparées, calendrier des sorties et connexion en fenêtre ajoutés (AD-45 à AD-47). À ne pas reprendre de la référence : faux chiffres et faux avis, bandeau de logos de marques, textes mêlant anglais et français.
+
+### U37 — Identité visuelle unifiée
+- **Objectif** : une seule couleur d'accent (vert du logo) et un langage visuel constant sur tout le site.
+- **Périmètre** : jetons de couleur revus dans `globals.css` (bouton principal vert à texte foncé, contrastes AA mesurés) ; grands titres en deux tons (mot clé en accent) ; petits titres de section uniformes ; boutons, onglets, puces et focus alignés ; `ui-context.md` et `ui-registry.md` mis à jour ; textes périmés corrigés (formats et durées depuis U33, modes d'identification). AD-45.
+- **Fin** : aucune couleur hors jetons (`check:design`) ; contrastes AA vérifiés et consignés ; captures avant/après des pages principales, ordinateur et mobile ; parcours Playwright existants verts.
+- **Dépend de** : U36.
+
+### U38 — Vitrine et application séparées
+- **Objectif** : une vitrine qui présente et convertit, une application qui sert à identifier et à retrouver ses titres.
+- **Périmètre** : la vitrine (`/`) garde la présentation, les tarifs, la FAQ, avec un champ d'identification en vedette qui mène à l'application ; l'application (adresse à décider en `/architect`) regroupe l'identification (4 modes en icônes), les identifications récentes, les tendances, l'historique, la liste, le compte et le calendrier ; navigation propre à l'application ; barre d'onglets en bas sur mobile ; bouton flottant « Identifier » sur les pages secondaires ; redirections et liens internes à jour (partage, courriels, plan du site). AD-46.
+- **Fin** : Playwright : vitrine → identification → résultat ; navigation mobile au clavier et au toucher ; aucun lien mort (contrôle des liens) ; captures.
+- **Dépend de** : U37.
+
+### U39 — Vitrine refondue
+- **Objectif** : montrer le produit plutôt que le décrire.
+- **Périmètre** : hero centré sur l'identification ; 3 étapes avec durées réelles ; sections illustrées par des maquettes de nos vrais écrans (résultat, analyse, où regarder) ; chiffres seulement s'ils sont réels et sourcés ; tarifs avec réassurance ; FAQ centrée ; appel final ; pied de page en colonnes. Animations sobres (Motion, `prefers-reduced-motion`).
+- **Fin** : Lighthouse mobile ≥ 90 (performance, accessibilité) ; captures ; aucun contenu inventé.
+- **Dépend de** : U38.
+
+### U40 — Fiche titre et états de l'application
+- **Objectif** : une fiche titre claire et des pages sans « trou ».
+- **Périmètre** : fiche en deux colonnes (titre, actions, synopsis, distribution à gauche ; où regarder avec choix du pays et détails à droite) ; titres similaires ; états vides, de chargement et « connexion requise » soignés sur historique, liste et compte.
+- **Fin** : Playwright fiche titre et pages vides ; captures ordinateur et mobile.
+- **Dépend de** : U38.
+
+### U41 — Connexion en fenêtre
+- **Objectif** : se connecter sans quitter la page en cours.
+- **Périmètre** : connexion, inscription et mot de passe oublié dans une fenêtre (Google en premier) ouverte depuis l'en-tête, la liste, le signalement ; retour à l'action d'origine après connexion ; les pages `/connexion` et `/inscription` restent pour les liens directs et les courriels ; mêmes Server Actions et contrôles qu'en U04. AD-47.
+- **Fin** : Playwright : connexion en fenêtre puis action reprise (ajout à la liste) ; Google ; clavier et focus piégé dans la fenêtre.
+- **Dépend de** : U38.
+
+### U42 — Calendrier des sorties
+- **Objectif** : voir les films à venir et les séries en cours de diffusion.
+- **Périmètre** : page Calendrier dans l'application (TMDB : films à venir, séries en diffusion, région de l'utilisateur), cartes avec date de sortie, lien vers la fiche, ajout à la liste ; cache et mention TMDB. Fonctionnalité absente du cahier des charges, ajoutée par le fondateur (AD-47).
+- **Fin** : tests du catalogue simulé ; Playwright calendrier → fiche ; captures.
+- **Dépend de** : U38.
+
+### U43 — Nouvelle identité et hero animé
+- **Objectif** : une première impression qui montre le produit en action, aux couleurs choisies par le fondateur.
+- **Périmètre** : thème clair (framboise #9E0059, violet #390099, blanc cassé #F8F9FA) sur toute la plateforme ; hero avec téléphone animé (GSAP) rejouant une identification ; « Comment ça marche » animé au défilement ; pellicule de la dernière section avec les images des titres en tendance. AD-48.
+- **Fin** : contrastes mesurés ; Playwright accueil (lanceur au premier écran, démonstration, étapes, pellicule) et suite complète ; captures ordinateur et mobile.
+- **Dépend de** : U38, U39.
+
+### U44 — Thème sombre au choix
+- **Objectif** : laisser chacun passer du fond clair à un fond sombre façon plateforme de streaming.
+- **Périmètre** : bouton dans les en-têtes, jetons sombres mesurés, choix conservé sans flash au chargement. AD-49.
+- **Fin** : Playwright bascule, rechargement et navigation ; captures des deux thèmes.
+- **Dépend de** : U43.
+
+---
+
+## Sprint 3 quater — Identification v2 (demande du fondateur, 23 octobre 2026)
+
+Constat du fondateur : l'identification d'une vidéo n'est pas assez fiable. Règle (AD-52) : chaque technique est mesurée par l'eval (U13) et gardée seulement si elle améliore « bon titre en premier » sans augmenter « mauvais titre affiché ». La vidéo ne quitte jamais le navigateur ; seul un extrait audio est permis (AD-51).
+
+### U45 — Dialogues : extrait audio et transcription
+- **Objectif** : se servir de ce qui est dit dans l'extrait.
+- **Périmètre** : le navigateur extrait jusqu'à 30 s d'audio du passage analysé (mono, compressé) et l'envoie avec les images ; transcription par la couche `server/ai` (garde de dépense, coût enregistré) ; texte transmis au modèle avec les images (répliques, noms), puis supprimé ; aucun stockage ni journal du son ou du texte ; vidéo sans son : comportement actuel. AD-51.
+- **Fin** : eval avant / après sur le jeu complet ; aucune trace audio en base ni dans les journaux (test).
+- **Dépend de** : U13, D5.
+
+### U46 — Meilleur choix des images
+- **Objectif** : envoyer les images qui portent le plus d'indices.
+- **Périmètre** : détection des changements de plan dans le navigateur (différence de dHash), une image nette par plan, jusqu'à 8 candidates ; texte à l'écran (générique, incrustations, pseudonymes) signalé au modèle ; recadrage des bandes noires et des filigranes fixes testé en variantes.
+- **Fin** : eval avant / après.
+- **Dépend de** : U13.
+
+### U47 — Reconnaissance musicale
+- **Objectif** : reconnaître la musique de l'extrait (bande originale), puis les titres qui l'utilisent.
+- **Périmètre** : service tiers de reconnaissance musicale (à choisir et chiffrer : décision du fondateur), sur l'extrait audio d'U45 ; la musique devient un indice, jamais une preuve seule.
+- **Fin** : eval avant / après, coût par identification.
+- **Dépend de** : U45.
+
+### U48 — Index des images publiques (TMDB)
+- **Objectif** : comparer les images de l'extrait à des images de référence légales.
+- **Périmètre** : vecteurs d'images (type SigLIP ou SSCD) des images publiques TMDB (affiches, images de fond, photos de tournage) des titres les plus populaires, stockés dans pgvector ; recherche des plus proches, proposés au modèle comme candidats puis vérifiés. Dépend de la licence TMDB (Q2) et d'un service de calcul des vecteurs (à chiffrer).
+- **Fin** : eval avant / après ; coût et temps de réponse dans le budget.
+- **Dépend de** : U13, Q2.
+
 ## Sprint 4 — Pilotage, conformité, lancement (13 au 31 décembre)
 
 ### U25 — Back-office : tableau de bord
@@ -253,7 +336,7 @@ Ajout de périmètre décidé par le fondateur (AD-37 à AD-40) : le cahier des 
 ### U32 — Bêta fermée et lancement
 - **Périmètre** : 20 à 50 testeurs, collecte des signalements, `npm run eval` final ≥ 85 %, test de charge k6 (500 simultanés), checklist de mise en production, gel au 20 décembre.
 - **Fin** : lancement doux le 31 décembre 2026, surveillance renforcée la première semaine.
-- **Dépend de** : U01 à U31, U33 à U36.
+- **Dépend de** : U01 à U31, U33 à U42.
 
 ---
 

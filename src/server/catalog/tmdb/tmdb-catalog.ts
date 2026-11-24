@@ -14,6 +14,8 @@ import {
   type CatalogProvider,
   type CatalogTitleDetails,
   type MediaType,
+  type ReleaseKind,
+  type ReleaseTitle,
   type ShowcaseTitle,
   type TitlePage,
 } from "../catalog-provider";
@@ -81,6 +83,8 @@ const showcaseSchema = z.object({
   voteAverage: z.number(),
   genreIds: z.array(z.number()),
 });
+
+const releaseSchema = showcaseSchema.extend({ releaseDate: z.string().nullable() });
 
 const genreSchema = z.object({ id: z.number(), name: z.string() });
 
@@ -197,6 +201,24 @@ export class TmdbCatalog implements CatalogProvider {
     return this.cached("tmdb:top_rated:movie", z.array(showcaseSchema), async () => {
       const page = await this.get({ path: "/movie/top_rated", params: { language: "fr-FR", region: "FR", page: 1 } }, tmdbListSchema);
       return page.results.flatMap((item) => toShowcaseTitle(item, "movie"));
+    });
+  }
+
+  /**
+   * Calendrier (U42) : `movie/upcoming` (région France, triés par date de sortie) ou `tv/on_the_air` (séries
+   * diffusées cette semaine). Même cache et même validation que les tendances.
+   */
+  async getReleases(kind: ReleaseKind): Promise<ReleaseTitle[]> {
+    return this.cached(`tmdb:releases:${kind}`, z.array(releaseSchema), async () => {
+      const movies = kind === "upcoming_movies";
+      const page = await this.get(
+        movies
+          ? { path: "/movie/upcoming", params: { language: "fr-FR", region: "FR", page: 1 } }
+          : { path: "/tv/on_the_air", params: { language: "fr-FR", page: 1 } },
+        tmdbListSchema,
+      );
+      const titles = page.results.flatMap((item) => toReleaseTitle(item, movies ? "movie" : "tv"));
+      return movies ? titles.sort((a, b) => (a.releaseDate ?? "9999").localeCompare(b.releaseDate ?? "9999")) : titles;
     });
   }
 
@@ -357,6 +379,17 @@ export function toShowcaseTitle(item: unknown, fallbackType: MediaType): Showcas
       genreIds: value.genre_ids,
     },
   ];
+}
+
+/** Élément du calendrier : comme une tendance, avec la date complète (« » de TMDB ramené à null). */
+export function toReleaseTitle(item: unknown, fallbackType: MediaType): ReleaseTitle[] {
+  const parsed = tmdbListItemSchema.safeParse(item);
+  const [title] = toShowcaseTitle(item, fallbackType);
+  if (!title || !parsed.success) {
+    return [];
+  }
+  const date = parsed.data.release_date || parsed.data.first_air_date || null;
+  return [{ ...title, releaseDate: date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : null }];
 }
 
 /** Un élément de `search/multi` validé, ou rien (personnes et éléments invalides sont écartés). */

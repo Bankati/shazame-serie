@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Archivo, Public_Sans } from "next/font/google";
 
-import { SiteFooter } from "@/components/layout/site-footer";
-import { SiteHeader } from "@/components/layout/site-header";
+import { ThemeProvider } from "@/components/layout/theme-provider";
 import { MotionProvider } from "@/components/showcase/motion-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { APP_TEXT } from "@/content/fr/app";
@@ -23,9 +22,10 @@ export const metadata: Metadata = {
   description: APP_TEXT.tagline,
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children, modal }: LayoutProps<"/">) {
   return (
-    <html lang="fr" className={cn("dark", archivo.variable, publicSans.variable)}>
+    // suppressHydrationWarning : next-themes pose la classe du thème sur <html> avant l'hydratation.
+    <html lang="fr" className={cn(archivo.variable, publicSans.variable)} suppressHydrationWarning>
       <body className="flex min-h-dvh flex-col">
         <a
           href="#contenu"
@@ -37,15 +37,16 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <noscript>
           <style>{"[data-reveal]{opacity:1!important;transform:none!important}"}</style>
         </noscript>
-        <MotionProvider>
-          <SiteHeader />
-          <main id="contenu" className="flex-1">
+        <ThemeProvider>
+          {/* En-tête, contenu et pied de page : coquille de la vitrine ou de l'application (U38, AD-46). */}
+          <MotionProvider>
             {children}
-          </main>
-          <SiteFooter />
-        </MotionProvider>
-        {/* Thème sombre imposé (AD-35) : le Toaster shadcn suivrait sinon le thème du système. */}
-        <Toaster theme="dark" />
+            {/* Fenêtre de connexion ouverte depuis le site (routes interceptées, U41). */}
+            {modal}
+          </MotionProvider>
+          {/* Le Toaster suit le thème choisi (next-themes). */}
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );

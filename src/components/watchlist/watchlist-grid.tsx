@@ -8,6 +8,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { toggleWatchlist, useWatchlist } from "@/client/watchlist/watchlist";
+import { EmptyState } from "@/components/layout/empty-state";
 import { Button } from "@/components/ui/button";
 import { LAYOUT_TEXT } from "@/content/fr/layout";
 import { WATCHLIST_TEXT } from "@/content/fr/watchlist";
@@ -106,13 +107,6 @@ export function WatchlistGrid({ items, limit }: { items: readonly WatchlistGridI
 function EmptyWatchlist() {
   const { empty } = WATCHLIST_TEXT.page;
   return (
-    <div className="flex flex-col items-center gap-4 rounded-lg border border-border bg-card p-6 text-center md:p-10">
-      <Film className="size-10 text-muted-foreground" aria-hidden="true" />
-      <h2 className="text-lg font-semibold text-foreground">{empty.title}</h2>
-      <p className="max-w-prose text-sm text-muted-foreground">{empty.description}</p>
-      <Button asChild className="h-11 px-5 text-base hover:bg-primary-hover">
-        <a href={LAYOUT_TEXT.nav.cta.href}>{empty.cta}</a>
-      </Button>
-    </div>
+    <EmptyState icon={Film} title={empty.title} description={empty.description} action={{ href: LAYOUT_TEXT.nav.cta.href, label: empty.cta }} />
   );
 }

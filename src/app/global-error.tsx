@@ -24,7 +24,7 @@ export default function GlobalError({ error, retry }: { error: Error & { digest?
           <button
             type="button"
             onClick={() => retry()}
-            className="h-11 rounded-lg bg-brand px-6 text-base font-medium text-inverse hover:bg-brand/85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            className="h-11 rounded-lg bg-primary px-6 text-base font-medium text-primary-foreground hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           >
             {text.retry}
           </button>

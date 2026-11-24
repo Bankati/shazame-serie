@@ -23,7 +23,13 @@ export async function openFfmpegSource(
   file: Blob,
   { signal, onLoadProgress }: { signal?: AbortSignal; onLoadProgress?: LoadProgress } = {},
 ): Promise<FrameSource> {
-  const [{ FFmpeg, FFFSType }, { toBlobURL }] = await Promise.all([import("@ffmpeg/ffmpeg"), import("@ffmpeg/util")]);
+  // Classe FFmpeg chargée depuis public/ffmpeg/ et non empaquetée : Turbopack (Next 16.4) refuse la création
+  // dynamique de son worker. Seuls les types viennent du paquet.
+  const libraryUrl = `${window.location.origin}/ffmpeg/worker-${FFMPEG_WORKER_VERSION}/index.js`;
+  const [{ FFmpeg, FFFSType }, { toBlobURL }] = await Promise.all([
+    import(/* webpackIgnore: true */ /* turbopackIgnore: true */ libraryUrl) as Promise<typeof import("@ffmpeg/ffmpeg")>,
+    import("@ffmpeg/util"),
+  ]);
   const ffmpeg = new FFmpeg();
   let closed = false;
   const close = () => {

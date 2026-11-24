@@ -1,16 +1,5 @@
-// Textes des rangées et de la vedette de l'accueil (refonte sombre, 16 octobre 2026).
+// Textes des rangées d'affiches et des genres de l'accueil (16 octobre 2026 ; vedette retirée en U43).
 export const SHOWCASE_TEXT = {
-  featured: {
-    eyebrow: "À l'affiche cette semaine",
-    kind: { movie: "Film", tv: "Série" },
-    viewTitle: "Voir la fiche",
-    previous: "Titre précédent",
-    next: "Titre suivant",
-    goTo: (index: number, total: number, title: string) => `Titre ${index} sur ${total} : ${title}`,
-    region: "Titres à l'affiche",
-    pause: "Mettre en pause le défilement",
-    play: "Reprendre le défilement",
-  },
   rows: {
     trendingMovies: "Films en tendance",
     trendingShows: "Séries en tendance",

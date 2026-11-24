@@ -93,7 +93,19 @@ export interface VisionProvider {
   identify(images: readonly Buffer[], context?: VisionContext): Promise<VisionResult>;
   /** Identification d'après une description écrite (U35), même format de réponse ; le texte n'est jamais conservé. */
   identifyFromText(text: string, context?: { signal?: AbortSignal }): Promise<VisionResult>;
+  /** Identification d'après les métadonnées publiques d'une publication et sa vignette éventuelle (U36). */
+  identifyFromLink(link: LinkClues, context?: { signal?: AbortSignal }): Promise<VisionResult>;
 }
+
+/** Indices d'une publication : métadonnées publiques et vignette réencodée en JPEG (null si absente). */
+export type LinkClues = {
+  platform: "youtube" | "tiktok";
+  title: string;
+  description: string;
+  author: string;
+  tags: readonly string[];
+  thumbnail: Buffer | null;
+};
 
 /** Applique les bornes : confiance entière 0 à 100, 3 alternatives au plus, rien de plus si non reconnu. */
 export function normalizeAnswer(raw: ModelAnswer): VisionAnswer {

@@ -1,14 +1,15 @@
 "use client";
 
 import { Lock } from "lucide-react";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 import { type ExtractionState, useFrameExtraction } from "@/client/frames/use-frame-extraction";
-import { useDescriptionIdentification } from "@/client/identify/use-description";
-import { publishQuota } from "@/client/identify/quota";
+import { useDescriptionIdentification, useLinkIdentification } from "@/client/identify/use-description";
+import { publishQuota, useQuota } from "@/client/identify/quota";
 import type { IdentifyFailure } from "@/client/identify/send-frames";
 import { type IdentificationState, useIdentification } from "@/client/identify/use-identification";
-import { PAUSE_ATTRIBUTE } from "@/components/decor/curved-film-band";
+import { PAUSE_ATTRIBUTE } from "@/components/decor/pause-motion";
+import { Paywall } from "@/components/pricing/paywall";
 import { Button } from "@/components/ui/button";
 import { IDENTIFY_TEXT } from "@/content/fr/identify";
 import type { IdentifyResponse, QuotaInfo } from "@/schemas/identify";
@@ -19,26 +20,36 @@ import { ExcerptPicker } from "./excerpt-picker";
 import { FilmStrip } from "./film-strip";
 import { IdentificationResultSkeleton } from "./identification-result";
 import { type IdentifyTab, IdentifyTabs } from "./identify-tabs";
+import { LinkForm } from "./link-form";
 import { ResultDialog } from "./result-dialog";
 
-// Carte d'identification de l'accueil : onglets « Vidéo ou captures » (extraction locale U06, U33, U34) et
-// « Description » (U35). Résultat dans une fenêtre (U12). Le compteur de l'en-tête suit le quota renvoyé.
-export function IdentifyPanel() {
+// Carte d'identification de l'accueil : onglets « Vidéo, image » (extraction locale U06, U33, U34),
+// « Description » (U35) et « Lien » (U36). Résultat dans une fenêtre (U12). Le compteur de l'en-tête suit le quota.
+export function IdentifyPanel({ initialTab = "media", initialLink }: { initialTab?: IdentifyTab; initialLink?: string } = {}) {
   // Changement d'onglet : le focus reste sur l'onglet (modèle WAI-ARIA) ; Tab mène ensuite au contenu.
-  const [tab, setTab] = useState<IdentifyTab>("media");
+  // Mode et lien de départ : transmis par le lanceur de la vitrine (U38).
+  const [tab, setTab] = useState<IdentifyTab>(initialTab);
   const panelId = useId();
-  const { dropzone, description } = IDENTIFY_TEXT;
+  const { dropzone, description, link } = IDENTIFY_TEXT;
+  // Quota du jour épuisé (connu au chargement ou par un refus du serveur) : paywall en tête du panneau (U21).
+  // Le panneau reste en dessous, pour revoir le dernier résultat.
+  const quota = useQuota();
 
   return (
     // min-w-0 : élément de grille du hero, il ne doit pas s'élargir pour contenir la pellicule.
     <div className="flex min-w-0 flex-col gap-4 rounded-xl bg-card p-4 text-card-foreground shadow-lg md:p-6">
+      {quota && quota.remaining === 0 ? <Paywall quota={quota} /> : null}
       <IdentifyTabs value={tab} panelId={panelId} onChange={setTab} />
       <div role="tabpanel" id={panelId} aria-labelledby={`${panelId}-${tab}`}>
-        {tab === "media" ? <MediaIdentify /> : <DescriptionIdentify />}
+        {tab === "media" ? (
+          <MediaIdentify />
+        ) : (
+          <QueryIdentify key={tab} kind={tab} initialValue={tab === "link" ? initialLink : undefined} />
+        )}
       </div>
       <p className="flex items-start gap-2 text-sm text-muted-foreground">
         <Lock className="mt-0.5 size-4 shrink-0 text-brand-strong" aria-hidden="true" />
-        {tab === "media" ? dropzone.privacy : description.privacy}
+        {tab === "media" ? dropzone.privacy : tab === "description" ? description.privacy : link.privacy}
       </p>
     </div>
   );
@@ -148,14 +159,27 @@ function MediaIdentify() {
   );
 }
 
-function DescriptionIdentify() {
-  const { state, submit, reset } = useDescriptionIdentification();
-  const { result, dialog, description, failures } = IDENTIFY_TEXT;
+/** Recherche par texte saisi : description (U35) ou lien (U36). Même parcours, formulaire et libellés propres. */
+function QueryIdentify({ kind, initialValue }: { kind: "description" | "link"; initialValue?: string }) {
+  const description = useDescriptionIdentification();
+  const link = useLinkIdentification();
+  const { state, submit, reset } = kind === "description" ? description : link;
+  const { result, dialog, failures } = IDENTIFY_TEXT;
   const response = state.status === "done" ? state.response : null;
   usePublishQuota(response, state.status === "failed" ? state.failure : null);
   const resultDialog = useResultDialog(response);
   // Formulaire remonté à chaque « Décrire un autre titre » : champ vidé et focus rendu.
   const [round, setRound] = useState(0);
+
+  // Lien collé sur la vitrine (U38) : envoyé une seule fois à l'arrivée, puis retiré de l'adresse pour qu'un
+  // rechargement de la page ne relance pas l'identification.
+  const sentInitial = useRef(false);
+  useEffect(() => {
+    if (!initialValue || sentInitial.current) return;
+    sentInitial.current = true;
+    window.history.replaceState(null, "", window.location.pathname);
+    void submit(initialValue);
+  }, [initialValue, submit]);
 
   const describeAnother = () => {
     resultDialog.close();
@@ -171,16 +195,21 @@ function DescriptionIdentify() {
             {dialog.reopen}
           </Button>
           <Button type="button" variant="outline" onClick={describeAnother} className="h-11 w-full text-base sm:w-fit">
-            {description.another}
+            {IDENTIFY_TEXT[kind].another}
           </Button>
         </div>
       ) : (
-        <DescriptionForm
-          key={round}
-          onSubmit={(text) => void submit(text)}
-          sending={state.status === "sending"}
-          focusOnMount={round > 0}
-        />
+        kind === "description" ? (
+          <DescriptionForm key={round} onSubmit={(text) => void submit(text)} sending={state.status === "sending"} focusOnMount={round > 0} />
+        ) : (
+          <LinkForm
+            key={round}
+            onSubmit={(url) => void submit(url)}
+            sending={state.status === "sending"}
+            focusOnMount={round > 0}
+            initialValue={round === 0 ? initialValue : undefined}
+          />
+        )
       )}
       <div aria-live="polite" className="flex flex-col gap-2">
         {state.status === "sending" ? <IdentificationResultSkeleton /> : null}
@@ -196,7 +225,7 @@ function DescriptionIdentify() {
           key={response.identificationId ?? "sans-identifiant"}
           // Aucune image : le signalement ne propose pas d'en joindre (RG8).
           frames={[]}
-          source="description"
+          source={kind}
           open={resultDialog.open}
           onOpenChange={resultDialog.onOpenChange}
           response={response}

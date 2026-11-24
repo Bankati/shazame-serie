@@ -91,6 +91,82 @@ Fichier : `src/components/home/section-heading.tsx`
 | Accent | sur-titre `text-sm font-semibold text-brand-strong` (fond clair) ou `text-brand` (fond sombre) |
 | Espacement | `gap-3`, `max-w-2xl` |
 
+### Page Mon abonnement (U22)
+
+Fichiers : `src/app/(app)/compte/abonnement/page.tsx`, `src/components/account/activation-watcher.tsx`
+Dernière mise à jour : 23 octobre 2026 (U22)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | sections `bg-card` ; messages d'activation `bg-brand-subtle` |
+| Bordure | `border border-border` |
+| Radius | `rounded-lg` (sections, messages) ; pastille `rounded-full` |
+| Texte principal | `text-lg font-semibold text-foreground` |
+| Texte secondaire | `text-sm text-muted-foreground` ; retard de paiement `text-warning` ; erreur `text-destructive` |
+| Espacement | `p-4 md:p-6 gap-4` ; factures `divide-y divide-border py-3` |
+| Hover / focus | boutons shadcn `h-11` ; lien facture `text-link hover:underline`, `min-h-11` |
+| Ombre | none |
+| Accent | couronne `text-brand-strong` sur `bg-brand-subtle` |
+
+**Notes de pattern :** une seule action principale : « Gérer mon abonnement » (portail Stripe) pour un abonné, « Découvrir Premium » sinon. Lien de facture externe : nouvel onglet annoncé dans le libellé. Offres de `/tarifs` : deux boutons dans un seul formulaire (`name="plan"`), le mensuel en principal.
+
+### Paywall et PricingPlans (U21)
+
+Fichiers : `src/components/pricing/paywall.tsx`, `pricing-plans.tsx` ; page `src/app/(vitrine)/tarifs/page.tsx`
+Dernière mise à jour : 23 octobre 2026 (U21)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | paywall `bg-brand-subtle` ; offres `bg-background` ; tableau et questions `bg-card` |
+| Bordure | paywall `border-2 border-primary` ; offre mise en avant `border-2 border-primary`, autre `border border-border` |
+| Radius | `rounded-xl` (paywall, offres, tableau) ; pastille d'icône `rounded-full` |
+| Texte principal | titre du paywall `font-display text-xl font-bold text-foreground` ; prix `font-display text-display-lg font-extrabold` |
+| Texte secondaire | paywall `text-brand-subtle-foreground` puis `text-sm text-muted-foreground` |
+| Espacement | paywall `p-4 md:p-6 gap-4` ; cellules `p-4` |
+| Hover / focus | boutons shadcn `h-11` ; liens `text-link hover:underline` |
+| Ombre | none |
+| Accent | pastille `bg-primary text-primary-foreground` (couronne) ; coches `text-brand-strong` |
+
+**Notes de pattern :** une seule action principale par profil (visiteur : compte gratuit ; gratuit : Premium ; Premium : aucune). Tableau : `th scope`, légende masquée, coche et tiret doublés d'un texte pour les lecteurs d'écran, défilement horizontal sur mobile (`overflow-x-auto`, `min-w-lg`).
+
+### ThemeToggle (U44, AD-49)
+
+Fichier : `src/components/layout/theme-toggle.tsx` (fournisseur : `theme-provider.tsx`)
+Dernière mise à jour : 23 octobre 2026 (U44)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | bouton shadcn `variant="ghost" size="icon"` |
+| Bordure | none |
+| Radius | `rounded-md` (bouton shadcn) |
+| Texte principal | icône `size-5 text-muted-foreground hover:text-foreground` |
+| Texte secondaire | none |
+| Espacement | `size-11` (zone tactile 44 px) |
+| Hover / focus | shadcn ghost ; focus `ring` |
+| Ombre | none |
+| Accent | none |
+
+**Notes de pattern :** lune en clair, soleil en sombre, par CSS (`dark:hidden` / `hidden dark:block`) pour éviter tout écart d'hydratation ; libellé « Passer au thème sombre / clair » fixé après l'hydratation. Placé avant le compte dans `SiteHeader` et `AppHeader`.
+
+### Hero animé + DemoPhone (U43, AD-48) — remplace « Hero + IdentifyPanel » (fond), « CurvedFilmBand » et la vedette
+
+Fichiers : `src/components/home/hero.tsx`, `demo-phone.tsx`, `demo-timeline.ts`, `how-it-works.tsx`
+Dernière mise à jour : 23 octobre 2026 (U43)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | hero `bg-background` avec halos `bg-inverse/15` et `bg-brand/10 blur-3xl` ; étapes : carte `bg-inverse` |
+| Bordure | pastilles `border border-border` ; téléphone `ring-1 ring-foreground/20` |
+| Radius | coque `rounded-phone`, écran `rounded-phone-screen`, pastilles `rounded-xl`, carte des étapes `rounded-3xl` |
+| Texte principal | titre `font-display text-display-lg md:text-display-xl font-extrabold` avec `TwoTone` |
+| Texte secondaire | `text-muted-foreground` ; sur violet `text-inverse-muted` |
+| Espacement | hero `gap-12 pt-8 md:pt-16` ; carte des étapes `p-6 md:p-12 gap-10` ; téléphone `w-64 md:w-72 aspect-[9/19]` |
+| Hover / focus | lanceur inchangé ; sur violet focus rose clair (`.bg-inverse` redéfinit `--ring`) |
+| Ombre | téléphone `shadow-2xl`, pastilles `shadow-lg` (objets flottants, pas des cartes) |
+| Accent | pastille d'icône `bg-brand-subtle` + `text-brand-strong` ; numéros d'étape `text-brand-light` |
+
+**Notes de pattern :** animations GSAP seulement via `gsap.matchMedia` + `prefers-reduced-motion: no-preference` ; l'écran du résultat est l'état rendu par le serveur. Pastilles `hidden lg:flex` (sur mobile elles masqueraient l'écran). Classes `demo-*` réservées à la séquence de `demo-timeline.ts`. FilmStripDecor accepte `images` (défilement `animate-film-scroll`, mis en pause par `data-pause-motion`).
+
 ### Hero + IdentifyPanel
 
 Fichiers : `src/components/home/hero.tsx`, `src/components/identify/identify-panel.tsx`
@@ -129,10 +205,181 @@ Dernière mise à jour : 14 octobre 2026 (U06)
 
 **Notes de pattern :** depuis U34, sélection multiple (`multiple`, `accept` vidéos + images) : une vidéo lance le clip, 1 à 5 images le mode captures (tri par `classifySelection`, erreurs dans la même zone `role="alert"`) ; titre « Choisir un clip ou des captures », libellé du bouton inchangé. `accept="video/*,.mp4,.mov,…"` depuis U33 (les galeries des téléphones proposent toutes les vidéos ; le contrôle trie ensuite). Le champ fichier est `sr-only`, `tabIndex={-1}`, `aria-hidden` : l'accès clavier et mobile passe par le bouton, qui pointe vers les contraintes (et l'erreur) par `aria-describedby`. La valeur du champ est vidée après chaque choix pour pouvoir reprendre le même fichier. L'indice « ou glissez-le ici » n'apparaît qu'à partir de `md`.
 
+### Navigation de l'application : AppHeader, AppTabBar, FloatingIdentify
+
+Fichiers : `src/components/layout/app-header.tsx`, `app-tab-bar.tsx`, `floating-identify.tsx`, `app-nav.ts`
+Dernière mise à jour : 21 octobre 2026 (U38)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | en-tête `bg-background/85 backdrop-blur-md` ; barre d'onglets `bg-background/95 backdrop-blur-md` ; bouton flottant `bg-primary` |
+| Bordure | en-tête `border-b border-border` ; barre d'onglets `border-t border-border` |
+| Radius | liens de l'en-tête `rounded-md` ; bouton flottant `rounded-full` |
+| Texte principal | lien actif `text-foreground` sur `bg-muted` (en-tête), `text-brand-strong` (onglets) ; bouton flottant `text-base font-semibold text-primary-foreground` |
+| Texte secondaire | liens inactifs `text-muted-foreground`, onglets `text-xs font-medium` |
+| Espacement | en-tête `h-16`, liens `min-h-11 px-3 gap-2` ; onglets `min-h-14 gap-1`, 4 colonnes égales ; bouton flottant `h-12 px-5 gap-2`, `right-6 bottom-6` |
+| Hover / focus | `hover:text-foreground` ; bouton flottant `hover:bg-primary-hover` ; focus `outline-2 outline-ring` (onglets : décalage intérieur) |
+| Ombre | bouton flottant `shadow-lg` |
+| Accent | icône de la page active en vert (`text-brand-strong`) |
+
+**Notes de pattern :** `aria-current="page"` sur l'entrée active (`isActive` : page ou sous-page). Barre d'onglets mobile seulement (`md:hidden`), la page réserve `pb-20` ; marge de la barre système en style en ligne (`env(safe-area-inset-bottom)`). Bouton flottant ordinateur seulement, masqué sur `/identifier`. Visiteur : l'onglet Compte devient « Connexion » avec retour à la page en cours.
+
+### IdentifyLauncher (lanceur de la vitrine)
+
+Fichier : `src/components/identify/identify-launcher.tsx`
+Dernière mise à jour : 21 octobre 2026 (U38)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | carte `bg-card shadow-lg` (comme `IdentifyPanel`) ; champ `bg-transparent dark:bg-input/30` |
+| Bordure | champ `border border-input`, focus `border-ring ring-3 ring-ring/50` |
+| Radius | carte `rounded-xl`, champ et bouton `rounded-md` |
+| Texte principal | saisie `text-base` ; bouton `text-base font-semibold` |
+| Texte secondaire | raccourcis `text-sm font-medium text-muted-foreground`, « ou » et confidentialité `text-sm text-muted-foreground` |
+| Espacement | carte `p-4 md:p-6 gap-4` ; champ et bouton `h-12` ; raccourcis `min-h-11 px-2 gap-2` |
+| Hover / focus | bouton `hover:bg-primary-hover` ; raccourcis `hover:text-foreground` |
+| Ombre | `shadow-lg` (carte du hero) |
+| Accent | icônes des raccourcis et du cadenas `text-brand-strong` |
+
+**Notes de pattern :** champ lien en vedette (icône à gauche), raccourcis en icône + texte dessous (« ou »), comme la référence ; l'identification se fait toujours dans l'application.
+
+### Fonctionnalités illustrées : Features, MockWindow
+
+Fichiers : `src/components/home/features.tsx`, `mock-window.tsx`
+Dernière mise à jour : 22 octobre 2026 (U39)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | section `bg-card` ; fenêtre `bg-card` ; lignes de maquette `border border-border`, ligne finale `bg-brand-subtle` |
+| Bordure | fenêtre `border border-border`, barre de titre `border-b border-border` |
+| Radius | fenêtre `rounded-xl`, lignes `rounded-lg`, pastilles `rounded-sm`, points de fenêtre `rounded-full` |
+| Texte principal | sur-titre `text-xs font-semibold uppercase tracking-widest text-brand-strong` ; titre `font-display text-display font-bold` en deux tons |
+| Texte secondaire | description `text-base md:text-lg text-muted-foreground` ; barre de titre `text-xs text-muted-foreground` |
+| Espacement | sections `gap-16 md:gap-24`, colonnes `md:grid-cols-2 gap-8 md:gap-16` ; fenêtre `p-4 md:p-5` |
+| Hover / focus | none (maquettes non interactives, `aria-hidden`) |
+| Ombre | fenêtre `shadow-lg` |
+| Accent | points de fenêtre `bg-destructive`, `bg-warning`, `bg-success` ; barre de progression `bg-primary` |
+
+**Notes de pattern :** texte et maquette alternent de côté (`md:order-*`) ; maquettes fidèles à nos écrans réels, sans affiche réelle ni logo de marque, avec une mention « Exemple d'affichage ». Étapes : pastille factuelle `rounded-full bg-brand-subtle text-brand-subtle-foreground` en bas de carte.
+
+### ReleaseCard (carte du calendrier)
+
+Fichier : `src/components/calendar/release-card.tsx`
+Dernière mise à jour : 23 octobre 2026 (U42)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | `bg-card` ; affiche `bg-muted` ; pastille de type `bg-muted` |
+| Bordure | `border border-border` |
+| Radius | carte `rounded-lg`, affiche `rounded-poster`, pastille `rounded-sm` |
+| Texte principal | `font-display text-lg font-bold text-foreground` |
+| Texte secondaire | résumé `text-sm text-muted-foreground line-clamp-3` ; date `text-sm font-medium text-brand-strong` |
+| Espacement | `p-3 md:p-4 gap-4` ; affiche `w-24 md:w-28` |
+| Hover / focus | titre `hover:text-link` ; liens `focus-visible:outline-2 outline-ring` ; zones `h-11` |
+| Ombre | none |
+| Accent | date et icône `text-brand-strong` ; « Voir la fiche » `text-link` |
+
+**Notes de pattern :** affiche et titre mènent à la fiche (l'affiche est retirée de l'ordre de tabulation, doublon). Onglets de la page : liens segmentés `rounded-lg border-border bg-card p-1`, actif `bg-primary text-primary-foreground` comme les onglets d'identification. Intertitres de mois `font-display text-xl font-bold`.
+
+### ReleaseCard (carte du calendrier)
+
+Fichier : `src/components/calendar/release-card.tsx`
+Dernière mise à jour : 23 octobre 2026 (U42)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | `bg-card` ; affiche `bg-muted` ; pastille de type `bg-muted` |
+| Bordure | `border border-border` |
+| Radius | carte `rounded-lg`, affiche `rounded-poster`, pastille `rounded-sm` |
+| Texte principal | `font-display text-lg font-bold text-foreground` |
+| Texte secondaire | résumé `text-sm text-muted-foreground line-clamp-3` ; date `text-sm font-medium text-brand-strong` |
+| Espacement | `p-3 md:p-4 gap-4` ; affiche `w-24 md:w-28` |
+| Hover / focus | titre `hover:text-link` ; liens `focus-visible:outline-2 outline-ring` ; zones `h-11` |
+| Ombre | none |
+| Accent | date et icône `text-brand-strong` ; « Voir la fiche » `text-link` |
+
+**Notes de pattern :** affiche et titre mènent à la fiche (l'affiche est retirée de l'ordre de tabulation, doublon). Onglets de la page : liens segmentés `rounded-lg border-border bg-card p-1`, actif `bg-primary text-primary-foreground` comme les onglets d'identification. Intertitres de mois `font-display text-xl font-bold`.
+
+### EmptyState (état vide de l'application)
+
+Fichier : `src/components/layout/empty-state.tsx`
+Dernière mise à jour : 22 octobre 2026 (U40)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | `bg-card` ; pastille d'icône `bg-brand-subtle` |
+| Bordure | `border border-border` |
+| Radius | carte `rounded-xl`, pastille `rounded-full` |
+| Texte principal | `font-display text-xl font-bold text-foreground` |
+| Texte secondaire | `text-sm md:text-base text-muted-foreground` |
+| Espacement | `px-6 py-10 md:py-14 gap-4` ; pastille `size-14`, icône `size-7` |
+| Hover / focus | bouton principal shadcn `h-11 hover:bg-primary-hover` |
+| Ombre | none |
+| Accent | icône `text-brand-strong` |
+
+**Notes de pattern :** une seule action, vers l'identification en général. Utilisé par l'historique et la liste.
+
+### Fiche titre en deux colonnes (TitleView)
+
+Fichier : `src/components/title/title-view.tsx`
+Dernière mise à jour : 22 octobre 2026 (U40)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | cartes latérales `bg-card` |
+| Bordure | cartes `border border-border` |
+| Radius | cartes `rounded-xl` ; genres `rounded-sm border border-border` |
+| Texte principal | sections `font-display text-display font-bold` ; cartes `font-display text-xl font-bold` ; valeurs `text-foreground` |
+| Texte secondaire | libellés `dt` et genres `text-muted-foreground`, `text-sm` |
+| Espacement | grille `lg:grid-cols-3 gap-10` ; cartes `p-5 gap-4` ; lignes `gap-3` |
+| Hover / focus | celui des composants internes |
+| Ombre | none |
+| Accent | none |
+
+**Notes de pattern :** colonne latérale `lg:sticky lg:top-24 lg:self-start`, placée en premier dans le document (ordre mobile de la fiche) et à droite sur ordinateur (`lg:order-2`).
+
+### AuthDialog (connexion en fenêtre)
+
+Fichier : `src/components/auth/auth-dialog.tsx`
+Dernière mise à jour : 22 octobre 2026 (U41)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | Dialog shadcn (`bg-background`) |
+| Bordure | celle du Dialog shadcn |
+| Radius | celui du Dialog shadcn ; bouton de fermeture `rounded-md` |
+| Texte principal | titre `font-display text-display font-bold` |
+| Texte secondaire | description `text-base text-muted-foreground` |
+| Espacement | `p-6 gap-6 sm:max-w-md`, `max-h-[90dvh] overflow-y-auto` (comme `ResultDialog`) |
+| Hover / focus | fermeture `size-11 hover:bg-muted`, `focus-visible:outline-2 outline-ring` |
+| Ombre | celle du Dialog shadcn |
+| Accent | none (le contenu porte les boutons) |
+
+**Notes de pattern :** même contenu que la page (`SignInPanel`, `SignUpPanel`) ; fermer = retour arrière dans l'historique.
+
+### TwoTone (grand titre en deux tons)
+
+Fichier : `src/components/layout/two-tone.tsx`
+Dernière mise à jour : 21 octobre 2026 (U37)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | none (s'insère dans un titre) |
+| Bordure | none |
+| Radius | none |
+| Texte principal | celui du titre parent |
+| Texte secondaire | mot clé `text-brand-strong` ; sur `bg-inverse` : `text-brand` |
+| Espacement | none |
+| Hover / focus | none |
+| Ombre | none |
+| Accent | mot clé en vert d'accent |
+
+**Notes de pattern :** un seul mot clé par titre (champ `highlight` des textes de `src/content/fr/`) ; titre lu d'un seul tenant. Sur-titre associé : `text-xs font-semibold uppercase tracking-widest text-brand-strong`. Utilisé par `SectionHeading`, `Hero`, `FeaturedHero`, `FinalCta`.
+
 ### IdentifyTabs (mode d'identification)
 
 Fichier : `src/components/identify/identify-tabs.tsx`
-Dernière mise à jour : 20 octobre 2026 (U35)
+Dernière mise à jour : 21 octobre 2026 (U37 : onglet actif en accent plein `bg-primary font-semibold text-primary-foreground`, `whitespace-nowrap px-2`)
 
 | Propriété | Classe |
 | --- | --- |
@@ -166,6 +413,25 @@ Dernière mise à jour : 20 octobre 2026 (U35)
 | Accent | none |
 
 **Notes de pattern :** `<textarea>` natif aux classes du champ shadcn (pas de composant `ui` textarea), `maxLength` 500, décrit par l'aide et le compteur (`aria-describedby`, compteur non annoncé à chaque frappe). Bornes partagées avec le serveur (`src/schemas/describe.ts`). Les erreurs d'envoi s'affichent sous le formulaire (`role="alert"`), le texte reste dans le champ.
+
+### LinkForm (identification par lien)
+
+Fichier : `src/components/identify/link-form.tsx`
+Dernière mise à jour : 20 octobre 2026 (U36)
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | champ `bg-transparent` (`dark:bg-input/30`) |
+| Bordure | champ `border border-input`, au focus `border-ring` + `ring-3 ring-ring/50`, invalide `aria-invalid:border-destructive` |
+| Radius | champ `rounded-md`, bouton `rounded-md` (shadcn) |
+| Texte principal | libellé `font-display text-2xl font-bold` ; saisie `text-base` |
+| Texte secondaire | aide `text-sm text-muted-foreground` ; erreur `text-sm font-medium text-destructive` (`role="alert"`) |
+| Espacement | `gap-3` ; champ `h-11 px-3` |
+| Hover / focus | bouton `h-11 hover:bg-primary-hover`, désactivé tant que le lien n'est pas reconnu |
+| Ombre | none |
+| Accent | none |
+
+**Notes de pattern :** même gabarit que `DescriptionForm` (libellé-titre, aide, champ, bouton aligné à droite dès `sm`). `type="url"`, `inputMode="url"`, `noValidate` : le contrôle est celui de `parseVideoLink` (partagé avec le serveur), affiché après la sortie du champ ou l'envoi, pas à chaque frappe. Erreurs serveur affichées par `IdentifyPanel` sous le formulaire, lien conservé dans le champ.
 
 ### ExcerptPicker (choix du passage d'une vidéo longue)
 
@@ -627,3 +893,22 @@ Dernière mise à jour : 20 octobre 2026
 | Accent | coche `text-brand-strong` sur le titre choisi |
 
 **Notes de pattern :** lien d'entrée discret sous le résultat (`text-sm text-muted-foreground underline`, `min-h-11`). Résultat choisi porté par `aria-pressed` ; recherche après 350 ms, annonces dans une région `aria-live`. Case de consentement non cochée par défaut avec son explication (`aria-describedby`), affichée seulement si des images sont encore en mémoire. Confirmation par `toast.success`, puis retour au résultat sans le lien (un seul signalement).
+
+### AdminShell, StatTile, DailyTable (back-office)
+
+Fichiers : `src/components/admin/admin-shell.tsx`, `stat-tile.tsx`, `daily-table.tsx`, page `src/app/admin/page.tsx` (U25)
+Dernière mise à jour : 22 novembre 2026
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | barre latérale `bg-card` ; tuiles et tableau `bg-card` ; survol des liens `hover:bg-accent` |
+| Bordure | barre latérale `md:border-r border-border` (mobile : `border-b`) ; tuiles et tableau `border border-border` ; lignes `border-b border-border` |
+| Radius | tuiles et tableau `rounded-lg` ; liens `rounded-md` |
+| Texte principal | titre de page `font-display text-display font-bold` ; valeur de tuile `font-display text-2xl font-bold tabular-nums` ; cellules `text-sm tabular-nums` |
+| Texte secondaire | libellés, précisions, en-têtes de colonnes `text-sm text-muted-foreground` |
+| Espacement | barre latérale `p-4 gap-4 md:w-60` ; contenu `px-4 sm:px-6 md:px-8 py-8`, `max-w-6xl gap-8` ; tuiles `p-4 gap-1`, grille `gap-4 sm:grid-cols-2 xl:grid-cols-5` ; cellules `px-3 py-2` |
+| Hover / focus | `focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring` |
+| Ombre | none |
+| Accent | aucun (ui-context : admin sans effet décoratif) |
+
+**Notes de pattern :** barre latérale collante (`md:sticky md:top-0 md:h-dvh`), lien « Retour à l'application » en bas. Tuiles dans un `<dl>` (`dt` libellé, `dd` valeur et précision). Tableau avec `caption` masquée, en-têtes `scope`, jour en `<time>`, défilement horizontal sous 40 rem. Aucune couleur sémantique sur les chiffres.

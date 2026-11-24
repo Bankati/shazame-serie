@@ -8,6 +8,7 @@ import {
   quotaInfoSchema,
   type QuotaInfo,
 } from "@/schemas/identify";
+import { linkRejectionSchema } from "@/schemas/link";
 
 // Envoi du paquet d'images (jamais la vidéo, invariant 1) ou d'une description (U35), et lecture validée de
 // la réponse, commune aux deux.
@@ -18,6 +19,11 @@ export type IdentifyFailure =
   | { kind: "frames" }
   /** Description refusée (longueur) : U35. */
   | { kind: "text" }
+  /** Lien (U36) : Instagram, autre lien refusé, publication introuvable, publication sans indice. */
+  | { kind: "link_instagram" }
+  | { kind: "link_unsupported" }
+  | { kind: "link_not_found" }
+  | { kind: "link_no_clues" }
   | { kind: "paused" }
   | { kind: "suspended" }
   | { kind: "unavailable" };
@@ -27,7 +33,10 @@ export type IdentifyCall = { ok: true; response: IdentifyResponse } | { ok: fals
 const successSchema = z.object({ ok: z.literal(true), data: identifyResponseSchema });
 const errorSchema = z.object({
   ok: z.literal(false),
-  error: z.object({ code: errorCodeSchema, details: z.object({ quota: quotaInfoSchema }).optional() }),
+  error: z.object({
+    code: errorCodeSchema,
+    details: z.object({ quota: quotaInfoSchema.optional(), reason: linkRejectionSchema.optional() }).optional(),
+  }),
 });
 
 export async function sendFrames(frames: readonly Blob[], mode: FrameMode, signal?: AbortSignal): Promise<IdentifyCall> {
@@ -47,7 +56,20 @@ export function sendDescription(text: string, signal?: AbortSignal): Promise<Ide
   );
 }
 
-async function postIdentify(url: string, init: RequestInit, invalidKind: "frames" | "text"): Promise<IdentifyCall> {
+/** Lien de publication (U36) : envoyé en JSON ; le serveur seul décide s'il est pris en charge. */
+export function sendLink(url: string, signal?: AbortSignal): Promise<IdentifyCall> {
+  return postIdentify(
+    "/api/identify/link",
+    { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ url }), signal },
+    "link_unsupported",
+  );
+}
+
+async function postIdentify(
+  url: string,
+  init: RequestInit,
+  invalidKind: "frames" | "text" | "link_unsupported",
+): Promise<IdentifyCall> {
   const signal = init.signal;
   let payload: unknown;
   try {
@@ -80,6 +102,12 @@ async function postIdentify(url: string, init: RequestInit, invalidKind: "frames
     case "FRAMES_UNUSABLE":
     case "VALIDATION_ERROR":
       return { ok: false, failure: { kind: invalidKind } };
+    case "LINK_UNSUPPORTED":
+      return { ok: false, failure: { kind: failure.data.error.details?.reason === "instagram" ? "link_instagram" : "link_unsupported" } };
+    case "LINK_NOT_FOUND":
+      return { ok: false, failure: { kind: "link_not_found" } };
+    case "LINK_NO_CLUES":
+      return { ok: false, failure: { kind: "link_no_clues" } };
     default:
       return { ok: false, failure: { kind: "unavailable" } };
   }

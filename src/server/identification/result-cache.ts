@@ -148,7 +148,10 @@ export async function storeCachedResult(
 
     // Clé primaire (cache_id, frame_hash) : deux images identiques ne donnent qu'une ligne.
     const uniqueHashes = [...new Set(lookup.frameHashes.map((hash) => toSignedBigint(hash)))];
-    await tx.insert(resultCacheFrames).values(uniqueHashes.map((frameHash) => ({ cacheId, frameHash })));
+    // Lien (U36) : entrée sans image, retrouvée seulement par son empreinte exacte (`link:<plateforme>:<id>`).
+    if (uniqueHashes.length > 0) {
+      await tx.insert(resultCacheFrames).values(uniqueHashes.map((frameHash) => ({ cacheId, frameHash })));
+    }
     return cacheId;
   });
 }

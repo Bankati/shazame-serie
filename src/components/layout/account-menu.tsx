@@ -1,7 +1,8 @@
 "use client";
 
-import { History, ListVideo, LogOut, UserRound } from "lucide-react";
+import { Crown, History, ListVideo, LogOut, UserRound } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 import { accountInitial, useAccount } from "@/client/account/account";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { AUTH_TEXT } from "@/content/fr/auth";
+import { SUBSCRIPTION_PATH } from "@/shared/billing";
 
 /** Déconnexion : formulaire HTML vers POST /auth/deconnexion, puis rechargement complet de l'accueil. */
 export const SIGN_OUT_PATH = "/auth/deconnexion";
@@ -25,6 +27,7 @@ export const ACCOUNT_PATH = "/compte";
 // Sur mobile, les mêmes entrées sont dans le menu (MobileNav).
 export function AccountMenu() {
   const state = useAccount();
+  const pathname = usePathname();
   const { account: text } = AUTH_TEXT;
 
   if (state.status === "loading") {
@@ -33,7 +36,8 @@ export function AccountMenu() {
   if (!state.account) {
     return (
       <Button asChild variant="ghost" className="hidden h-11 px-3 text-sm lg:inline-flex">
-        <a href="/connexion">{text.signIn}</a>
+        {/* Link : ouvre la connexion en fenêtre par-dessus la page (U41), retour à la page ensuite. */}
+        <Link href={`/connexion?suite=${encodeURIComponent(pathname)}`}>{text.signIn}</Link>
       </Button>
     );
   }
@@ -57,6 +61,12 @@ export function AccountMenu() {
           <Link href={ACCOUNT_PATH}>
             <UserRound className="size-4" aria-hidden="true" />
             {text.profile}
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild className="min-h-11 gap-2 text-sm">
+          <Link href={SUBSCRIPTION_PATH}>
+            <Crown className="size-4" aria-hidden="true" />
+            {text.subscription}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild className="min-h-11 gap-2 text-sm">
@@ -94,7 +104,7 @@ export function AccountBadge({ initial, avatarUrl }: { initial: string; avatarUr
   return (
     <span
       aria-hidden="true"
-      className="flex size-9 items-center justify-center rounded-full bg-brand text-sm font-bold text-inverse"
+      className="flex size-9 items-center justify-center rounded-full bg-brand text-sm font-bold text-primary-foreground"
     >
       {initial}
     </span>

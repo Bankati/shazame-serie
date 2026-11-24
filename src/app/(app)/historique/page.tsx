@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { type HistoryItem, HistoryList } from "@/components/history/history-list";
-import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/layout/empty-state";
 import { HISTORY_TEXT } from "@/content/fr/history";
 import { LAYOUT_TEXT } from "@/content/fr/layout";
 import { formatParisDateTime } from "@/lib/paris-time";
@@ -41,14 +41,12 @@ export default async function HistoryPage() {
       {items.length > 0 ? (
         <HistoryList items={items} />
       ) : (
-        <div className="flex flex-col items-center gap-4 rounded-lg border border-border bg-card p-6 text-center md:p-10">
-          <History className="size-10 text-muted-foreground" aria-hidden="true" />
-          <h2 className="text-lg font-semibold text-foreground">{HISTORY_TEXT.empty.title}</h2>
-          <p className="max-w-prose text-sm text-muted-foreground">{HISTORY_TEXT.empty.description}</p>
-          <Button asChild className="h-11 px-5 text-base hover:bg-primary-hover">
-            <a href={LAYOUT_TEXT.nav.cta.href}>{HISTORY_TEXT.empty.cta}</a>
-          </Button>
-        </div>
+        <EmptyState
+          icon={History}
+          title={HISTORY_TEXT.empty.title}
+          description={HISTORY_TEXT.empty.description}
+          action={{ href: LAYOUT_TEXT.nav.cta.href, label: HISTORY_TEXT.empty.cta }}
+        />
       )}
     </div>
   );

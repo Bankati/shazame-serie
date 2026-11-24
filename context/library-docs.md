@@ -8,6 +8,7 @@ Référence des librairies et services utilisés, de leurs versions et des pièg
 2. Versions **exactes** dans `package.json` (pas de `^`), mises à jour volontairement, une librairie à la fois, avec la CI verte.
 3. Toute nouvelle dépendance est ajoutée à ce fichier avec : rôle, raison, alternative écartée.
 4. Les points marqués « À vérifier » doivent être confirmés dans la doc officielle au moment de l'unité concernée, puis ce fichier est mis à jour.
+5. **Piège npm sous Windows (24 novembre 2026)** : un `npm install` lancé sous Windows peut retirer de `package-lock.json` des dépendances optionnelles embarquées des versions wasm32 (`@emnapi/core`, `@emnapi/runtime`, utilisées par `sharp` et `@tailwindcss/oxide`) ; `npm ci` échoue alors sur la CI Linux (« Missing: @emnapi/... from lock file »), même si tout marche en local. Après toute mise à jour, vérifier que `git diff package-lock.json` ne supprime pas ces entrées ; si c'est le cas, les restaurer depuis la version précédente du fichier (correctif `45d1ec8`).
 
 ## Versions de référence
 
@@ -15,7 +16,8 @@ Relevées sur le registre npm le **4 octobre 2026**, révisées en U01 le **7 oc
 
 | Paquet | Version | Rôle |
 | --- | --- | --- |
-| `next` | 16.3.8 | Framework |
+| `next` / `eslint-config-next` | 16.4.6 (installé le 22 novembre 2026 : correctifs de sécurité de cache et de cookies, dont GHSA-f3mh-rxg3-f5g2 et GHSA-rhh4-g77r-r9qj ; le build de Next 16.4.2 s'arrêtait sur une alerte de sécurité. Avant : 16.4.2 le 22 octobre 2026) | Framework |
+| `gsap` / `@gsap/react` | 3.15.0 / 2.1.2 (installés le 23 octobre 2026, U43) | Animations du hero et des étapes |
 | `react` / `react-dom` | 19.3.0 (installé) | UI |
 | `typescript` | 6.0.3 (installé, AD-21) | Typage (voir note) |
 | `tailwindcss` | 4.3.3 | Styles |
@@ -23,7 +25,7 @@ Relevées sur le registre npm le **4 octobre 2026**, révisées en U01 le **7 oc
 | `lucide-react` | 1.52.0 | Icônes |
 | `react-hook-form` | 7.89.0 | Formulaires |
 | `@hookform/resolvers` | 5.9.1 | Pont zod ↔ react-hook-form |
-| `zod` | 4.6.5 (installé) | Validation |
+| `zod` | 4.6.7 (installé le 22 novembre 2026 : correctif de sécurité, < 4.6.6 vulnérable) | Validation |
 | `drizzle-orm` / `drizzle-kit` | 0.45.3 / 0.31.11 | ORM et migrations |
 | `postgres` | 3.4.9 | Pilote PostgreSQL pour Drizzle |
 | `@supabase/supabase-js` | 2.117.3 | Auth, Storage |
@@ -76,6 +78,12 @@ Plans d'hébergement : **Vercel Pro** obligatoire (le plan Hobby est réservé �
 - Motion : importer depuis `motion/react`. On utilise `LazyMotion features={domAnimation} strict` (dans `MotionProvider`) : seuls les composants `m.*` sont autorisés, `motion.*` lèverait une erreur. `MotionConfig reducedMotion="user"`. API vérifiées dans les types installés : `AnimatePresence`, `useReducedMotion`, `whileInView` + `viewport`, variantes, `layout`.
 - Embla : `useEmblaCarousel(options, plugins)` renvoie `[ref, api]` ; l'événement `init` est déjà passé quand `api` arrive (lire l'état à l'image suivante). Greffon `Autoplay` : ne jamais appeler `play()` / `stop()` avant que `api` existe (erreur « reading 'internalEngine' », rencontrée). `Fade()` pour la vedette ; les diapositives restent empilées, donc monter les images au fur et à mesure (sinon toutes se chargent).
 - Les composants clients peuvent importer des **types** depuis `src/server/**` (`import type`, effacé à la compilation), jamais des valeurs.
+
+## GSAP (hero animé, U43, AD-48)
+
+- Installés le 23 octobre 2026 : `gsap` **3.15.0** (avril 2026) et `@gsap/react` **2.1.2**. Licence « Standard » sans frais, ScrollTrigger compris.
+- API vérifiées dans les types installés : `useGSAP(callback, { scope })` (nettoyage automatique, sélecteurs limités au `scope`), `gsap.matchMedia().add(conditions, ctx => cleanup)` (les animations d'une condition sont annulées quand elle cesse), `gsap.quickTo(cible, propriété, vars)`, `ScrollTrigger` (`pin`, `scrub`, `onToggle`), `gsap.registerPlugin(useGSAP, ScrollTrigger)` au niveau du module client.
+- Règles du projet : toute animation passe par `gsap.matchMedia` avec `(prefers-reduced-motion: no-preference)` ; l'état affiché par le serveur doit être un état final lisible (écran du résultat), la boucle part de lui (`timeline.seek("result")`) pour éviter un saut au chargement. Composants `"use client"` seulement.
 
 ## React 19
 
@@ -197,6 +205,14 @@ Plans d'hébergement : **Vercel Pro** obligatoire (le plan Hobby est réservé �
 - Installé en U11 : `@upstash/ratelimit` 2.2.0 (`src/server/http/rate-limit.ts` : `slidingWindow(10, "1 m")` et `fixedWindow(60, "1 d")` par IP, `analytics: false`, `timeout`, `await result.pending`). Quota : script Lua via `redis.eval(script, [clé], [args])` (`src/server/quota/quota-store.ts`) ; vérifié en direct (`npm run test:quota`) : 20 réservations simultanées pour une limite de 3 → exactement 3.
 - Quota : `INCR` + `EXPIREAT` sur la clé du jour (minuit Europe/Paris), réservation puis confirmation/libération (`DECR`) pour éviter les dépassements en cas de requêtes simultanées.
 
+## Stripe (paiement, U22, AD-50)
+
+- Installé le 23 octobre 2026 : `stripe` **22.6.2** (septembre 2026 ; la 23.0.0 d'octobre venait de recevoir un correctif, non retenue). Version d'API figée par le SDK : **2026-08-26.dahlia** (`node_modules/stripe/cjs/apiVersion.js`).
+- API vérifiées dans les types installés : `new Stripe(clé, { timeout, maxNetworkRetries })` (import par défaut), `checkout.sessions.create` (`mode: "subscription"`, `line_items`, `client_reference_id`, `subscription_data.metadata`, `customer` ou `customer_email`, `locale: "fr"`, `success_url`, `cancel_url`), `billingPortal.sessions.create({ customer, return_url })`, `subscriptions.retrieve`, `invoices.list({ customer, limit })`, `webhooks.constructEvent(corpsBrut, signature, secret)`, `webhooks.generateTestHeaderString` (tests).
+- **Piège** : depuis l'API 2025-03-31, `current_period_end` n'est plus sur l'abonnement mais sur chaque ligne (`items.data[].current_period_end`).
+- Statuts : `active`, `trialing` → actif ; `past_due`, `unpaid`, `paused` → retard ; `canceled` → résilié ; `incomplete_expired` → expiré ; `incomplete` → rien n'est accordé.
+- Webhook : corps brut (`await request.text()`), en-tête `stripe-signature`, route exclue du proxy ; l'ordre des événements n'est pas garanti, d'où la relecture de l'abonnement à chaque événement. Événements à cocher dans Stripe : `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`. En local : `stripe listen --forward-to localhost:3000/api/billing/webhook`.
+
 ## Paiement (selon D1)
 
 - Stripe Billing : https://docs.stripe.com/billing/subscriptions/overview — Checkout : https://docs.stripe.com/payments/checkout — Webhooks : https://docs.stripe.com/webhooks — Portail client : https://docs.stripe.com/customer-management — pays pris en charge : https://stripe.com/global
@@ -248,11 +264,19 @@ Plans d'hébergement : **Vercel Pro** obligatoire (le plan Hobby est réservé �
 - Cœur mono-thread (`@ffmpeg/core`, wasm de 32 Mo) : pas besoin de `SharedArrayBuffer` ni des en-têtes COOP/COEP. Servi par le site depuis `public/ffmpeg/core-<version>/` (copie par `scripts/copy-ffmpeg-core.mjs` au `postinstall`, dossier ignoré par git, `Cache-Control: immutable` dans `next.config.ts`).
 - Pièges vérifiés le 20 octobre 2026 :
   - **Turbopack casse le worker empaqueté** : son `import(coreURL)` dynamique devient « Cannot find module as expression is too dynamic ». Passer `classWorkerURL` vers la copie servie telle quelle (`public/ffmpeg/worker-<version>/worker.js`, avec `const.js` et `errors.js`).
+  - **Depuis Next 16.4, Turbopack refuse aussi d'empaqueter la classe** (`new Worker(new URL(classWorkerURL, import.meta.url))` : « Can't resolve (<dynamic> | 'undefined') », le build échoue). Toute la bibliothèque `@ffmpeg/ffmpeg` (`index.js`, `classes.js`, `types.js`, `utils.js`, `worker.js`, `const.js`, `errors.js`) est servie depuis `public/ffmpeg/worker-<version>/` et chargée par `import(/* webpackIgnore: true */ /* turbopackIgnore: true */ url)` ; seuls les types viennent du paquet.
   - **`ffprobe()` renvoie -1 même en cas de succès** (0.12.10) : lire le fichier produit par `-o` au lieu du code de retour.
   - Monter la vidéo en `WORKERFS` (`mount(FFFSType.WORKERFS, { files: [file] }, dir)`, après `createDir`) : lecture par morceaux, pas de copie de 500 Mo en mémoire. Ne pas utiliser `writeFile` pour la vidéo.
   - `-ss t` **avant** `-i` (déplacement rapide sur image clé), `-frames:v 1` ; une commande par image.
   - Le `signal` des méthodes rejette la promesse sans arrêter le worker : appeler `terminate()` à l'annulation.
   - Constantes de version (`src/client/frames/ffmpeg-source.ts`) vérifiées contre les paquets installés par un test : les mettre à jour avec les paquets.
+
+## YouTube Data API v3 et oEmbed TikTok (liens, U36)
+
+- YouTube : https://developers.google.com/youtube/v3/docs/videos/list — `GET https://www.googleapis.com/youtube/v3/videos?part=snippet&id=<id>&key=<YOUTUBE_API_KEY>` (1 unité de quota sur 10 000 par jour). Vidéo privée ou supprimée : `items` vide (pas de 404). Vignettes : `maxres` → `standard` → `high` → `medium` → `default`, servies par `i.ytimg.com`. Vérifié en direct le 20 octobre 2026 (`tests/live/youtube-metadata.test.ts`).
+- TikTok : https://developers.tiktok.com/doc/embed-videos — `GET https://www.tiktok.com/oembed?url=<adresse de la vidéo>`, sans clé ; renvoie `title` (légende), `author_name`, `thumbnail_url` (domaines `*.tiktokcdn*.com`, adresses signées et temporaires). Une vidéo supprimée peut répondre 200 sans titre ni vignette : traitée comme « sans indice ».
+- Instagram : aucune lecture publique sans application Meta validée (« oEmbed Read », D11) ; l'ancienne adresse `api.instagram.com/oembed` renvoie une page web.
+- Liens courts TikTok (`vm.tiktok.com`, `vt.tiktok.com`, `/t/`) : `fetch(…, { redirect: "manual" })` puis vérification de chaque `Location` (jamais `redirect: "follow"`).
 
 ## heic-to (captures HEIC, U34)
 

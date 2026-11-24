@@ -4,20 +4,22 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { IdentifyResponse } from "@/schemas/identify";
 
-import { type IdentifyFailure, sendDescription } from "./send-frames";
+import { type IdentifyCall, type IdentifyFailure, sendDescription, sendLink } from "./send-frames";
 
-export type DescriptionState =
+export type QueryState =
   | { status: "idle" }
   | { status: "sending" }
   | { status: "done"; response: IdentifyResponse }
   | { status: "failed"; failure: IdentifyFailure };
 
+type Sender = (value: string, signal: AbortSignal) => Promise<IdentifyCall>;
+
 /**
- * Identification par description (U35) : un envoi à la fois ; un nouvel envoi, « Réinitialiser » ou le démontage
- * annulent le précédent. Le texte reste dans le champ du navigateur, il n'est conservé nulle part ailleurs.
+ * Identification par texte saisi (description U35, lien U36) : un envoi à la fois ; un nouvel envoi,
+ * « Réinitialiser » ou le démontage annulent le précédent. La saisie n'est conservée nulle part ailleurs.
  */
-export function useDescriptionIdentification() {
-  const [state, setState] = useState<DescriptionState>({ status: "idle" });
+function useQueryIdentification(send: Sender) {
+  const [state, setState] = useState<QueryState>({ status: "idle" });
   const controller = useRef<AbortController | null>(null);
 
   const cancel = useCallback(() => {
@@ -26,13 +28,13 @@ export function useDescriptionIdentification() {
   }, []);
 
   const submit = useCallback(
-    async (text: string) => {
+    async (value: string) => {
       cancel();
       const current = new AbortController();
       controller.current = current;
       setState({ status: "sending" });
       try {
-        const call = await sendDescription(text, current.signal);
+        const call = await send(value, current.signal);
         if (!current.signal.aborted) {
           setState(call.ok ? { status: "done", response: call.response } : { status: "failed", failure: call.failure });
         }
@@ -40,7 +42,7 @@ export function useDescriptionIdentification() {
         // Annulation volontaire (nouvel envoi, démontage) : rien à afficher.
       }
     },
-    [cancel],
+    [cancel, send],
   );
 
   const reset = useCallback(() => {
@@ -51,4 +53,12 @@ export function useDescriptionIdentification() {
   useEffect(() => cancel, [cancel]);
 
   return { state, submit, reset };
+}
+
+export function useDescriptionIdentification() {
+  return useQueryIdentification(sendDescription);
+}
+
+export function useLinkIdentification() {
+  return useQueryIdentification(sendLink);
 }

@@ -35,7 +35,7 @@ async function simulateServer(page: Page) {
 }
 
 async function chooseVideo(page: Page, name: string) {
-  await page.goto("/");
+  await page.goto("/identifier");
   const input = page.locator('input[type="file"]');
   // Sous charge, l'envoi peut précéder l'hydratation : on recommence jusqu'à voir la lecture démarrer.
   await expect(async () => {
@@ -104,7 +104,7 @@ test("« Annuler » pendant la lecture de secours : retour à la zone d'envoi, r
 
 test("format non pris en charge : refus immédiat, sans lecture", async ({ page }) => {
   await simulateServer(page);
-  await page.goto("/");
+  await page.goto("/identifier");
   const input = page.locator('input[type="file"]');
   await expect(async () => {
     await input.setInputFiles({ name: "clip.wmv", mimeType: "video/x-ms-wmv", buffer: Buffer.from("pas une vidéo") });

@@ -53,6 +53,29 @@ export async function searchUsers(db: Database, query: string): Promise<AdminUse
   );
 }
 
+/** Fiche d'un compte pour le back-office (U26c) ; null s'il n'existe pas ou a été supprimé. */
+export async function loadAdminUser(db: Database, userId: string): Promise<AdminUserRow | null> {
+  const rows = await withQueryTimeout(db, (tx) =>
+    tx
+      .select({
+        id: profiles.id,
+        email: authUsers.email,
+        displayName: profiles.displayName,
+        role: profiles.role,
+        status: profiles.status,
+        createdAt: profiles.createdAt,
+        subscriptionPlan: subscriptions.plan,
+        subscriptionStatus: subscriptions.status,
+      })
+      .from(profiles)
+      .innerJoin(authUsers, eq(authUsers.id, profiles.id))
+      .leftJoin(subscriptions, eq(subscriptions.userId, profiles.id))
+      .where(and(eq(profiles.id, userId), isNull(profiles.deletedAt)))
+      .limit(1),
+  );
+  return rows[0] ?? null;
+}
+
 export type StatusChangeOutcome = "changed" | "unchanged";
 
 /** Suspend ou réactive un compte ; journalisé dans la même transaction (invariant 6). */

@@ -26,7 +26,8 @@ import { type ApplyOutcome, applyBillingEvent, loadSubscription, type Subscripti
 // Paiement Premium (U22, CDC 12.8 et 13.3). Ordre fixe (code-standards.md) : validation, session, puis action
 // sur le seul compte de la session. Le statut Premium n'est jamais modifié ici : seul le webhook l'écrit.
 
-const PROVIDER = "stripe";
+/** Nom du prestataire enregistré avec chaque abonnement (AD-50). */
+export const PROVIDER = "stripe";
 const CHECKOUTS_PER_HOUR = 10;
 
 const planSchema = z.enum(["monthly", "yearly"]);

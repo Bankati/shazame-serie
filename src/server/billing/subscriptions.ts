@@ -2,14 +2,14 @@ import "server-only";
 
 import { eq } from "drizzle-orm";
 
-import { type Database, withQueryTimeout } from "@/server/db/client";
+import { type Database, type DbTransaction, withQueryTimeout } from "@/server/db/client";
 import { billingEvents, subscriptions } from "@/server/db/schema";
 
 import type { BillingEvent, BillingPlan, ProviderSubscription, SubscriptionStatus } from "./billing-provider";
 import { isPremium } from "./premium-rule";
 
 // Abonnements en base (U22). Le statut Premium ne change que par un webhook vérifié dont l'identifiant n'a
-// jamais été traité (invariant 5) : l'enregistrement de l'événement et la mise à jour de l'abonnement se font
+// jamais été traité, ou par une correction admin journalisée relue chez le prestataire (invariant 5, U26c) : l'enregistrement de l'événement et la mise à jour de l'abonnement se font
 // dans la même transaction, un événement rejoué ne modifie rien.
 
 export type SubscriptionRow = {
@@ -76,20 +76,31 @@ export async function applyBillingEvent(
     if (existing && existing.id !== subscription.providerSubscriptionId && isPremium(existing, new Date()))
       return "conflict";
 
-    const values = {
-      provider,
-      providerCustomerId: subscription.providerCustomerId,
-      providerSubscriptionId: subscription.providerSubscriptionId,
-      plan: subscription.plan,
-      status: subscription.status,
-      currentPeriodEnd: subscription.currentPeriodEnd,
-      cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
-      updatedAt: new Date(),
-    };
-    await tx
-      .insert(subscriptions)
-      .values({ userId: subscription.userId, ...values })
-      .onConflictDoUpdate({ target: subscriptions.userId, set: values });
+    await writeSubscription(tx, subscription.userId, { ...subscription, plan: subscription.plan, status: subscription.status }, provider);
     return "applied";
   });
+}
+
+/** Abonnement exploitable (statut et offre connus), prêt à écrire. */
+export type UsableSubscription = ProviderSubscription & { plan: BillingPlan; status: SubscriptionStatus };
+
+/**
+ * Seule écriture de la ligne d'abonnement, partagée par le webhook et la correction admin (U26c). L'appelant
+ * a verrouillé la ligne et appliqué ses règles dans la même transaction.
+ */
+export async function writeSubscription(tx: DbTransaction, userId: string, subscription: UsableSubscription, provider: string): Promise<void> {
+  const values = {
+    provider,
+    providerCustomerId: subscription.providerCustomerId,
+    providerSubscriptionId: subscription.providerSubscriptionId,
+    plan: subscription.plan,
+    status: subscription.status,
+    currentPeriodEnd: subscription.currentPeriodEnd,
+    cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
+    updatedAt: new Date(),
+  };
+  await tx
+    .insert(subscriptions)
+    .values({ userId, ...values })
+    .onConflictDoUpdate({ target: subscriptions.userId, set: values });
 }

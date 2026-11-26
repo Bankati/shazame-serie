@@ -2,10 +2,21 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { Account } from "@/server/auth/guards";
 
-import { type AdminDeps, changeSetting, changeUserStatus, reviewReportRequest } from "./admin-requests";
+import type { ProviderSubscription } from "@/server/billing/billing-provider";
+
+import { type AdminDeps, changeSetting, changeUserStatus, reviewReportRequest, syncSubscriptionRequest } from "./admin-requests";
 
 const ADMIN: Account = { id: "a0000000-0000-4000-8000-000000000001", email: null, displayName: "Admin", role: "admin", status: "active" };
 const USER_ID = "b0000000-0000-4000-8000-000000000002";
+const FETCHED: ProviderSubscription = {
+  providerSubscriptionId: "sub_STORED1",
+  providerCustomerId: "cus_1",
+  userId: USER_ID,
+  plan: "monthly",
+  status: "active",
+  currentPeriodEnd: new Date("2026-12-26T00:00:00Z"),
+  cancelAtPeriodEnd: false,
+};
 
 function deps(overrides: Partial<AdminDeps> = {}): AdminDeps {
   return {
@@ -14,6 +25,10 @@ function deps(overrides: Partial<AdminDeps> = {}): AdminDeps {
     updateSetting: vi.fn(async () => "changed" as const),
     titleExists: vi.fn(async () => true),
     reviewReport: vi.fn(async () => ({ ok: true as const, value: { status: "reviewed" as const, cacheCorrected: true } })),
+    billingConfigured: vi.fn(() => true),
+    storedSubscriptionId: vi.fn(async () => "sub_STORED1"),
+    fetchSubscription: vi.fn(async () => FETCHED),
+    syncSubscription: vi.fn(async () => ({ ok: true as const, value: "changed" as const })),
     ...overrides,
   };
 }
@@ -127,5 +142,57 @@ describe("reviewReportRequest", () => {
     const d = deps({ reviewReport: vi.fn(async () => ({ ok: false as const, error: "already_reviewed" as const })) });
     const state = await reviewReportRequest(form(valid), d);
     expect(state).toMatchObject({ status: "error", message: expect.stringContaining("déjà") });
+  });
+});
+
+describe("syncSubscriptionRequest", () => {
+  it("valide l'entrée (compte, identifiant Stripe) avant de vérifier le rôle", async () => {
+    const d = deps();
+    expect((await syncSubscriptionRequest(form({ userId: "x" }), d)).status).toBe("error");
+    expect(await syncSubscriptionRequest(form({ userId: USER_ID, subscriptionId: "cus_123456" }), d)).toMatchObject({
+      status: "error",
+      fields: { subscriptionId: expect.any(String) },
+    });
+    expect(d.admin).not.toHaveBeenCalled();
+  });
+
+  it("refuse un non-admin sans interroger le prestataire", async () => {
+    const d = deps({ admin: vi.fn(async () => null) });
+    expect((await syncSubscriptionRequest(form({ userId: USER_ID }), d)).status).toBe("error");
+    expect(d.fetchSubscription).not.toHaveBeenCalled();
+  });
+
+  it("relit l'abonnement connu en base, puis l'écrit au nom de l'admin", async () => {
+    const d = deps();
+    expect((await syncSubscriptionRequest(form({ userId: USER_ID }), d)).status).toBe("success");
+    expect(d.fetchSubscription).toHaveBeenCalledWith("sub_STORED1");
+    expect(d.syncSubscription).toHaveBeenCalledWith(ADMIN.id, USER_ID, FETCHED);
+  });
+
+  it("utilise l'identifiant collé par l'admin en priorité", async () => {
+    const d = deps();
+    await syncSubscriptionRequest(form({ userId: USER_ID, subscriptionId: " sub_PASTED9 " }), d);
+    expect(d.fetchSubscription).toHaveBeenCalledWith("sub_PASTED9");
+    expect(d.storedSubscriptionId).not.toHaveBeenCalled();
+  });
+
+  it("sans abonnement connu ni identifiant, ou paiement non configuré : rien n'est lu ni écrit", async () => {
+    const none = deps({ storedSubscriptionId: vi.fn(async () => null) });
+    expect((await syncSubscriptionRequest(form({ userId: USER_ID }), none)).status).toBe("error");
+    const off = deps({ billingConfigured: vi.fn(() => false) });
+    expect((await syncSubscriptionRequest(form({ userId: USER_ID }), off)).status).toBe("error");
+    expect(none.fetchSubscription).not.toHaveBeenCalled();
+    expect(off.fetchSubscription).not.toHaveBeenCalled();
+  });
+
+  it("prestataire injoignable ou identifiant inconnu : rien n'est écrit", async () => {
+    const d = deps({ fetchSubscription: vi.fn(async () => Promise.reject(new Error("stripe"))) });
+    expect((await syncSubscriptionRequest(form({ userId: USER_ID }), d)).status).toBe("error");
+    expect(d.syncSubscription).not.toHaveBeenCalled();
+  });
+
+  it("renvoie le motif d'un refus", async () => {
+    const d = deps({ syncSubscription: vi.fn(async () => ({ ok: false as const, error: "other_account" as const })) });
+    expect(await syncSubscriptionRequest(form({ userId: USER_ID }), d)).toMatchObject({ status: "error", message: expect.stringContaining("autre compte") });
   });
 });

@@ -950,3 +950,22 @@ Dernière mise à jour : 26 novembre 2026
 | Accent | statut « À traiter » en `Badge` par défaut, autres en `secondary` |
 
 **Notes de pattern :** filtre de statut en `<nav>` de liens GET (`?statut=`, `aria-current`). Décision en `<fieldset>` de boutons radio natifs (`size-5 accent-primary`) : titre proposé, suggestion de l'utilisateur, autre titre (sélecteur TMDB indenté `pl-8`). Le titre retenu part en champs cachés ; bouton désactivé tant qu'aucun titre n'est choisi. Case « Ajouter au jeu de test » désactivée sans image, avec son explication (`aria-describedby`). Images par `<img>` (liens signés de 15 min, pas d'optimiseur), `alt` numéroté.
+
+### SubscriptionSyncForm, fiche utilisateur (back-office, U26c)
+
+Fichiers : `src/components/admin/subscription-sync-form.tsx`, page `src/app/admin/utilisateurs/[id]/page.tsx`
+Dernière mise à jour : 26 novembre 2026
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | cartes `bg-card` |
+| Bordure | cartes `rounded-lg border border-border p-4 md:p-6` ; champ `Input` (`border-input`) |
+| Radius | `rounded-lg` (cartes) |
+| Texte principal | nom `font-display text-display font-bold` ; valeurs `text-sm break-all` ; identifiants Stripe `font-mono text-xs` ; champ `font-mono text-base` |
+| Texte secondaire | libellés `dt` `text-sm text-muted-foreground sm:w-56` ; aides `text-xs text-muted-foreground` |
+| Espacement | page `max-w-4xl gap-6` ; cartes `gap-3` ; lignes `dl` `gap-2` |
+| Hover / focus | `focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring` ; boutons shadcn |
+| Ombre | none |
+| Accent | droit Premium « Oui » en `Badge` par défaut ; statut suspendu `destructive` |
+
+**Notes de pattern :** fiche en listes de définition (`dl` / `dt` / `dd`, une colonne sur mobile). Sections titrées (`aria-labelledby`). Formulaire de correction : un seul bouton `outline` « Relire chez Stripe », champ `sub_…` facultatif avec aide et erreur liées par `aria-describedby`, `aria-invalid` sur erreur de format. Factures en liste (date, montant `tabular-nums`, statut, lien externe `rel="noreferrer"`).

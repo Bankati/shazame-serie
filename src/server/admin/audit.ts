@@ -8,8 +8,8 @@ import { adminAuditLog } from "@/server/db/schema";
 // Journal d'audit du back-office (U26, invariant 6) : la ligne de journal est écrite dans la même transaction
 // que la modification. Si l'une échoue, aucune des deux n'est enregistrée.
 
-export type AuditAction = "user.suspend" | "user.reactivate" | "setting.update" | "report.review" | "cache.correct";
-export type AuditTargetType = "user" | "setting" | "report" | "result_cache";
+export type AuditAction = "user.suspend" | "user.reactivate" | "setting.update" | "report.review" | "cache.correct" | "subscription.sync";
+export type AuditTargetType = "user" | "setting" | "report" | "result_cache" | "subscription";
 
 export type AuditEntry = {
   action: AuditAction;

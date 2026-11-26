@@ -10,10 +10,16 @@ import { getDb } from "@/server/db/client";
 import { log } from "@/server/log";
 import { errorCode } from "@/server/log-error";
 
+import type { ProviderSubscription } from "@/server/billing/billing-provider";
+import { PROVIDER } from "@/server/billing/billing-requests";
+import { getBilling, isBillingConfigured } from "@/server/billing/stripe/stripe-billing";
+import { loadSubscription } from "@/server/billing/subscriptions";
 import { getCatalog } from "@/server/catalog/tmdb/tmdb-catalog";
 
 import type { ReviewRefusal, TitleRef } from "./report-review-rules";
 import { reviewReport, type ReviewOutcome } from "./reports-admin";
+import type { SyncRefusal } from "./subscription-rules";
+import { type SyncOutcome, syncSubscriptionFromProvider } from "./subscriptions-admin";
 import { parseSettingInput, settingKeySchema, type EditableSetting } from "./settings-input";
 import { type SettingUpdateOutcome, updateSetting } from "./settings-admin";
 import type { AccountStatus, StatusChangeRefusal } from "./user-rules";
@@ -29,6 +35,12 @@ export type AdminDeps = {
   /** Le titre existe-t-il dans le catalogue ? Lève une erreur si le catalogue est indisponible. */
   titleExists: (title: TitleRef) => Promise<boolean>;
   reviewReport: (adminId: string, reportId: string, retained: TitleRef, addToEval: boolean) => Promise<Result<ReviewOutcome, ReviewRefusal>>;
+  billingConfigured: () => boolean;
+  /** Identifiant de l'abonnement déjà connu en base pour ce compte, ou null. */
+  storedSubscriptionId: (userId: string) => Promise<string | null>;
+  /** Abonnement relu chez le prestataire ; lève une erreur si inconnu ou injoignable. */
+  fetchSubscription: (subscriptionId: string) => Promise<ProviderSubscription>;
+  syncSubscription: (adminId: string, userId: string, fetched: ProviderSubscription) => Promise<Result<SyncOutcome, SyncRefusal>>;
 };
 
 export function adminDeps(): AdminDeps {
@@ -41,6 +53,10 @@ export function adminDeps(): AdminDeps {
     updateSetting: (adminId, key, value) => updateSetting(getDb(), adminId, key, value),
     titleExists: async (title) => (await getCatalog().getTitleDetails(title.tmdbId, title.mediaType)) !== null,
     reviewReport: (adminId, reportId, retained, addToEval) => reviewReport(getDb(), adminId, reportId, retained, addToEval),
+    billingConfigured: isBillingConfigured,
+    storedSubscriptionId: async (userId) => (await loadSubscription(getDb(), userId))?.providerSubscriptionId ?? null,
+    fetchSubscription: (subscriptionId) => getBilling().getSubscription(subscriptionId),
+    syncSubscription: (adminId, userId, fetched) => syncSubscriptionFromProvider(getDb(), adminId, userId, fetched, PROVIDER),
   };
 }
 
@@ -131,6 +147,50 @@ export async function reviewReportRequest(form: FormData, deps: AdminDeps = admi
     return { status: "success", message: text.done[outcome.value.status] };
   } catch (error) {
     log.error("admin.report_review_failed", { code: errorCode(error) });
+    return { status: "error", message: ADMIN_TEXT.failed };
+  }
+}
+
+const syncFormSchema = z.object({
+  userId: z.uuid(),
+  // Identifiant Stripe vu dans le tableau de bord du prestataire ; facultatif si un abonnement est déjà connu.
+  subscriptionId: z
+    .string()
+    .regex(/^sub_[A-Za-z0-9]{6,250}$/)
+    .optional(),
+});
+
+/** Correction d'un abonnement (U26c) : relu chez le prestataire, puis écrit et journalisé (invariants 5 et 6). */
+export async function syncSubscriptionRequest(form: FormData, deps: AdminDeps = adminDeps()): Promise<FormState> {
+  const text = ADMIN_TEXT.subscription.sync;
+  const input = syncFormSchema.safeParse({ userId: field(form, "userId"), subscriptionId: field(form, "subscriptionId").trim() || undefined });
+  if (!input.success) {
+    const invalidId = input.error.issues.some((issue) => issue.path[0] === "subscriptionId");
+    return invalidId
+      ? { status: "error", message: text.invalidId, fields: { subscriptionId: text.invalidId } }
+      : { status: "error", message: text.invalid };
+  }
+
+  const admin = await deps.admin();
+  if (!admin) return { status: "error", message: ADMIN_TEXT.forbidden };
+  if (!deps.billingConfigured()) return { status: "error", message: text.notConfigured };
+
+  let fetched: ProviderSubscription;
+  try {
+    const subscriptionId = input.data.subscriptionId ?? (await deps.storedSubscriptionId(input.data.userId));
+    if (!subscriptionId) return { status: "error", message: text.refused.no_subscription };
+    fetched = await deps.fetchSubscription(subscriptionId);
+  } catch (error) {
+    log.warn("admin.subscription_fetch_failed", { code: errorCode(error) });
+    return { status: "error", message: text.fetchFailed };
+  }
+
+  try {
+    const outcome = await deps.syncSubscription(admin.id, input.data.userId, fetched);
+    if (!outcome.ok) return { status: "error", message: text.refused[outcome.error] };
+    return { status: "success", message: outcome.value === "changed" ? text.changed : text.unchanged };
+  } catch (error) {
+    log.error("admin.subscription_sync_failed", { code: errorCode(error) });
     return { status: "error", message: ADMIN_TEXT.failed };
   }
 }

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { UserStatusForm } from "@/components/admin/user-status-form";
 import { Badge } from "@/components/ui/badge";
@@ -86,7 +87,9 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
                   <tr key={user.id} className="border-b border-border last:border-b-0">
                     <th scope="row" className={`${CELL} text-left font-normal`}>
                       <span className="flex items-center gap-2 font-medium text-foreground">
-                        {user.displayName || text.noName}
+                        <Link href={`/admin/utilisateurs/${user.id}`} className="underline underline-offset-4">
+                          {user.displayName || text.noName}
+                        </Link>
                         {user.role === "admin" ? <Badge variant="secondary">{text.roleAdmin}</Badge> : null}
                       </span>
                       <span className="block break-all text-muted-foreground">{user.email ?? text.noEmail}</span>

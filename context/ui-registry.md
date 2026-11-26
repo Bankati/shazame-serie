@@ -877,8 +877,8 @@ Dernière mise à jour : 20 octobre 2026
 
 ### ReportForm (signalement d'erreur)
 
-Fichier : `src/components/identify/report-form.tsx` (dans `ResultDialog`, U20)
-Dernière mise à jour : 20 octobre 2026
+Fichier : `src/components/identify/report-form.tsx` (dans `ResultDialog`, U20) ; recherche du titre dans `catalog-title-picker.tsx` (`CatalogTitlePicker`, extrait le 26 novembre 2026, partagé avec la revue des signalements)
+Dernière mise à jour : 26 novembre 2026
 
 | Propriété | Classe |
 | --- | --- |
@@ -931,3 +931,22 @@ Dernière mise à jour : 23 novembre 2026
 | Accent | statut « Suspendu » en `Badge variant="destructive"`, bouton « Suspendre » `Button variant="destructive" size="sm"` ; « Réactiver » en `outline` |
 
 **Notes de pattern :** navigation en composant client (`usePathname`, `aria-current="page"`), défilement horizontal sur mobile. Recherche en `<form role="search">` GET (`?q=`), nombre de résultats annoncé (`role="status"`). Une action par ligne : formulaire de Server Action avec champs cachés, message sous le bouton (`role="alert"` / `role="status"`), liste relue par `revalidatePath`. Un formulaire par réglage (une erreur n'en bloque pas d'autres) ; la clé React inclut la valeur pour reprendre la valeur relue après enregistrement. Pagination du journal par liens `?page=`.
+
+### ReportReviewForm, pages des signalements (back-office, U26b)
+
+Fichiers : `src/components/admin/report-review-form.tsx`, pages `src/app/admin/signalements/page.tsx` et `[id]/page.tsx` ; réutilise `CatalogTitlePicker`
+Dernière mise à jour : 26 novembre 2026
+
+| Propriété | Classe |
+| --- | --- |
+| Arrière-plan | cartes du détail et tableau `bg-card` ; filtre de statut actif `bg-accent` |
+| Bordure | cartes `rounded-lg border border-border p-4` ; images `rounded-md border border-border` ; liens de filtre et de pagination `border border-border rounded-md` |
+| Radius | `rounded-lg` (cartes, tableau) ; `rounded-md` (liens, images) |
+| Texte principal | titre de page `font-display text-display font-bold` avec `Badge` de statut ; titres de carte `text-base font-semibold` ; cellules `text-sm` |
+| Texte secondaire | dates, confiance, état du cache, aides `text-sm text-muted-foreground` |
+| Espacement | liste `max-w-6xl gap-6` ; détail `max-w-4xl gap-6`, cartes en `md:grid-cols-2 gap-4` ; images `grid-cols-2 sm:grid-cols-3 gap-2`, `aspect-video object-cover` |
+| Hover / focus | `focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring` ; boutons shadcn |
+| Ombre | none |
+| Accent | statut « À traiter » en `Badge` par défaut, autres en `secondary` |
+
+**Notes de pattern :** filtre de statut en `<nav>` de liens GET (`?statut=`, `aria-current`). Décision en `<fieldset>` de boutons radio natifs (`size-5 accent-primary`) : titre proposé, suggestion de l'utilisateur, autre titre (sélecteur TMDB indenté `pl-8`). Le titre retenu part en champs cachés ; bouton désactivé tant qu'aucun titre n'est choisi. Case « Ajouter au jeu de test » désactivée sans image, avec son explication (`aria-describedby`). Images par `<img>` (liens signés de 15 min, pas d'optimiseur), `alt` numéroté.

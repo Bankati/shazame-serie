@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutDashboard, type LucideIcon, ScrollText, SlidersHorizontal, Users } from "lucide-react";
+import { Flag, LayoutDashboard, type LucideIcon, ScrollText, SlidersHorizontal, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -13,6 +13,7 @@ const LINK =
 const ITEMS: { href: string; label: string; icon: LucideIcon }[] = [
   { href: "/admin", label: ADMIN_TEXT.nav.dashboard, icon: LayoutDashboard },
   { href: "/admin/utilisateurs", label: ADMIN_TEXT.nav.users, icon: Users },
+  { href: "/admin/signalements", label: ADMIN_TEXT.nav.reports, icon: Flag },
   { href: "/admin/reglages", label: ADMIN_TEXT.nav.settings, icon: SlidersHorizontal },
   { href: "/admin/journal", label: ADMIN_TEXT.nav.audit, icon: ScrollText },
 ];
@@ -23,7 +24,8 @@ export function AdminNav() {
   return (
     <nav aria-label={ADMIN_TEXT.nav.label} className="flex gap-1 overflow-x-auto md:flex-col">
       {ITEMS.map(({ href, label, icon: Icon }) => {
-        const current = pathname === href;
+        // Sous-pages (détail d'un signalement) : l'entrée de leur section reste marquée.
+        const current = pathname === href || (href !== "/admin" && pathname.startsWith(`${href}/`));
         return (
           <Link key={href} href={href} className={cn(LINK, "shrink-0", current && "bg-accent")} aria-current={current ? "page" : undefined}>
             <Icon className="size-4" aria-hidden="true" />

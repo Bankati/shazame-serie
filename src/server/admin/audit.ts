@@ -8,8 +8,8 @@ import { adminAuditLog } from "@/server/db/schema";
 // Journal d'audit du back-office (U26, invariant 6) : la ligne de journal est écrite dans la même transaction
 // que la modification. Si l'une échoue, aucune des deux n'est enregistrée.
 
-export type AuditAction = "user.suspend" | "user.reactivate" | "setting.update";
-export type AuditTargetType = "user" | "setting";
+export type AuditAction = "user.suspend" | "user.reactivate" | "setting.update" | "report.review" | "cache.correct";
+export type AuditTargetType = "user" | "setting" | "report" | "result_cache";
 
 export type AuditEntry = {
   action: AuditAction;
@@ -21,18 +21,20 @@ export type AuditEntry = {
 };
 
 /**
- * Exécute une mutation admin et journalise son effet. `work` renvoie l'entrée à journaliser, ou `null` quand
- * l'action n'a rien changé (aucune ligne écrite) ; son résultat métier est renvoyé tel quel.
+ * Exécute une mutation admin et journalise son effet. `work` renvoie l'entrée (ou les entrées, une par objet
+ * modifié) à journaliser, ou `null` quand l'action n'a rien changé (aucune ligne écrite) ; son résultat métier
+ * est renvoyé tel quel.
  */
 export async function withAdminAudit<T>(
   db: Database,
   adminId: string,
-  work: (tx: DbTransaction) => Promise<{ result: T; audit: AuditEntry | null }>,
+  work: (tx: DbTransaction) => Promise<{ result: T; audit: AuditEntry | readonly AuditEntry[] | null }>,
 ): Promise<T> {
   return withQueryTimeout(db, async (tx) => {
     const { result, audit } = await work(tx);
-    if (audit) {
-      await tx.insert(adminAuditLog).values({ adminId, ...audit });
+    const entries: readonly AuditEntry[] = audit === null ? [] : "action" in audit ? [audit] : audit;
+    if (entries.length > 0) {
+      await tx.insert(adminAuditLog).values(entries.map((entry) => ({ adminId, ...entry })));
     }
     return result;
   });

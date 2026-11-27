@@ -162,7 +162,9 @@ export async function startGoogleSignIn(form: FormData, ctx: AuthContext, deps: 
 export async function completeGoogleSignIn(url: URL, deps: AuthDeps): Promise<string> {
   const code = url.searchParams.get("code");
   if (!code || code.length > 512) {
-    log.warn("auth.google_callback_failed", { code: url.searchParams.get("error") ?? "no_code" });
+    // Paramètre de l'adresse (choisi par l'appelant) : journalisé seulement s'il a la forme d'un code OAuth (U28).
+    const reason = url.searchParams.get("error");
+    log.warn("auth.google_callback_failed", { code: reason === null ? "no_code" : /^[a-z_]{1,64}$/.test(reason) ? reason : "other" });
     return `${SIGN_IN_PATH}?erreur=google`;
   }
   const auth = await deps.auth();

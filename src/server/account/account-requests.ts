@@ -6,6 +6,8 @@ import { ACCOUNT_TEXT } from "@/content/fr/account";
 import type { FormState } from "@/schemas/auth";
 import { type Account, getCurrentAccount } from "@/server/auth/guards";
 import { getDb } from "@/server/db/client";
+import { type AttemptLimiter, buildLimiter } from "@/server/http/attempt-limiter";
+import { clientIp } from "@/server/http/rate-limit";
 import { jsonError, jsonOk } from "@/server/http/respond";
 import { isSameOrigin } from "@/server/http/same-origin";
 import { log } from "@/server/log";
@@ -27,6 +29,9 @@ import {
 const NO_STORE = { "Cache-Control": "private, no-store" };
 // Marge pour l'enveloppe multipart autour du fichier.
 const MULTIPART_OVERHEAD_BYTES = 64 * 1024;
+/** Revue U28 : chaque envoi décode et réencode l'image (sharp) ; limite par adresse IP, avant toute lecture. */
+export const AVATAR_UPLOADS_PER_HOUR = 20;
+let uploadLimiter: AttemptLimiter | undefined;
 
 export type AccountDeps = {
   account: () => Promise<Account | null>;
@@ -34,6 +39,7 @@ export type AccountDeps = {
   replace: (store: AvatarStore, userId: string, image: Buffer) => Promise<string>;
   remove: (store: AvatarStore, userId: string) => Promise<void>;
   rename: (userId: string, displayName: string) => Promise<void>;
+  uploadLimiter: () => AttemptLimiter;
 };
 
 export function accountDeps(): AccountDeps {
@@ -46,6 +52,7 @@ export function accountDeps(): AccountDeps {
     replace: (store, userId, image) => replaceAvatar(getDb(), store, userId, image),
     remove: (store, userId) => removeAvatar(getDb(), store, userId),
     rename: (userId, displayName) => updateDisplayName(getDb(), userId, displayName),
+    uploadLimiter: () => (uploadLimiter ??= buildLimiter("avatar-upload", AVATAR_UPLOADS_PER_HOUR)),
   };
 }
 
@@ -53,6 +60,9 @@ export function accountDeps(): AccountDeps {
 export async function handleAvatarUpload(request: Request, deps: AccountDeps = accountDeps()): Promise<Response> {
   if (!isSameOrigin(request)) {
     return jsonError("FORBIDDEN", undefined, { headers: NO_STORE });
+  }
+  if (!(await deps.uploadLimiter().consume(`avatar:${clientIp(request.headers)}`)).ok) {
+    return jsonError("RATE_LIMITED", undefined, { headers: NO_STORE });
   }
   const declared = Number(request.headers.get("content-length") ?? 0);
   if (declared > AVATAR_MAX_UPLOAD_BYTES + MULTIPART_OVERHEAD_BYTES) {

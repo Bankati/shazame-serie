@@ -211,6 +211,16 @@ describe("Google", () => {
     expect(await completeGoogleSignIn(callback("error=access_denied"), deps())).toBe("/connexion?erreur=google");
   });
 
+  it("ne journalise que la forme d'un code OAuth du paramètre « error » (U28)", async () => {
+    const { log } = await import("@/server/log");
+    const warn = vi.spyOn(log, "warn").mockImplementation(() => {});
+    const callback = (query: string) => new URL(`https://site.example/auth/callback?${query}`);
+    await completeGoogleSignIn(callback("error=access_denied"), deps());
+    await completeGoogleSignIn(callback(`error=${encodeURIComponent("<script>x</script>".repeat(50))}`), deps());
+    expect(warn.mock.calls.map((call) => call[1])).toEqual([{ code: "access_denied" }, { code: "other" }]);
+    warn.mockRestore();
+  });
+
   it("reprend le nom fourni par Google", async () => {
     const auth = fakeAuth({
       exchangeCodeForSession: vi.fn(async () => ({ data: { user: { ...realUser, user_metadata: { full_name: "Ana Diallo" } } }, error: null })),

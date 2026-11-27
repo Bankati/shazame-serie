@@ -86,7 +86,7 @@ type Result<T, E = AppError> = { ok: true; value: T } | { ok: false; error: E };
 ## Security
 
 - Secrets uniquement dans les variables d'environnement serveur, lus via `src/server/env.ts`.
-- En-têtes de sécurité définis globalement (CSP, HSTS, X-Content-Type-Options, Referrer-Policy, `frame-ancestors 'none'`). La CSP suit la méthode à nonce décrite dans la doc Next.js de la version installée et autorise explicitement : images `image.tmdb.org`, cadre `www.youtube-nocookie.com` (bandes-annonces), connexions Supabase, PostHog (`eu.i.posthog.com`, erreurs et analytique), et le domaine du prestataire de paiement si nécessaire.
+- En-têtes de sécurité définis globalement (CSP, HSTS, X-Content-Type-Options, Referrer-Policy, `frame-ancestors 'none'`) dans `src/lib/security-headers.ts`. La CSP est **sans nonce** (AD-53, proposé le 27 novembre 2026 : une CSP à nonce rendrait toutes les pages dynamiques) ; toute nouvelle origine externe s'ajoute dans ce fichier et son test. Elle autorise explicitement : images `image.tmdb.org`, cadre `www.youtube-nocookie.com` (bandes-annonces), connexions Supabase, PostHog (`eu.i.posthog.com`, erreurs et analytique), et le domaine du prestataire de paiement si nécessaire.
 - Bandes-annonces : lecteur `youtube-nocookie.com`, chargé seulement au clic.
 - Contrôle du type réel des images reçues (octets magiques via `sharp`), pas seulement du type MIME annoncé.
 - Limitation de débit sur : connexion, inscription, reset, identification, signalement, export.

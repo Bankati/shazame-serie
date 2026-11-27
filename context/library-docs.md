@@ -71,6 +71,7 @@ Plans d'hébergement : **Vercel Pro** obligatoire (le plan Hobby est réservé �
   - Corps de requête des fonctions Vercel limité (de l'ordre de 4,5 Mo) : c'est pour cela que l'on envoie ≤ 1,5 Mo d'images.
   - `next/image` avec les affiches TMDB : l'optimisation d'images Vercel est facturée à l'usage. Comme TMDB sert déjà des tailles prédéfinies (w185, w342, w500…), envisager `unoptimized` pour ces images et choisir la bonne taille TMDB. À trancher en U15.
   - CSP à nonce : suivre la page « Content Security Policy » de la doc de la version installée ; une CSP à nonce rend les pages dynamiques.
+  - Retenu en U28 (AD-53) : CSP sans nonce dans `headers()` de `next.config.ts`. Vérifié sous CSP par `tests/e2e/security-headers.spec.ts` (écoute de `securitypolicyviolation`). Piège : `upgrade-insecure-requests` casserait le http local (Supabase sur 127.0.0.1) : seulement une fois déployé.
 
 ## Motion et Embla (animations et carrousels, AD-36)
 
@@ -281,7 +282,7 @@ Plans d'hébergement : **Vercel Pro** obligatoire (le plan Hobby est réservé �
 ## heic-to (captures HEIC, U34)
 
 - Doc : https://github.com/hoppergee/heic-to — types dans `node_modules/heic-to/dist/next/heic-to.d.ts`.
-- Importer `heic-to/next` (variante prévue pour Next.js). `heicTo({ blob, type: "bitmap", options: { imageOrientation: "from-image" } })` renvoie directement une `ImageBitmap` ; `type: "image/jpeg"` renvoie un `Blob`.
+- Importer `heic-to/next` (variante prévue pour Next.js). Elle utilise `new Function` : la CSP doit permettre `'unsafe-eval'` (AD-53). La variante `heic-to/csp` n'en a pas besoin, à essayer avec une vraie photo HEIC avant de retirer `'unsafe-eval'`. `heicTo({ blob, type: "bitmap", options: { imageOrientation: "from-image" } })` renvoie directement une `ImageBitmap` ; `type: "image/jpeg"` renvoie un `Blob`.
 - Essayer d'abord `createImageBitmap(file)` (Safari décode le HEIC lui-même) ; n'importer `heic-to` (environ 3 Mo) qu'en cas d'échec sur un fichier `.heic`/`.heif`.
 
 ## ffmpeg-static (vidéos d'essai et eval)

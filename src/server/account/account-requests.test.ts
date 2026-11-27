@@ -5,6 +5,8 @@ import { ACCOUNT_TEXT } from "@/content/fr/account";
 import type { Account } from "@/server/auth/guards";
 
 import { type AccountDeps, handleAvatarDelete, handleAvatarUpload, renameAccount } from "./account-requests";
+import { createMemoryLimiter } from "@/server/http/attempt-limiter";
+
 import type { AvatarStore } from "./profile-service";
 
 const ACCOUNT: Account = { id: "8b1f3c1e-0000-4000-8000-000000000001", email: "a@example.com", displayName: "Ana", role: "user", status: "active" };
@@ -23,6 +25,7 @@ function deps(overrides: Partial<AccountDeps> = {}): AccountDeps & { replace: Re
     replace: vi.fn(async (_store: AvatarStore, userId: string) => `${userId}/nouvelle.webp`),
     remove: vi.fn(async () => {}),
     rename: vi.fn(async () => {}),
+    uploadLimiter: () => createMemoryLimiter(1_000, 60_000),
     ...overrides,
   } as AccountDeps & { replace: ReturnType<typeof vi.fn>; rename: ReturnType<typeof vi.fn> };
 }
@@ -118,5 +121,16 @@ describe("renameAccount", () => {
   it("compte suspendu : refusé", async () => {
     const d = deps({ account: async () => ({ ...ACCOUNT, status: "suspended" }) });
     expect(await renameAccount(form("Ana"), d)).toEqual({ status: "error", message: ACCOUNT_TEXT.name.suspended });
+  });
+});
+
+describe("limitation de débit de la photo (U28)", () => {
+  it("refuse au-delà de la limite sans lire ni traiter l'image", async () => {
+    const limiter = createMemoryLimiter(1, 60_000);
+    const d = deps({ uploadLimiter: () => limiter });
+    const file = new Blob(["pas une image"], { type: "image/png" });
+    await handleAvatarUpload(await upload(file), d);
+    expect((await handleAvatarUpload(await upload(file), d)).status).toBe(429);
+    expect(d.replace).not.toHaveBeenCalled();
   });
 });

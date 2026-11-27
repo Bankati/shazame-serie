@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { createMemoryLimiter } from "@/server/http/attempt-limiter";
+
 import type { WatchProvider } from "./watch-provider";
 import { handleWatchRequest } from "./watch-request";
 
@@ -65,5 +67,24 @@ describe("handleWatchRequest", () => {
       },
     });
     expect((await handleWatchRequest(request(), { mediaType: "tv", id: "1396" }, failing)).status).toBe(502);
+  });
+});
+
+describe("limitation de débit (U28)", () => {
+  it("refuse au-delà de 60 requêtes par minute pour une même adresse, sans appeler TMDB", async () => {
+    const limiter = createMemoryLimiter(2, 60_000);
+    const getOffersByCountry = vi.fn(async () => ({}));
+    const provider = () => ({ getOffersByCountry }) as unknown as WatchProvider;
+    const call = () =>
+      handleWatchRequest(
+        new Request("https://site.example/api/titles/movie/603/watch", { headers: { "x-forwarded-for": "203.0.113.7" } }),
+        { mediaType: "movie", id: "603" },
+        provider,
+        () => limiter,
+      );
+    await call();
+    await call();
+    expect((await call()).status).toBe(429);
+    expect(getOffersByCountry).toHaveBeenCalledTimes(2);
   });
 });
